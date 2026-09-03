@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html {
+    background-color: #0e1215;
+  }
+  body {
+    @apply bg-bg text-text font-sans;
+    font-size: 15px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  ::selection {
+    background: #c08a2e;
+    color: #12160f;
+  }
+  *:focus-visible {
+    outline: 2px solid #e7c983;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Largeurs reprises de motoconcess.com : colonne de contenu 680px,
+     bandeau de listing 1200px. */
+  .conteneur {
+    @apply mx-auto w-full max-w-[680px] px-4;
+  }
+  .conteneur-large {
+    @apply mx-auto w-full max-w-[1200px] px-4;
+  }
+  /* Grille de vignettes : 1 colonne, puis 2 a 600px, 3 a 850px, 4 a 1200px. */
+  .grille-annonces {
+    @apply grid grid-cols-1 gap-[30px] min-[600px]:grid-cols-2 min-[850px]:grid-cols-3 min-[1200px]:grid-cols-4;
+  }
+  .carte {
+    @apply border border-line bg-surface;
+  }
+  .btn {
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-card px-4 text-[15px] font-semibold transition-colors;
+  }
+  .btn-or {
+    @apply btn bg-gold text-on-gold hover:bg-gold-light;
+  }
+  .btn-fantome {
+    @apply btn border border-line bg-surface-hi text-text hover:border-gold;
+  }
+  .puce {
+    @apply inline-flex min-h-[34px] shrink-0 items-center rounded-card border border-line bg-surface-hi px-3.5 text-[14px] font-medium text-chrome transition-colors;
+  }
+  .puce-active {
+    @apply border-gold bg-gold font-semibold text-on-gold;
+  }
+  /* Étape 1 du choix : neuf, occasion ou tout, en sélecteur segmenté. */
+  .segment {
+    @apply flex min-h-[38px] items-center justify-center rounded-card text-[15px] font-semibold text-chrome transition-colors;
+  }
+  .segment-actif {
+    @apply bg-gold text-on-gold;
+  }
+  /* Étape 2 : tuile de type, silhouette au-dessus du libellé. */
+  .tuile-type {
+    @apply flex w-[84px] shrink-0 snap-start flex-col items-center gap-1 rounded-card border border-line bg-surface px-1 pb-2 pt-1.5 text-[13px] font-medium text-chrome transition-colors;
+  }
+  /* Sans masque CSS, l'aplat de couleur resterait un rectangle plein :
+     mieux vaut ne montrer que le libellé de la tuile. */
+  @supports not ((-webkit-mask-image: url("/types/roadster.png")) or (mask-image: url("/types/roadster.png"))) {
+    .pictogramme-type {
+      display: none;
+    }
+  }
+  .tuile-type:hover {
+    @apply border-gold/50 text-text;
+  }
+  .tuile-type-active {
+    @apply border-gold bg-surface-hi font-semibold text-gold-light;
+  }
+  .champ {
+    @apply min-h-touch w-full rounded-card border border-line bg-surface-hi px-3 text-[15px] text-text placeholder:text-dim;
+  }
+  .etiquette {
+    @apply mb-1.5 block text-[14px] font-medium text-chrome;
+  }
+  .carte-produit {
+    @apply flex h-full flex-col overflow-hidden border border-line bg-surface transition-colors;
+  }
+  .carte-produit:hover {
+    @apply border-gold/60;
+  }
+  .cadre-photo {
+    @apply overflow-hidden border border-line bg-surface-hi;
+  }
+  /* Bandeau inférieur : « + de détails » en pointe de flèche mordant sur le prix. */
+  .bande-prix {
+    @apply relative flex min-h-[48px] items-center justify-end;
+  }
+  .bande-details {
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%);
+    @apply absolute inset-y-0 left-0 flex items-center bg-surface-hi pl-4 pr-7 text-[14px] font-semibold text-chrome;
+  }
+  .ligne-spec {
+    @apply flex items-baseline justify-between gap-3 py-1.5 text-[15px] font-semibold;
+  }
+  /* Jauge a deux poignees : deux `input[type=range]` superposes sur un meme
+     rail. Les champs eux-memes laissent passer le pointeur, seules les
+     poignees le captent — sans quoi celui du dessus avalerait tous les clics
+     et l'autre borne deviendrait intouchable. */
+  .jauge {
+    @apply pointer-events-none absolute inset-x-0 top-1/2 h-9 w-full -translate-y-1/2 appearance-none bg-transparent;
+  }
+  .jauge::-webkit-slider-thumb {
+    pointer-events: auto;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 22px;
+    width: 22px;
+    background: #c08a2e;
+    border: 2px solid #12160f;
+    cursor: grab;
+  }
+  .jauge::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    background: #e7c983;
+  }
+  .jauge::-moz-range-thumb {
+    pointer-events: auto;
+    height: 22px;
+    width: 22px;
+    background: #c08a2e;
+    border: 2px solid #12160f;
+    border-radius: 0;
+    cursor: grab;
+  }
+  .jauge::-moz-range-thumb:active {
+    cursor: grabbing;
+    background: #e7c983;
+  }
+  .jauge:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid #e7c983;
+    outline-offset: 2px;
+  }
+  .jauge:focus-visible::-moz-range-thumb {
+    outline: 2px solid #e7c983;
+    outline-offset: 2px;
+  }
+  .squelette {
+    @apply animate-pulse rounded-card bg-surface-hi;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .defilement-x {
+    @apply flex snap-x snap-mandatory overflow-x-auto no-scrollbar;
+  }
+}
