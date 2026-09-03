@@ -51,6 +51,17 @@ const enTetesSecurite = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /**
+   * Le serveur de développement et la build de production écrivent par défaut
+   * dans le même `.next`. Lancer `npm run build` — ne serait-ce que pour jouer
+   * la recette — pendant que `npm run dev` tourne écrase les fragments que le
+   * serveur de dev a en mémoire, et celui-ci sert alors des « Cannot find
+   * module './5873.js' » jusqu'à ce qu'on efface le dossier à la main.
+   *
+   * Deux dossiers distincts suppriment la collision. Vercel et `next start`
+   * tournent en production et gardent `.next` : rien ne change au déploiement.
+   */
+  distDir: enProduction ? ".next" : ".next-dev",
   reactStrictMode: true,
   // Ne pas annoncer la pile technique : c'est du renseignement gratuit.
   poweredByHeader: false,

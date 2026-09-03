@@ -110,10 +110,27 @@ verifier("le catalogue expose des liens de fiche", Boolean(slug), String(slug));
 
 const fiche = await get(`/motos/${slug}`);
 verifier("la fiche répond 200", fiche.statut === 200);
-verifier("le prix porte la mention rendu Tana", fiche.texte.includes("Prix final, rendu à Antananarivo"));
-verifier("la carte grise est mentionnée", fiche.texte.includes("Carte grise établie à votre nom"));
-verifier("l'acompte de 35 % est affiché", fiche.texte.includes("35 %"));
-verifier("le délai est affiché", /45\D{0,20}65/.test(fiche.texte));
+// Exigence CGV 2.1 : la carte grise figure sous le prix, sans exception. La
+// casse, elle, depend de la place du mot dans la phrase selon le statut.
+verifier("la carte grise est mentionnée", /carte grise établie à votre nom/i.test(fiche.texte));
+
+// Le bloc prix depend du statut : la premiere fiche du catalogue est une
+// « disponible de suite », triee en tete, qui n'affiche ni trajet, ni acompte,
+// ni date de validite. Les deux redactions sont donc testees chacune sur une
+// fiche du statut correspondant.
+const surCommande = await get("/motos/honda-cb500x-2023-mi001");
+verifier("sur commande, le prix porte la mention rendu Tana", surCommande.texte.includes("Prix final, rendu à Antananarivo"));
+verifier("sur commande, l'acompte de 35 % est affiché", surCommande.texte.includes("35 %"));
+verifier("sur commande, le délai est affiché", /45\D{0,20}65/.test(surCommande.texte));
+verifier("sur commande, la date de validité du prix est affichée", surCommande.texte.includes("Prix valable jusqu"));
+
+const surPlace = await get("/motos/suzuki-v-strom-650-2022-mi005");
+verifier("sur place, le véhicule est annoncé déjà au local", surPlace.texte.includes("Véhicule déjà au local"));
+verifier("sur place, aucun délai d'importation n'est promis", surPlace.texte.includes("Aucun délai d"));
+verifier("sur place, « rendu à Antananarivo » disparaît", !surPlace.texte.includes("Prix final, rendu à Antananarivo"));
+verifier("sur place, l'acompte de 35 % disparaît", !surPlace.texte.includes("35 %"));
+verifier("sur place, la date de validité du prix disparaît", !surPlace.texte.includes("Prix valable jusqu"));
+verifier("sur place, le parcours d'importation n'est pas décrit", !surPlace.texte.includes("Nous importons"));
 verifier("le bouton devis pointe vers WhatsApp", fiche.texte.includes("wa.me"));
 verifier("les données structurées Vehicle sont présentes", fiche.texte.includes('"@type":"Vehicle"'));
 verifier("l'offre Schema.org est présente", fiche.texte.includes('"@type":"Offer"'));
@@ -265,7 +282,14 @@ verifier("aucun nom de fournisseur n'est rendu à l'éditeur", !editeurFournisse
 
 // ── 8. Bascule de statut ──────────────────────────────────────────────────
 titre("8. Bascule de statut (10.2)");
-const idMoto = adminMotos.texte.match(/\/admin\/motos\/([0-9a-f-]{36})/)?.[1];
+// La premiere ligne du back-office est la derniere modifiee, donc souvent une
+// « disponible de suite » : la repasser en « disponible » est refuse par le
+// controle de coherence description/statut, a raison. On bascule une fiche
+// dont la description ne promet aucune disponibilite particuliere.
+const posMI001 = adminMotos.texte.indexOf("MI-001");
+const idMoto = adminMotos.texte
+  .slice(Math.max(0, posMI001 - 1200), posMI001 + 1200)
+  .match(/\/admin\/motos\/([0-9a-f-]{36})/)?.[1];
 verifier("un identifiant de moto est trouvé", Boolean(idMoto));
 
 const basculer = (statut) =>
