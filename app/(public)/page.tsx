@@ -40,7 +40,7 @@ export default async function Accueil() {
             imposés par les CGV — prix final rendu Tana, carte grise au nom de
             l'acheteur, délai de 45 à 65 jours — sont donc dans l'intro, où ils
             se lisent d'un trait au lieu d'être découpés en trois boîtes. */}
-        <section className="relative isolate max-w-[640px] py-14 sm:py-20">
+        <section className="relative isolate max-w-[740px] py-14 sm:py-20">
           {/* Halo laiton très bas en opacité : la seule ornementation de la
               page. Décoratif, donc hors du flux et hors du pointeur. */}
           <div

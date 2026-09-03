@@ -18,7 +18,7 @@ export function BadgeStatut({ statut, className }: { statut: Statut; className?:
   return (
     <span
       className={clsx(
-        "inline-flex items-center border-l-[3px] bg-bg px-2 py-1 text-badge font-bold uppercase leading-none text-text",
+        "inline-flex items-center whitespace-nowrap border-l-[3px] bg-bg px-2 py-1 text-badge font-bold uppercase leading-none text-text",
         filet[statut],
         className
       )}

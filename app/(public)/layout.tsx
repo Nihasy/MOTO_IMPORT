@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BarreInferieure } from "@/components/ui/navigation";
+import { Marque } from "@/components/ui/logo";
 
 export default function LayoutPublic({ children }: { children: React.ReactNode }) {
   return (
@@ -17,9 +18,7 @@ function PiedDePage() {
   return (
     <footer className="border-t border-line bg-surface pb-20 pt-8">
       <div className="conteneur">
-        <p className="text-[19px] font-extrabold tracking-wide">
-          <span className="text-gold-light">MOTO</span> <span className="text-chrome">IMPORT</span>
-        </p>
+        <Marque taille={46} texte={20} />
         <p className="mt-2 max-w-md text-meta text-dim">
           Importation de motocycles neufs et d&apos;occasion. Prix final rendu à Antananarivo, carte
           grise établie à votre nom. Aucun stock : chaque véhicule est commandé sur mesure.

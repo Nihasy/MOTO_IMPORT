@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { destinationSure, sessionCourante } from "@/lib/auth";
 import { FormulaireConnexion } from "./formulaire";
+import { Marque } from "@/components/ui/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -23,9 +24,9 @@ export default async function PageConnexion({
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <p className="mb-6 text-center text-[22px] font-extrabold tracking-wide">
-          <span className="text-gold-light">MOTO</span> <span className="text-chrome">IMPORT</span>
-        </p>
+        <div className="mb-6 flex justify-center">
+          <Marque taille={40} texte={19} />
+        </div>
         <div className="carte p-5">
           <h1 className="text-[17px] font-semibold">Back-office</h1>
           <p className="mt-1 text-meta text-dim">Accès réservé aux deux comptes fondateurs.</p>

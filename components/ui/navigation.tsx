@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { useEnregistrees } from "@/components/catalogue/enregistrees";
+import { Marque } from "@/components/ui/logo";
 
 export function BarreSuperieure({
   titre,
@@ -18,14 +19,9 @@ export function BarreSuperieure({
 }) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
-      <div className="conteneur flex h-14 items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-2" aria-label="MOTO IMPORT, accueil">
-          <span className="text-[19px] font-extrabold tracking-wide text-gold-light">
-            MOTO
-          </span>
-          <span className="text-[19px] font-extrabold tracking-wide text-chrome">
-            IMPORT
-          </span>
+      <div className="conteneur-large flex h-14 items-center justify-between gap-3">
+        <Link href="/" aria-label="MOTO IMPORT, accueil" className="shrink-0">
+          <Marque taille={38} texte={18} />
         </Link>
         {titre ? <span className="truncate text-[13px] text-dim">{titre}</span> : null}
         <div className="flex items-center gap-1">

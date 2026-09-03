@@ -4,6 +4,7 @@ import { sessionCourante } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { MIN_PHOTOS, estPublic } from "@/lib/types";
 import { NavAdmin, type Onglet } from "@/components/admin/nav";
+import { Marque } from "@/components/ui/logo";
 import { deconnexion } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -51,9 +52,9 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
         <div className="conteneur-large flex h-14 items-center justify-between gap-3">
-          <Link href="/admin" className="text-[17px] font-extrabold tracking-wide">
-            <span className="text-gold-light">MOTO</span> <span className="text-chrome">IMPORT</span>
-            <span className="ml-2 rounded-card border border-line px-2 py-0.5 font-sans text-[10px] font-semibold uppercase text-dim">
+          <Link href="/admin" className="flex items-center gap-2.5">
+            <Marque taille={28} texte={15} />
+            <span className="rounded-card border border-line px-2 py-0.5 text-[10px] font-semibold uppercase text-dim">
               {session.role}
             </span>
           </Link>
