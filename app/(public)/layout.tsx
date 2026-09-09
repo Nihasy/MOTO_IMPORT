@@ -18,7 +18,10 @@ function PiedDePage() {
   return (
     <footer className="border-t border-line bg-surface pb-20 pt-8">
       <div className="conteneur">
-        <Marque taille={46} texte={20} />
+        {/* Le verrou de marque est centre, comme dans l'en-tete. Sa racine
+            est deja un conteneur flex pleine largeur : `justify-center` suffit
+            a recentrer les trois elements du verrou. */}
+        <Marque taille={46} texte={20} className="justify-center" />
         <p className="mt-2 max-w-md text-meta text-dim">
           Importation de motocycles neufs et d&apos;occasion. Prix final rendu à Antananarivo, carte
           grise établie à votre nom. Aucun stock : chaque véhicule est commandé sur mesure.
@@ -27,7 +30,6 @@ function PiedDePage() {
           <Link href="/motos" className="text-chrome hover:text-text">Catalogue</Link>
           <Link href="/comment-ca-marche" className="text-chrome hover:text-text">Comment ça marche</Link>
           <Link href="/faq" className="text-chrome hover:text-text">FAQ</Link>
-          <Link href="/a-propos" className="text-chrome hover:text-text">À propos</Link>
           <Link href="/contact" className="text-chrome hover:text-text">Contact</Link>
           <Link href="/cgv" className="text-chrome hover:text-text">CGV</Link>
           <Link href="/mentions-legales" className="text-chrome hover:text-text">Mentions légales</Link>

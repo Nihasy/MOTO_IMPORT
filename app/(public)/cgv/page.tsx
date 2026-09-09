@@ -15,7 +15,7 @@ const ARTICLES: [string, string[]][] = [
   ]],
   ["Article 2 — Absence de stock", [
     "MOTO IMPORT ne détient aucun stock de véhicules. Chaque motocycle est commandé auprès d'un atelier partenaire après signature du bon de commande par l'acheteur.",
-    "La mention « disponible » figurant au catalogue signifie que le véhicule est sourçable auprès d'un partenaire, et non qu'il est physiquement présent à Antananarivo.",
+    "La mention « disponible sur commande » figurant au catalogue signifie que le véhicule est sourçable auprès d'un partenaire, et non qu'il est physiquement présent à Antananarivo.",
   ]],
   ["Article 3 — Description des véhicules", [
     "Les caractéristiques techniques figurant sur chaque fiche sont communiquées par l'atelier partenaire et vérifiées par MOTO IMPORT.",

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { ar, dateFr, estNouvelle } from "@/lib/format";
 import { urlMedia } from "@/lib/cloudinary";
-import { MIN_PHOTOS } from "@/lib/types";
+import { LIBELLE_VUE } from "@/lib/types";
 import {
   GROUPES_ADMIN, effectifsAdmin, estGroupeAdmin, filtrerMotosAdmin, type GroupeAdmin,
 } from "@/lib/admin-filtres";
@@ -103,7 +103,7 @@ export default async function ListeMotos({ searchParams }: Props) {
           ) : (
             <ul className="space-y-2">
               {motos.map((m) => {
-                const manque = m.nb_photos < MIN_PHOTOS[m.etat];
+                const manque = m.vues_manquantes.length > 0;
                 const couverture = m.couverture
                   ? urlMedia(m.couverture.cloudinary_id, "vignette", { origine: m.couverture.origine })
                   : null;
@@ -149,9 +149,14 @@ export default async function ListeMotos({ searchParams }: Props) {
                           className={`rounded-card px-2.5 py-1 text-badge font-semibold ${
                             manque ? "bg-vendu/20 text-vendu" : "bg-dispo/20 text-dispo"
                           }`}
-                          title={`Minimum ${MIN_PHOTOS[m.etat]} photos pour une moto ${m.etat}`}
+                          title={
+                            manque
+                              ? `Vues manquantes : ${m.vues_manquantes.map((v) => LIBELLE_VUE[v]).join(", ")}`
+                              : `Plan de prise de vue complet pour une moto ${m.etat}`
+                          }
                         >
-                          {m.nb_photos}/{MIN_PHOTOS[m.etat]} photos
+                          {m.nb_photos} photo{m.nb_photos > 1 ? "s" : ""}
+                          {manque ? ` · ${m.vues_manquantes.length} vue${m.vues_manquantes.length > 1 ? "s" : ""} manquante${m.vues_manquantes.length > 1 ? "s" : ""}` : ""}
                         </span>
                         <Link
                           href={`/admin/motos/${m.id}?onglet=photos`}

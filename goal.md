@@ -96,7 +96,7 @@ La consommation de données du visiteur n'est pas un critère de conception rete
 | Contrats signés | statut `contrat_signe` | ≥ 3/mois |
 | Temps sur fiche produit | analytics | ≥ 90 s |
 | Délai de publication d'une moto | chronomètre réel | ≤ 5 min depuis un téléphone |
-| Photos par moto | moyenne catalogue | ≥ 9 (neuf), ≥ 12 (occasion) |
+| Fiches au plan de prise de vue complet | back-office, filtre « Incomplètes » | 100 % des fiches en ligne |
 
 **Le seul indicateur qui décide de l'avenir du projet est le nombre de contrats signés attribués au site.** Le champ `source` de la table `demandes` doit permettre de le calculer sans ambiguïté.
 
@@ -169,7 +169,6 @@ Facebook / TikTok / Instagram
       /[slug]/page.tsx          Fiche produit
     /comment-ca-marche/page.tsx
     /faq/page.tsx
-    /a-propos/page.tsx
     /contact/page.tsx
     /cgv/page.tsx
     /mentions-legales/page.tsx
@@ -418,7 +417,7 @@ Chaque moto est photographiée dans le **même ordre**, sans exception. Un ordre
 | 10 | Numéro de châssis | `cha` | — | ✔ |
 | 11+ | Gros plans des points d'usure | `def1`, `def2`… | — | ✔ |
 
-**Minimum : 9 photos pour le neuf, 12 pour l'occasion.** Le back-office refuse la publication en dessous de ce seuil. Une fiche à quatre photos réactive le doute que tout le reste du site cherche à dissiper.
+**Aucun seuil chiffré de photos.** Les lots reçus des trois ateliers partenaires comptent un nombre très variable de clichés, et un nombre ne dit rien de ce qui est montré : quinze photos du même profil valent moins que dix vues distinctes. Le back-office refuse la publication tant qu'une **vue obligatoire** du tableau ci-dessus manque — le nombre total, lui, est libre. C'est l'absence d'angle, pas la maigreur du lot, qui réactive le doute que tout le reste du site cherche à dissiper.
 
 ## 7.2 Convention de nommage des fichiers
 
@@ -453,9 +452,9 @@ Le suffixe `-cat` bascule `origine` sur `constructeur`. Sans suffixe, la photo e
 
 ```
 ┌──────────────────────────────────────────────┐
-│ MI-047 · Honda CB500X          12 photos  ✔ │
-│ MI-051 · Yamaha MT-03           9 photos  ✔ │
-│ MI-058 · Honda Rebel 500        7 photos  ⚠  Minimum 12 (occasion)
+│ MI-047 · Honda CB500X          12 photos  ✔  Plan complet (occasion)
+│ MI-051 · Yamaha MT-03           9 photos  ✔  Plan complet (neuf)
+│ MI-058 · Honda Rebel 500        7 photos  ⚠  Manque compteur, châssis
 │ MI-062 · référence inconnue     4 photos  ✖  Aucune moto à cette référence
 │ 6 fichiers non conformes                  ✖  Nom illisible → assigner à la main
 └──────────────────────────────────────────────┘
@@ -617,7 +616,7 @@ C'est le seul endroit où l'interface hausse le ton. Tout le reste reste sobre. 
 | Catalogue | maison | `/motos` |
 | Enregistrées | signet | Sélection locale, badge du nombre |
 | Contact | bulle | WhatsApp, téléphone, adresse du local |
-| Plus | menu | Comment ça marche, FAQ, à propos, CGV |
+| Plus | menu | Comment ça marche, FAQ, CGV, mentions légales |
 
 **La recherche n'est pas dans la barre inférieure.** Elle vit en haut, sous la loupe, à côté du bouton de filtres. Deux entrées de recherche à deux endroits fragmentent l'usage.
 
@@ -634,12 +633,11 @@ C'est le seul endroit où l'interface hausse le ton. Tout le reste reste sobre. 
 ## 9.1 Accueil `/`
 
 1. Bandeau : logo, accroche, deux boutons — « Voir le catalogue » et « Trouvez ma moto ».
-2. **Trois arguments** : livraison 45-65 jours · carte grise à votre nom · prix final rendu Tana.
+2. Les trois faits imposés par les CGV — livraison 45-65 jours · carte grise à votre nom · prix final rendu Tana — ne sont pas répétés dans l'accroche : ils figurent sur chaque carte du catalogue et sur chaque fiche, là où ils servent à décider.
 3. **Six motos disponibles** en avant, lien vers le catalogue.
 4. **Entrée par budget** : trois paliers cliquables (moins de 10 M, 10-15 M, plus de 15 M Ar).
 5. Le process en 5 étapes, condensé.
-6. Le duo fondateur, photo et texte court. Vous vendez de la confiance avant de vendre des motos.
-7. Pied de page.
+6. Pied de page.
 
 ## 9.2 Catalogue `/motos`
 
@@ -716,8 +714,6 @@ Chaque clic est enregistré dans `demandes` **avant** la redirection.
 
 **`/faq`** — huit questions obligatoires : Pourquoi un acompte de 35 % ? · Que se passe-t-il si je me désiste ? · Le prix peut-il changer ? · Qui fait la carte grise ? · Puis-je voir la moto avant de payer ? · D'où viennent les motos ? · Que couvre la garantie ? · Livrez-vous en province ? Chaque réponse renvoie à l'article correspondant des CGV.
 
-**`/a-propos`** — le duo fondateur, le dépôt en Chine, le local à Tana.
-
 **`/contact`** — WhatsApp, téléphone, adresse, horaires, carte.
 
 **`/cgv`** et **`/mentions-legales`** — contenu juridique intégral.
@@ -730,12 +726,12 @@ Chaque clic est enregistré dans `demandes` **avant** la redirection.
 
 - Demandes nouvelles non traitées, en tête.
 - Motos dont le `prix_valable_jusqu_au` expire sous 7 jours.
-- Motos publiées avec un nombre de photos insuffisant.
+- Motos publiées auxquelles il manque des vues du plan de prise de vue.
 - Compteurs du mois : demandes, RDV, contrats signés.
 
 ## 10.2 Liste des motos `/admin/motos`
 
-Tableau avec vignette, référence, désignation, prix, statut, nombre de photos, date de mise à jour.
+Tableau avec vignette, référence, désignation, prix, statut, nombre de photos et vues manquantes s'il en reste, date de mise à jour.
 
 **Bascule de statut en un geste.** Sélecteur `Disponible / Réservé / Vendu` directement sur la ligne, **sans ouvrir la fiche et sans rechargement** : mise à jour optimiste, appel serveur en arrière-plan, retour visuel immédiat.
 
@@ -751,7 +747,7 @@ L'onglet Photos affiche la grille ordonnée, permet le réordonnancement par gli
 
 **Contrôles avant publication** — bloquants :
 
-- [ ] Photos ≥ 9 (neuf) ou ≥ 12 (occasion)
+- [ ] Plan de prise de vue complet — aucun seuil sur le nombre de photos
 - [ ] Photo de couverture définie
 - [ ] Description ≥ 150 mots
 - [ ] Prix et date de validité renseignés
@@ -981,7 +977,7 @@ Paiement en ligne · Comptes clients · Chat en direct (vous ne pourrez pas rép
 - [ ] L'import CSV rejette intégralement un fichier contenant une ligne invalide
 - [ ] L'import photos regroupe correctement par référence et signale les orphelins
 - [ ] L'annulation d'un lot supprime exactement les médias de ce lot
-- [ ] La publication est bloquée si le nombre de photos est insuffisant
+- [ ] La publication est bloquée s'il manque une vue du plan de prise de vue
 
 ## 16.2 Technique
 

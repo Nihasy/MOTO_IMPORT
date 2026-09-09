@@ -132,7 +132,7 @@ export type ImportLot = {
 export const LIBELLE_STATUT: Record<Statut, string> = {
   brouillon: "Brouillon",
   dispo_immediate: "Disponible de suite",
-  disponible: "Disponible",
+  disponible: "Disponible sur commande",
   reserve: "Réservé",
   vendu: "Vendu",
   archive: "Archivé",
@@ -209,5 +209,3 @@ export const POIDS_STATUT: Record<Statut, number> = {
   brouillon: 4,
   archive: 5,
 };
-
-export const MIN_PHOTOS: Record<Etat, number> = { neuf: 9, occasion: 12 };

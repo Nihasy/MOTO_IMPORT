@@ -1,5 +1,5 @@
 import type { Media, Moto, Statut } from "./types";
-import { LIBELLE_VUE, MIN_PHOTOS, estEnVente } from "./types";
+import { LIBELLE_VUE, estEnVente } from "./types";
 import { compterMots } from "./format";
 import { vuesManquantes } from "./medias";
 
@@ -21,17 +21,11 @@ const PROMESSE_SUR_PLACE = /déjà à Antananarivo/i;
  * dans un écran d'administration ne contrôle rien.
  */
 export function controlesPublication(moto: Moto, medias: Media[]): Controle[] {
-  const min = MIN_PHOTOS[moto.etat];
   const manquantes = vuesManquantes(medias, moto.etat);
   const mots = compterMots(moto.description);
   const sansAlt = medias.filter((m) => !m.alt?.trim());
 
   return [
-    {
-      libelle: `Au moins ${min} photos (${moto.etat})`,
-      ok: medias.length >= min,
-      detail: `${medias.length} photo${medias.length > 1 ? "s" : ""} enregistrée${medias.length > 1 ? "s" : ""}`,
-    },
     {
       libelle: "Photo de couverture définie",
       ok: medias.length > 0 && medias[0].vue === "34_avant_droit",
@@ -42,7 +36,7 @@ export function controlesPublication(moto: Moto, medias: Media[]): Controle[] {
       ok: manquantes.length === 0,
       detail: manquantes.length
         ? `Manque : ${manquantes.map((v) => LIBELLE_VUE[v]).join(", ")}`
-        : "Toutes les vues présentes",
+        : `${medias.length} photo${medias.length > 1 ? "s" : ""}, toutes les vues présentes`,
     },
     {
       libelle: "Description d'au moins 150 mots",

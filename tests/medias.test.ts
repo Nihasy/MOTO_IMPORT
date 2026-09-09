@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  altParDefaut, analyserNomFichier, grouperParReference, photosSuffisantes, vuesManquantes,
+  VUES_OBLIGATOIRES, altParDefaut, analyserNomFichier, grouperParReference, vuesManquantes,
 } from "@/lib/medias";
 
 describe("convention de nommage (7.2)", () => {
@@ -84,12 +84,17 @@ describe("regroupement par référence (7.3)", () => {
   });
 });
 
-describe("seuils de publication (7.1)", () => {
-  it("exige 9 photos pour le neuf, 12 pour l'occasion", () => {
-    expect(photosSuffisantes(9, "neuf")).toBe(true);
-    expect(photosSuffisantes(8, "neuf")).toBe(false);
-    expect(photosSuffisantes(12, "occasion")).toBe(true);
-    expect(photosSuffisantes(11, "occasion")).toBe(false);
+describe("plan de prise de vue (7.1)", () => {
+  it("ne juge pas une fiche sur son nombre de photos", () => {
+    // Vingt clichés du même angle ne remplacent pas le plan de prise de vue,
+    // et un lot complet de dix suffit : seule la liste des vues est exigée.
+    const vingtFoisLeMemeAngle = Array.from({ length: 20 }, () => ({
+      vue: "profil_droit" as const,
+    }));
+    expect(vuesManquantes(vingtFoisLeMemeAngle, "neuf").length).toBeGreaterThan(0);
+
+    const planComplet = VUES_OBLIGATOIRES.occasion.map((vue) => ({ vue }));
+    expect(vuesManquantes(planComplet, "occasion")).toEqual([]);
   });
 
   it("liste les vues manquantes du plan de prise de vue", () => {

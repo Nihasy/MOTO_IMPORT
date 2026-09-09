@@ -34,12 +34,12 @@ export default async function Accueil() {
       <BarreSuperieure />
 
       <main className="conteneur-large pb-24">
-        {/* Accroche. Volontairement dépouillée : trois cartes d'arguments sous
-            le titre repoussaient le catalogue hors du premier écran, alors que
-            l'information qu'elles portaient tient en une phrase. Les faits
-            imposés par les CGV — prix final rendu Tana, carte grise au nom de
-            l'acheteur, délai de 45 à 65 jours — sont donc dans l'intro, où ils
-            se lisent d'un trait au lieu d'être découpés en trois boîtes. */}
+        {/* Accroche. Volontairement dépouillée : elle promet, elle ne détaille
+            pas. Les faits imposés par les CGV — prix final rendu Tana, carte
+            grise au nom de l'acheteur, délai de 45 à 65 jours — se lisent sur
+            chaque carte du catalogue et sur chaque fiche, c'est-à-dire au
+            moment où ils servent à décider. Les répéter ici repoussait le
+            catalogue hors du premier écran pour dire deux fois la même chose. */}
         <section className="relative isolate max-w-[740px] py-14 sm:py-20">
           {/* Halo laiton très bas en opacité : la seule ornementation de la
               page. Décoratif, donc hors du flux et hors du pointeur. */}
@@ -49,20 +49,17 @@ export default async function Accueil() {
             style={{ background: "radial-gradient(closest-side, #C08A2E, transparent)" }}
           />
 
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">
-            Importation sur commande · Antananarivo
-          </p>
-
-          <h1 className="mt-5 text-[38px] font-bold leading-[1.06] tracking-tight sm:text-[54px]">
-            La moto que vous voulez,
-            <br />
-            <span className="text-gold-light">rendue à Tana.</span>
+          {/* La coupure est imposée à partir de sm seulement : sur un
+              téléphone, « Votre prochaine moto » passe déjà sur deux lignes et
+              la forcer en laissait une troisième avec le seul mot « moto ». */}
+          <h1 className="text-[34px] font-bold leading-[1.08] tracking-tight sm:text-[54px] sm:leading-[1.06]">
+            Votre prochaine moto{" "}
+            <br className="hidden sm:inline" />
+            <span className="text-gold-light">vous attend.</span>
           </h1>
 
-          <p className="mt-5 max-w-[34rem] text-[16px] leading-[1.65] text-chrome">
-            Neuves et d&apos;occasion, sourcées pour vous chez nos ateliers partenaires en Chine.
-            Un seul prix, annoncé d&apos;avance : carte grise établie à votre nom comprise,
-            livraison en 45 à 65 jours.
+          <p className="mt-6 max-w-[34rem] text-[19px] font-medium leading-[1.5] text-text sm:text-[21px]">
+            Dites-nous laquelle. Nous allons la chercher.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -115,20 +112,6 @@ export default async function Accueil() {
         </Section>
 
         <CommentCaSePasse />
-
-        <Section titre="Qui sommes-nous">
-          <div className="carte p-4">
-            <p className="text-corps text-chrome">
-              MOTO IMPORT, c&apos;est deux associés à Antananarivo. Nihasy gère le sourcing, la
-              logistique et les contrats ; sa sœur, motarde, s&apos;occupe de la sélection technique
-              et du suivi client. Nous ne vendons pas ce que nous ne prendrions pas nous-mêmes, et
-              chaque moto d&apos;occasion est photographiée telle qu&apos;elle est, points d&apos;usure compris.
-            </p>
-            <Link href="/a-propos" className="mt-3 inline-block text-[12.5px] font-semibold text-gold-light">
-              En savoir plus →
-            </Link>
-          </div>
-        </Section>
       </main>
     </>
   );

@@ -6,6 +6,11 @@ import { LIBELLE_STATUT } from "@/lib/types";
 // Etiquette sobre facon plaque : plaque sombre opaque, libelle en blanc, et un
 // simple filet de couleur en bord gauche pour le statut. Aucun aplat vif ni flou,
 // qui passent mal sur une photo de moto.
+//
+// Le libelle n'est pas tenu sur une seule ligne : « Disponible sur commande »
+// depasse la largeur d'une carte de catalogue a quatre colonnes, ou d'un
+// telephone quand le bandeau « Nouveau » l'accompagne. Il passe alors sur deux
+// lignes plutot que de deborder du cadre photo.
 export function BadgeStatut({ statut, className }: { statut: Statut; className?: string }) {
   const filet: Record<Statut, string> = {
     brouillon: "border-l-gold",
@@ -18,7 +23,7 @@ export function BadgeStatut({ statut, className }: { statut: Statut; className?:
   return (
     <span
       className={clsx(
-        "inline-flex items-center whitespace-nowrap border-l-[3px] bg-bg px-2 py-1 text-badge font-bold uppercase leading-none text-text",
+        "inline-flex items-center border-l-[3px] bg-bg px-2 py-1 text-badge font-bold uppercase leading-tight text-text",
         filet[statut],
         className
       )}

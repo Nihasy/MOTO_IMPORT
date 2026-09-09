@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { ar } from "@/lib/format";
@@ -16,6 +15,7 @@ import { CarteMoto } from "@/components/catalogue/carte-moto";
 import { BadgeStatut } from "@/components/ui";
 import { BadgeNouveau } from "@/components/ui/badge-nouveau";
 import { CompteurVue } from "@/components/fiche/compteur-vue";
+import { EnteteFiche } from "@/components/fiche/entete-fiche";
 import { jsonLdSecurise } from "@/lib/jsonld";
 
 // Statique genere a la construction, revalide a la demande sur modification (5.3).
@@ -109,17 +109,7 @@ export default async function FicheMoto({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSecurise(jsonLd) }} />
       <CompteurVue id={moto.id} reference={moto.reference} />
 
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
-        <div className="conteneur flex h-14 items-center gap-2">
-          <Link href="/motos" className="flex h-touch w-touch items-center justify-center text-chrome" aria-label="Retour au catalogue">
-            ←
-          </Link>
-          <span className="flex-1 truncate text-[13px] font-medium">
-            {moto.marque} {moto.modele}
-          </span>
-          <span className="text-meta text-dim">{moto.reference}</span>
-        </div>
-      </header>
+      <EnteteFiche marque={moto.marque} modele={moto.modele} reference={moto.reference} />
 
       {/* Colonne de fiche calee sur les 680px de motoconcess.com : au-dela, une
           galerie 4:3 pleine largeur ecrase le reste de la page. */}
@@ -127,7 +117,7 @@ export default async function FicheMoto({ params }: Props) {
         <div className="relative">
           <GalerieFiche medias={moto.medias} alt={`${moto.marque} ${moto.modele} ${moto.annee}`} />
           <div className="pointer-events-none absolute inset-x-4 top-3 flex items-start justify-between gap-2">
-            <BadgeStatut statut={moto.statut} />
+            <BadgeStatut statut={moto.statut} className="min-w-0" />
             <BadgeNouveau creeLe={moto.created_at} />
           </div>
         </div>

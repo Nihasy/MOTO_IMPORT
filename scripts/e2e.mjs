@@ -55,11 +55,10 @@ if (!(await attendreServeur())) {
 // ── 1. Pages publiques ────────────────────────────────────────────────────
 titre("1. Pages publiques");
 for (const [chemin, attendu] of [
-  ["/", "rendue à Tana"],
-  ["/motos", "commande 45 à 65 jours"],
+  ["/", "Votre prochaine moto"],
+  ["/motos", "Trier par"],
   ["/comment-ca-marche", "acompte"],
   ["/faq", "35 %"],
-  ["/a-propos", "Antananarivo"],
   ["/contact", "WhatsApp"],
   ["/cgv", "Article 4"],
   ["/mentions-legales", "Hébergement"],
@@ -405,16 +404,23 @@ verifier("les médias annulés ont disparu", !apresAnnulation.texte.includes("e2
 
 // ── 11. Contrôles de publication ──────────────────────────────────────────
 titre("11. Contrôles avant publication (10.3)");
-// L'identifiant est cherché dans la fenêtre de HTML qui entoure « MI-901 » :
-// se raccrocher au premier lien de la liste attraperait une moto du jeu de
-// démonstration, complète, et les contrôles ne prouveraient plus rien.
+// L'identifiant est celui de la ligne MI-901 : se raccrocher au premier lien
+// de la liste attraperait une moto du jeu de démonstration, complète, et les
+// contrôles ne prouveraient plus rien.
 const posMI901 = apresImport.texte.indexOf("MI-901");
-const fenetreMI901 = apresImport.texte.slice(Math.max(0, posMI901 - 1200), posMI901 + 1200);
-const idImportee = fenetreMI901.match(/\/admin\/motos\/([0-9a-f-]{36})/)?.[1];
+// Le lien porte l'identifiant et precede immediatement la reference dans la
+// ligne : on prend donc le dernier lien situe AVANT « MI-901 », et non le
+// premier d'une fenetre de largeur fixe. Cette fenetre attrapait le lien de la
+// ligne precedente des que la largeur du balisage changeait, et la recette
+// archivait alors une autre fiche en croyant tester celle-ci.
+const liensAvantMI901 = [...apresImport.texte
+  .slice(0, posMI901)
+  .matchAll(/\/admin\/motos\/([0-9a-f-]{36})/g)];
+const idImportee = liensAvantMI901.at(-1)?.[1];
 verifier("la fiche importée MI-901 est retrouvée au back-office", Boolean(idImportee));
 const fichePhotos = await get(`/admin/motos/${idImportee}?onglet=photos`, { headers: cookie });
 verifier("l'onglet photos affiche les contrôles", fichePhotos.texte.includes("Publication bloquée") || fichePhotos.texte.includes("Prête à publier"));
-verifier("le seuil de photos est contrôlé", fichePhotos.texte.includes("Au moins"));
+verifier("le plan de prise de vue est contrôlé", fichePhotos.texte.includes("Plan de prise de vue"));
 verifier("le texte alternatif est contrôlé", fichePhotos.texte.includes("alternatif"));
 
 // Le verrou est serveur, pas seulement affiché : la route PATCH doit refuser
@@ -425,7 +431,7 @@ const misEnVente = await get(`/api/motos/${idImportee}/statut`, {
   body: JSON.stringify({ statut: "disponible" }),
 });
 verifier("la mise en vente d'une fiche sans photo est refusée", misEnVente.statut === 422, `statut ${misEnVente.statut}`);
-verifier("le refus énumère les points bloquants", misEnVente.texte.includes("Au moins"));
+verifier("le refus énumère les points bloquants", misEnVente.texte.includes("Plan de prise de vue"));
 
 const versArchive = await get(`/api/motos/${idImportee}/statut`, {
   method: "PATCH",
@@ -456,7 +462,11 @@ const introuvable = await get("/admin/motos?q=zzzzintrouvable", { headers: cooki
 verifier("une recherche sans résultat le dit", introuvable.texte.includes("Aucune fiche ne correspond"));
 
 const filtreBrouillons = await get("/admin/motos?statut=brouillon", { headers: cookie });
-verifier("le filtre brouillon isole les fiches non publiées", filtreBrouillons.texte.includes("MI-901"));
+// MI-901 vient d'etre archivee au chapitre 11 : le brouillon encore attendu
+// ici est MI-903, la ligne sans photo retenue par l'import. Les deux sens sont
+// verifies, sans quoi un filtre qui laisse tout passer serait declare bon.
+verifier("le filtre brouillon isole les fiches non publiées", filtreBrouillons.texte.includes("MI-903"));
+verifier("le filtre brouillon exclut une fiche archivée", !filtreBrouillons.texte.includes("MI-901"));
 
 const filtreEnLigne = await get("/admin/motos?statut=en_ligne", { headers: cookie });
 verifier("le filtre en ligne exclut les brouillons", !filtreEnLigne.texte.includes("MI-901"));

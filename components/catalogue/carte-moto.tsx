@@ -17,6 +17,7 @@ export function CarteMoto({ moto }: { moto: MotoAvecMedias }) {
   const { contient, basculer, pret } = useEnregistrees();
   const enregistree = pret && contient(moto.id);
   const vendu = moto.statut === "vendu";
+  const reserve = moto.statut === "reserve";
   const fiche = `/motos/${moto.slug}`;
 
   return (
@@ -32,7 +33,11 @@ export function CarteMoto({ moto }: { moto: MotoAvecMedias }) {
       </Link>
 
       <div className="relative px-4 pt-3">
-        <div className="cadre-photo">
+        {/* Une moto reservee est desaturee : le badge seul se lit apres coup,
+            alors qu'une vignette grise se repere en balayant la grille. Le
+            traitement porte sur le cadre photo et non sur la carte entiere,
+            pour que le badge de statut garde sa couleur au-dessus. */}
+        <div className={clsx("cadre-photo", reserve && "grayscale opacity-75")}>
           <Link href={fiche} className="block" aria-label={`${moto.marque} ${moto.modele}`}>
             <GalerieCarte
               medias={moto.medias}
@@ -42,7 +47,7 @@ export function CarteMoto({ moto }: { moto: MotoAvecMedias }) {
           </Link>
         </div>
         <div className="pointer-events-none absolute inset-x-6 top-5 flex items-start justify-between gap-2">
-          <BadgeStatut statut={moto.statut} />
+          <BadgeStatut statut={moto.statut} className="min-w-0" />
           <BadgeNouveau creeLe={moto.created_at} />
         </div>
       </div>

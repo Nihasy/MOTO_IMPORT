@@ -95,9 +95,15 @@ describe("contrôles bloquants avant publication (10.3)", () => {
     "compteur", "moteur", "pneu_avant", "pneu_arriere", "selle",
   ];
 
-  it("bloque en dessous de 9 photos pour le neuf", () => {
+  it("bloque un plan de prise de vue incomplet, quel que soit le nombre de photos", () => {
     const c = controlesPublication(moto(), planNeuf.slice(0, 8).map((v, i) => photo(i + 1, v)));
-    expect(c.find((x) => x.libelle.startsWith("Au moins"))?.ok).toBe(false);
+    expect(c.find((x) => x.libelle.startsWith("Plan de prise de vue"))?.ok).toBe(false);
+
+    // Vingt clichés du même angle ne remplacent pas les vues absentes : c'est
+    // la liste des angles qui est exigée, jamais un volume.
+    const vingtFoisLeProfil = Array.from({ length: 20 }, (_, i) => photo(i + 1, "profil_droit"));
+    const c2 = controlesPublication(moto(), vingtFoisLeProfil);
+    expect(c2.find((x) => x.libelle.startsWith("Plan de prise de vue"))?.ok).toBe(false);
   });
 
   it("valide une fiche neuve complète", () => {
@@ -230,7 +236,7 @@ describe("verrou de publication (7.1, 10.3, recette 16.1)", () => {
     for (const cible of ["disponible", "dispo_immediate", "reserve"] as const) {
       const v = verrouPublication(fiche(), [], cible);
       expect(v.autorise).toBe(false);
-      expect(v.bloquants.join(" ")).toMatch(/Au moins 9 photos/);
+      expect(v.bloquants.join(" ")).toMatch(/Plan de prise de vue complet/);
     }
   });
 

@@ -15,17 +15,21 @@ const ligne = (o: Partial<LigneAdmin> = {}): LigneAdmin => ({
   statut: "disponible",
   etat: "neuf",
   nb_photos: 9,
+  vues_manquantes: [],
   ...o,
 });
 
 describe("filtres de la liste d'administration", () => {
   const catalogue: LigneAdmin[] = [
-    ligne({ reference: "MI-001", statut: "disponible", nb_photos: 9 }),
-    ligne({ reference: "MI-002", statut: "dispo_immediate", nb_photos: 9 }),
-    ligne({ reference: "MI-003", statut: "brouillon", nb_photos: 2 }),
-    ligne({ reference: "MI-004", statut: "vendu", nb_photos: 9 }),
-    ligne({ reference: "MI-005", statut: "archive", nb_photos: 9 }),
-    ligne({ reference: "MI-006", statut: "disponible", nb_photos: 4, marque: "Yamaha", modele: "MT-03" }),
+    ligne({ reference: "MI-001", statut: "disponible" }),
+    ligne({ reference: "MI-002", statut: "dispo_immediate" }),
+    ligne({ reference: "MI-003", statut: "brouillon", nb_photos: 2, vues_manquantes: ["compteur"] }),
+    ligne({ reference: "MI-004", statut: "vendu" }),
+    ligne({ reference: "MI-005", statut: "archive" }),
+    ligne({
+      reference: "MI-006", statut: "disponible", nb_photos: 4, vues_manquantes: ["moteur"],
+      marque: "Yamaha", modele: "MT-03",
+    }),
   ];
 
   it("range chaque fiche dans le bon groupe", () => {
@@ -36,11 +40,12 @@ describe("filtres de la liste d'administration", () => {
     expect(appartientAuGroupe(ligne({ statut: "archive" }), "en_ligne")).toBe(false);
   });
 
-  it("signale une fiche sous le seuil quel que soit son statut", () => {
-    expect(appartientAuGroupe(ligne({ nb_photos: 8, etat: "neuf" }), "incompletes")).toBe(true);
-    expect(appartientAuGroupe(ligne({ nb_photos: 9, etat: "neuf" }), "incompletes")).toBe(false);
-    expect(appartientAuGroupe(ligne({ nb_photos: 11, etat: "occasion" }), "incompletes")).toBe(true);
-    expect(appartientAuGroupe(ligne({ nb_photos: 12, etat: "occasion" }), "incompletes")).toBe(false);
+  it("signale une vue manquante quel que soit le statut ou le nombre de photos", () => {
+    const manquante = ligne({ nb_photos: 30, vues_manquantes: ["compteur"] });
+    expect(appartientAuGroupe(manquante, "incompletes")).toBe(true);
+    expect(appartientAuGroupe({ ...manquante, statut: "brouillon" }, "incompletes")).toBe(true);
+    // Un lot fournisseur réduit mais complet n'est pas une fiche incomplète.
+    expect(appartientAuGroupe(ligne({ nb_photos: 3 }), "incompletes")).toBe(false);
   });
 
   it("compte les effectifs de chaque puce", () => {

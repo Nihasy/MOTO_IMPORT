@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { ar, dateFr, joursAvant } from "@/lib/format";
-import { MIN_PHOTOS, estPublic } from "@/lib/types";
+import { LIBELLE_VUE, estPublic } from "@/lib/types";
 import { verrouPublication } from "@/lib/publication";
 import { dansPeriode } from "@/lib/periodes";
 import { lienConversation } from "@/lib/whatsapp";
@@ -15,7 +15,7 @@ export default async function TableauDeBord() {
 
   // Le verrou de publication est rejoué ici pour trier les brouillons : celui
   // qui ne demande plus qu'un clic ne doit pas être noyé parmi ceux auxquels
-  // il manque encore neuf photos.
+  // il manque encore la moitié du plan de prise de vue.
   const brouillons = await Promise.all(
     motos
       .filter((m) => m.statut === "brouillon")
@@ -27,10 +27,10 @@ export default async function TableauDeBord() {
   const prets = brouillons.filter((b) => b.pret);
   const enCours = brouillons.filter((b) => !b.pret);
 
-  // Une fiche publiée sous le seuil est d'une autre nature qu'un brouillon
-  // incomplet : elle est déjà devant les clients.
+  // Une fiche publiée à qui il manque des vues est d'une autre nature qu'un
+  // brouillon incomplet : elle est déjà devant les clients.
   const publieesIncompletes = motos.filter(
-    (m) => estPublic(m.statut) && m.nb_photos < MIN_PHOTOS[m.etat]
+    (m) => estPublic(m.statut) && m.vues_manquantes.length > 0
   );
 
   const nouvelles = demandes.filter((d) => d.statut === "nouveau");
@@ -85,10 +85,10 @@ export default async function TableauDeBord() {
       {/* Ordre volontaire : ce qui est cassé devant le public, puis ce qui est
           prêt à partir, puis ce qui attend une réponse, puis le reste. */}
       {publieesIncompletes.length ? (
-        <Bandeau ton="alerte" titre="Publiées sous le seuil de photos">
+        <Bandeau ton="alerte" titre="Publiées avec des vues manquantes">
           <p className="mt-1 text-meta text-chrome">
-            Ces fiches sont visibles des clients avec trop peu de photos. Complétez-les ou
-            repassez-les en brouillon.
+            Ces fiches sont visibles des clients alors qu&apos;il manque des angles du plan de prise
+            de vue. Complétez-les ou repassez-les en brouillon.
           </p>
           <ul className="mt-3 divide-y divide-line">
             {publieesIncompletes.map((m) => (
@@ -97,10 +97,12 @@ export default async function TableauDeBord() {
                   <span className="block truncate text-corps font-medium">
                     {m.reference} · {m.marque} {m.modele}
                   </span>
-                  <span className="block text-meta text-dim">{m.etat}</span>
+                  <span className="block truncate text-meta text-dim">
+                    {m.etat} · manque {m.vues_manquantes.map((v) => LIBELLE_VUE[v]).join(", ")}
+                  </span>
                 </Link>
                 <span className="shrink-0 rounded-card bg-vendu/20 px-2.5 py-1 text-badge font-semibold text-vendu">
-                  {m.nb_photos}/{MIN_PHOTOS[m.etat]}
+                  {m.vues_manquantes.length} vue{m.vues_manquantes.length > 1 ? "s" : ""}
                 </span>
               </li>
             ))}
@@ -273,7 +275,7 @@ function PriseEnMain() {
       </ol>
       <VideAdmin
         titre="Une fiche ne part en ligne que complète"
-        texte="Minimum 9 photos pour une moto neuve, 12 pour une occasion, une description de 150 mots et une couverture en 3/4 avant droit. Tant qu'un de ces points manque, le statut ne peut pas passer en vente."
+        texte="Le plan de prise de vue au complet, une description de 150 mots et une couverture en 3/4 avant droit. Le nombre de photos est libre — c'est la liste des angles qui compte. Tant qu'un de ces points manque, le statut ne peut pas passer en vente."
       />
     </div>
   );

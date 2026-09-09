@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import { reinitialiserChrome, useChromeVisible } from "@/components/ui/masquage-au-scroll";
 import { useEnregistrees } from "@/components/catalogue/enregistrees";
 import { Marque } from "@/components/ui/logo";
 
@@ -17,14 +19,30 @@ export function BarreSuperieure({
   onOuvrirFiltres?: () => void;
   onOuvrirRecherche?: () => void;
 }) {
+  const visible = useChromeVisible();
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
-      <div className="conteneur-large flex h-14 items-center justify-between gap-3">
-        <Link href="/" aria-label="MOTO IMPORT, accueil" className="shrink-0">
-          <Marque taille={38} texte={18} />
+    <header
+      className={clsx(
+        "sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur",
+        "transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
+        !visible && "-translate-y-full"
+      )}
+    >
+      {/* Trois colonnes plutot qu'une rangee justifiee : les deux laterales
+          font 1fr, donc la meme largeur quoi qu'elles portent, et le
+          medaillon reste optiquement au centre de l'ecran — que la page ait
+          un titre, deux boutons, ou ni l'un ni l'autre. Une simple rangee le
+          decalait des que l'un des cotes changeait de contenu. */}
+      <div className="conteneur-large grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <span className="min-w-0 justify-self-start truncate text-[13px] text-dim">{titre}</span>
+        {/* Legerement reduit par rapport aux 38/18 d'avant : a pleine taille,
+            le verrou de marque et les deux boutons ne tenaient pas ensemble
+            sur un telephone, et la colonne de droite debordait de sa part —
+            le medaillon se retrouvait decale de 23 px vers la gauche. */}
+        <Link href="/" aria-label="MOTO IMPORT, accueil" className="justify-self-center">
+          <Marque taille={32} texte={15} />
         </Link>
-        {titre ? <span className="truncate text-[13px] text-dim">{titre}</span> : null}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-self-end gap-1">
           {onOuvrirRecherche ? (
             <button
               type="button"
@@ -69,9 +87,22 @@ const ENTREES = [
 export function BarreInferieure() {
   const chemin = usePathname();
   const { ids } = useEnregistrees();
+  const visible = useChromeVisible();
+
+  // Cette barre est le seul element monte en permanence sur les pages
+  // publiques : c'est donc ici que la remise a zero du masquage se branche
+  // sur le changement de page.
+  useEffect(() => {
+    reinitialiserChrome();
+  }, [chemin]);
+
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className={clsx(
+        "fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur",
+        "transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
+        !visible && "translate-y-full"
+      )}
       aria-label="Navigation principale"
     >
       <ul className="conteneur flex items-stretch justify-between">

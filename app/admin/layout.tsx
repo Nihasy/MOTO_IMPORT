@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { sessionCourante } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { MIN_PHOTOS, estPublic } from "@/lib/types";
+import { estPublic } from "@/lib/types";
 import { NavAdmin, type Onglet } from "@/components/admin/nav";
 import { Marque } from "@/components/ui/logo";
 import { deconnexion } from "./actions";
@@ -29,7 +29,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
 
   const brouillons = motos.filter((m) => m.statut === "brouillon").length;
   const publieesIncompletes = motos.filter(
-    (m) => estPublic(m.statut) && m.nb_photos < MIN_PHOTOS[m.etat]
+    (m) => estPublic(m.statut) && m.vues_manquantes.length > 0
   ).length;
   const nouvellesDemandes = demandes.filter((d) => d.statut === "nouveau").length;
 

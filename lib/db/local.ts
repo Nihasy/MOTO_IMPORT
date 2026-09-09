@@ -6,6 +6,7 @@ import type {
 } from "@/lib/types";
 import { estPublic } from "@/lib/types";
 import { construireSlug } from "@/lib/format";
+import { vuesManquantes } from "@/lib/medias";
 import type { MotoInput } from "@/lib/schemas";
 import type { FiltresCatalogue, Pilote } from "./types";
 import { publier } from "./types";
@@ -173,7 +174,12 @@ export function creerPiloteLocal(): Pilote {
           const siennes = base.medias
             .filter((x) => x.moto_id === m.id)
             .sort((a, b) => a.ordre - b.ordre);
-          return { ...m, nb_photos: siennes.length, couverture: siennes[0] ?? null };
+          return {
+            ...m,
+            nb_photos: siennes.length,
+            vues_manquantes: vuesManquantes(siennes, m.etat),
+            couverture: siennes[0] ?? null,
+          };
         })
         .sort((a, b) => b.updated_at.localeCompare(a.updated_at));
     },

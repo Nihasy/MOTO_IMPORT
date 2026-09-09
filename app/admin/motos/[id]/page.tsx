@@ -11,6 +11,7 @@ import { BoutonDanger } from "@/components/admin/bouton-danger";
 import { BarreFiltres, EntetePage, PuceFiltre } from "@/components/admin/ui";
 import { BadgeStatut } from "@/components/ui";
 import { estPublic } from "@/lib/types";
+import { vuesManquantes } from "@/lib/medias";
 import { supprimerMoto } from "@/app/admin/actions";
 
 export const dynamic = "force-dynamic";
@@ -104,7 +105,11 @@ export default async function EditionMoto({ params, searchParams }: Props) {
       {onglet === "photos" ? (
         <div className="space-y-5">
           <ListeControles controles={controles} />
-          <AjoutPhotos moto={moto} nbExistantes={medias.length} />
+          <AjoutPhotos
+            moto={moto}
+            nbExistantes={medias.length}
+            manquantes={vuesManquantes(medias, moto.etat)}
+          />
           <GrillePhotos motoId={moto.id} medias={medias} />
         </div>
       ) : null}

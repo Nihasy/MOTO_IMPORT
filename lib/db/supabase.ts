@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Media, Moto, MotoAvecMedias, Statut } from "@/lib/types";
 import { STATUTS_PUBLICS } from "@/lib/types";
 import { construireSlug } from "@/lib/format";
+import { vuesManquantes } from "@/lib/medias";
 import type { FiltresCatalogue, Pilote } from "./types";
 import { publier } from "./types";
 import { appliquerFiltres, similaires, trierCatalogue } from "./filtres";
@@ -97,7 +98,12 @@ export function creerPiloteSupabase(): Pilote {
       const medias = await mediasDe(motos.map((m) => m.id));
       return motos.map((m) => {
         const siennes = medias[m.id] ?? [];
-        return { ...m, nb_photos: siennes.length, couverture: siennes[0] ?? null };
+        return {
+          ...m,
+          nb_photos: siennes.length,
+          vues_manquantes: vuesManquantes(siennes, m.etat),
+          couverture: siennes[0] ?? null,
+        };
       });
     },
 

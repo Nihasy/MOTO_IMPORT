@@ -1,6 +1,6 @@
 import type {
   Demande, DemandeStatut, Fournisseur, ImportLot, Media, Moto, MotoAvecMedias,
-  MotoPublique, Statut,
+  MotoPublique, Statut, Vue,
 } from "@/lib/types";
 import type { MotoInput } from "@/lib/schemas";
 
@@ -29,8 +29,15 @@ export interface Pilote {
    * Liste d'administration. La couverture est renvoyee avec la ligne : la
    * reclamer moto par moto depuis la page produisait une requete par fiche,
    * soit soixante allers-retours a soixante motos.
+   *
+   * `vues_manquantes` suit la meme logique : l'ecran signale les fiches
+   * incompletes, et le calculer ligne par ligne demanderait de recharger les
+   * medias de chaque moto. Le compte de photos reste affiche a titre indicatif,
+   * il ne conditionne plus rien.
    */
-  listerMotosAdmin(): Promise<(Moto & { nb_photos: number; couverture: Media | null })[]>;
+  listerMotosAdmin(): Promise<
+    (Moto & { nb_photos: number; vues_manquantes: Vue[]; couverture: Media | null })[]
+  >;
   motoParId(id: string): Promise<Moto | null>;
   motoParReference(ref: string): Promise<Moto | null>;
   creerMoto(input: MotoInput): Promise<Moto>;

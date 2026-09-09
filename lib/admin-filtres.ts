@@ -1,10 +1,10 @@
-import type { Etat, Moto, Statut } from "./types";
-import { MIN_PHOTOS, estPublic } from "./types";
+import type { Moto, Statut, Vue } from "./types";
+import { estPublic } from "./types";
 
 export type LigneAdmin = Pick<
   Moto,
   "reference" | "marque" | "modele" | "annee" | "statut" | "etat"
-> & { nb_photos: number };
+> & { nb_photos: number; vues_manquantes: Vue[] };
 
 /**
  * Groupes de statut du back-office.
@@ -27,10 +27,15 @@ export type GroupeAdmin = keyof typeof GROUPES_ADMIN;
 export const estGroupeAdmin = (v: string | undefined): v is GroupeAdmin =>
   Boolean(v && v in GROUPES_ADMIN);
 
-const photosManquantes = (nb: number, etat: Etat) => nb < MIN_PHOTOS[etat];
+/**
+ * « Incomplète » se juge sur le plan de prise de vue, jamais sur un nombre de
+ * photos : les lots reçus des ateliers en comptent un nombre variable, et une
+ * fiche à quinze clichés qui n'en montre aucun du compteur reste incomplète.
+ */
+const photosManquantes = (vues: Vue[]) => vues.length > 0;
 
 export function appartientAuGroupe(
-  ligne: { statut: Statut; etat: Etat; nb_photos: number },
+  ligne: { statut: Statut; vues_manquantes: Vue[] },
   groupe: GroupeAdmin
 ): boolean {
   switch (groupe) {
@@ -43,7 +48,7 @@ export function appartientAuGroupe(
     case "archive":
       return ligne.statut === "archive";
     case "incompletes":
-      return photosManquantes(ligne.nb_photos, ligne.etat);
+      return photosManquantes(ligne.vues_manquantes);
     default:
       return true;
   }

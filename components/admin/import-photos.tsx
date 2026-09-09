@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import type { Moto } from "@/lib/types";
-import { LIBELLE_VUE, MIN_PHOTOS } from "@/lib/types";
-import { altParDefaut, analyserNomFichier, grouperParReference } from "@/lib/medias";
+import { LIBELLE_VUE } from "@/lib/types";
+import {
+  altParDefaut, analyserNomFichier, grouperParReference, vuesManquantes,
+} from "@/lib/medias";
 import { compresser, fileDEnvoi, televerser, versDataUrl } from "@/lib/upload-client";
 
 type Etat = "depot" | "reconciliation" | "envoi" | "rapport";
@@ -221,8 +223,10 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
         <ul className="mt-3 divide-y divide-line">
           {analyse.groupes.map((g) => {
             const moto = parReference.get(g.reference);
-            const min = moto ? MIN_PHOTOS[moto.etat] : 0;
-            const assez = moto ? g.fichiers.length >= min : false;
+            // Le lot est jugé sur les angles qu'il couvre, pas sur son volume :
+            // les fournisseurs envoient des paquets de tailles très inégales.
+            const manquantes = moto ? vuesManquantes(g.fichiers, moto.etat) : [];
+            const assez = moto ? manquantes.length === 0 : false;
             return (
               <li key={g.reference} className="flex items-center justify-between gap-3 py-2.5">
                 <span className="min-w-0">
@@ -234,7 +238,11 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
                   </span>
                   <span className="block text-meta text-dim">
                     {g.fichiers.length} photo{g.fichiers.length > 1 ? "s" : ""}
-                    {moto ? ` · minimum ${min} (${moto.etat})` : " · aucune moto à cette référence"}
+                    {moto
+                      ? manquantes.length
+                        ? ` · manque ${manquantes.map((v) => LIBELLE_VUE[v]).join(", ")} (${moto.etat})`
+                        : ` · plan complet (${moto.etat})`
+                      : " · aucune moto à cette référence"}
                     {g.doublonsOrdre.length ? ` · ordres en doublon : ${g.doublonsOrdre.join(", ")}` : ""}
                   </span>
                 </span>
@@ -244,7 +252,7 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
                     !moto ? "bg-vendu/20 text-vendu" : assez ? "bg-dispo/20 text-dispo" : "bg-gold/20 text-gold-light"
                   )}
                 >
-                  {!moto ? "✖" : assez ? "✔" : `⚠ min ${min}`}
+                  {!moto ? "✖" : assez ? "✔" : `⚠ ${manquantes.length} vue${manquantes.length > 1 ? "s" : ""}`}
                 </span>
               </li>
             );

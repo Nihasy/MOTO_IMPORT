@@ -33,7 +33,7 @@ const QUESTIONS = [
   },
   {
     q: "Puis-je voir la moto avant de payer ?",
-    r: "Pas physiquement avant la commande, puisqu'elle n'est pas encore importée. C'est précisément pourquoi nos fiches comportent au minimum 9 photos pour le neuf et 12 pour l'occasion, prises sur le véhicule réel, avec les points d'usure montrés et non dissimulés. Vous pouvez aussi passer au local nous rencontrer avant de vous engager.",
+    r: "Pas physiquement avant la commande, puisqu'elle n'est pas encore importée. C'est précisément pourquoi nos fiches comportent des photos prises sur le véhicule réel, avec les points d'usure montrés et non dissimulés. Vous pouvez aussi passer au local nous rencontrer avant de vous engager.",
     cgv: "Article 3 — Description des véhicules",
   },
   {

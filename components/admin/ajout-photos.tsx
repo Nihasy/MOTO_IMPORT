@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Moto } from "@/lib/types";
-import { LIBELLE_VUE, MIN_PHOTOS, VUES } from "@/lib/types";
+import type { Moto, Vue } from "@/lib/types";
+import { LIBELLE_VUE, VUES } from "@/lib/types";
 import { analyserNomFichier } from "@/lib/medias";
 import { altParDefaut } from "@/lib/medias";
 import { compresser, fileDEnvoi, televerser, versDataUrl } from "@/lib/upload-client";
@@ -12,7 +12,15 @@ import { compresser, fileDEnvoi, televerser, versDataUrl } from "@/lib/upload-cl
  * Ajout rapide depuis un téléphone (7.6) : prise de photo directe,
  * compression locale, envoi par file de trois, enregistrement en base.
  */
-export function AjoutPhotos({ moto, nbExistantes }: { moto: Moto; nbExistantes: number }) {
+export function AjoutPhotos({
+  moto,
+  nbExistantes,
+  manquantes,
+}: {
+  moto: Moto;
+  nbExistantes: number;
+  manquantes: Vue[];
+}) {
   const router = useRouter();
   const champ = useRef<HTMLInputElement>(null);
   const [etat, setEtat] = useState<"pret" | "traitement" | "fini">("pret");
@@ -84,15 +92,15 @@ export function AjoutPhotos({ moto, nbExistantes }: { moto: Moto; nbExistantes: 
     router.refresh();
   };
 
-  const manque = Math.max(0, MIN_PHOTOS[moto.etat] - nbExistantes);
-
   return (
     <section className="carte p-4">
       <h2 className="text-[17px] font-semibold">Ajouter des photos</h2>
       <p className="mt-1 text-meta text-dim">
-        {manque
-          ? `Encore ${manque} photo${manque > 1 ? "s" : ""} avant de pouvoir publier (${moto.etat}).`
-          : `Seuil atteint : ${nbExistantes} photos.`}{" "}
+        {manquantes.length
+          ? `Vues encore à prendre avant de pouvoir publier (${moto.etat}) : ${manquantes
+              .map((v) => LIBELLE_VUE[v])
+              .join(", ")}.`
+          : `Plan de prise de vue complet : ${nbExistantes} photo${nbExistantes > 1 ? "s" : ""}.`}{" "}
         Les fichiers nommés {moto.reference}_01_34ad.jpg sont classés automatiquement.
       </p>
 

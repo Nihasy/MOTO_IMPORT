@@ -1,5 +1,4 @@
 import type { Etat, Media, Origine, Vue } from "./types";
-import { MIN_PHOTOS } from "./types";
 
 /** Codes de vue de l'annexe 17.2 -> enum `vue_photo`. */
 export const CODES_VUE: Record<string, Vue> = {
@@ -105,6 +104,14 @@ export function grouperParReference(noms: string[]): ResultatAnalyse {
   };
 }
 
+/**
+ * Plan de prise de vue exigé avant publication.
+ *
+ * Il n'existe pas de seuil chiffré de photos : les lots reçus des ateliers
+ * partenaires comptent un nombre variable de clichés, et un nombre ne dit rien
+ * de ce qui est montré. Ce sont ces angles-là qui sont exigés — une fiche peut
+ * en compter davantage, jamais moins que cette liste.
+ */
 export const VUES_OBLIGATOIRES: Record<Etat, Vue[]> = {
   neuf: [
     "34_avant_droit", "profil_droit", "34_arriere_gauche", "face_avant",
@@ -119,10 +126,6 @@ export const VUES_OBLIGATOIRES: Record<Etat, Vue[]> = {
 export function vuesManquantes(medias: Pick<Media, "vue">[], etat: Etat): Vue[] {
   const presentes = new Set(medias.map((m) => m.vue));
   return VUES_OBLIGATOIRES[etat].filter((v) => !presentes.has(v));
-}
-
-export function photosSuffisantes(nb: number, etat: Etat): boolean {
-  return nb >= MIN_PHOTOS[etat];
 }
 
 /** Texte alternatif par defaut, jamais vide (exigence 10.3). */

@@ -9,6 +9,7 @@ import { lienRecherche } from "@/lib/whatsapp";
 import { arCourt } from "@/lib/format";
 import { pister } from "@/lib/analytics";
 import { BarreSuperieure } from "@/components/ui/navigation";
+import { useChromeVisible } from "@/components/ui/masquage-au-scroll";
 import { EtatVide } from "@/components/ui";
 import { CarteMoto } from "./carte-moto";
 import { ICONE_CATEGORIE, IconeToutes } from "./icones-types";
@@ -45,6 +46,7 @@ export function VueCatalogue({
   const router = useRouter();
   const params = useSearchParams();
   const [feuilleOuverte, setFeuilleOuverte] = useState(false);
+  const chromeVisible = useChromeVisible();
   const [rechercheOuverte, setRechercheOuverte] = useState(false);
 
   const filtres: EtatFiltres = useMemo(
@@ -199,7 +201,18 @@ export function VueCatalogue({
         </div>
       ) : null}
 
-      <div className="sticky top-14 z-30 border-b border-line bg-bg/92 backdrop-blur">
+      {/* Collee a 56 px, c'est-a-dire sous l'en-tete. Quand celui-ci
+          s'escamote, elle remonte d'autant pour venir se coller au bord :
+          la laisser en place ouvrirait une bande transparente au sommet.
+          Elle reste visible, elle, parce qu'elle porte le compte de
+          resultats et le tri, utiles pendant tout le defilement. */}
+      <div
+        className={clsx(
+          "sticky top-14 z-30 border-b border-line bg-bg/92 backdrop-blur",
+          "transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
+          !chromeVisible && "-translate-y-14"
+        )}
+      >
         <div className="conteneur-large py-3">
           <div
             role="group"
@@ -248,14 +261,15 @@ export function VueCatalogue({
             s'empilent au centre plutot que de se disputer la largeur. Des la
             rangee, on revient au compte a gauche et au tri a droite. */}
         <div className="mb-3 flex flex-col items-center gap-2.5 sm:flex-row sm:justify-between sm:gap-3">
-          {/* Le rappel du délai fait partie du compteur (9.2) : il répond à la
-              question « c'est en stock ? » avant qu'elle ne soit posée, sur
-              l'écran où le visiteur compare. */}
+          {/* Le compteur ne rappelle plus le delai d'importation : la liste
+              melange des motos a commander et des motos deja sur place, et un
+              « 45 a 65 jours » pose au-dessus de tout contredisait les fiches
+              « disponible de suite ». Le delai reste sur chaque carte, ou il
+              correspond bien au vehicule qu'il annonce. */}
           <p className="text-meta text-chrome">
             <strong className="font-semibold text-text">
               {motos.length} moto{motos.length > 1 ? "s" : ""}
             </strong>
-            <span className="text-dim"> · commande 45 à 65 jours</span>
           </p>
 
           <SelecteurTri
