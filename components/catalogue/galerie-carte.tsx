@@ -4,12 +4,17 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import clsx from "clsx";
 import type { Media } from "@/lib/types";
-import { urlMedia } from "@/lib/cloudinary";
+import { filigraneIncruste, urlMedia } from "@/lib/cloudinary";
+import { Filigrane } from "@/components/ui/filigrane";
 
 /**
  * Galerie au balayage d'une carte catalogue. Le balayage ne doit jamais
  * déclencher l'ouverture de la fiche (recette 16.1) : on absorbe le clic
  * dès qu'un déplacement horizontal a eu lieu.
+ *
+ * Chaque cliché porte la marque et refuse le menu contextuel : la carte de
+ * catalogue est ce qui se copie le plus, parce qu'elle s'atteint sans ouvrir
+ * la fiche.
  */
 export function GalerieCarte({
   medias,
@@ -47,7 +52,8 @@ export function GalerieCarte({
 
   return (
     <div
-      className="relative"
+      className="photo-protegee relative"
+      onContextMenu={(e) => e.preventDefault()}
       onPointerDown={(e) => {
         depart.current = { x: e.clientX, y: e.clientY };
         deplace.current = false;
@@ -77,6 +83,9 @@ export function GalerieCarte({
               placeholder={m.blurhash ? "blur" : "empty"}
               blurDataURL={m.blurhash ?? undefined}
             />
+            {m.origine === "reelle" && !filigraneIncruste(m.cloudinary_id, "carte", { origine: m.origine }) ? (
+              <Filigrane />
+            ) : null}
           </div>
         ))}
       </div>

@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  FILIGRANE_LARGEUR,
+  FILIGRANE_MARGE,
+  FILIGRANE_OPACITE,
+  FILIGRANE_SRC,
+} from "./cloudinary";
+
 export type FichierPret = {
   blob: Blob;
   nom: string;
@@ -14,8 +21,16 @@ const QUALITE = 0.82;
 /**
  * Compression côté navigateur avant tout envoi (7.3, étape 5) :
  * plus grand côté 2400 px, qualité 82, WebP.
+ *
+ * `filigrane` incruste la marque dans les pixels du fichier envoyé. On ne le
+ * demande que lorsque Cloudinary ne la posera pas à la livraison — voir
+ * `filigraneALEnvoi`. C'est la seule protection qui survive à un
+ * téléchargement : une surcouche CSS ne part pas avec le fichier.
  */
-export async function compresser(fichier: File): Promise<FichierPret> {
+export async function compresser(
+  fichier: File,
+  opts: { filigrane?: boolean } = {}
+): Promise<FichierPret> {
   const bitmap = await creerBitmap(fichier);
   const ratio = Math.min(1, COTE_MAX / Math.max(bitmap.width, bitmap.height));
   const largeur = Math.round(bitmap.width * ratio);
@@ -27,6 +42,7 @@ export async function compresser(fichier: File): Promise<FichierPret> {
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas indisponible sur ce navigateur");
   ctx.drawImage(bitmap, 0, 0, largeur, hauteur);
+  if (opts.filigrane) await incrusterFiligrane(ctx, largeur, hauteur);
 
   const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/webp", QUALITE));
   if (!blob) throw new Error("Compression impossible");
@@ -38,6 +54,35 @@ export async function compresser(fichier: File): Promise<FichierPret> {
     hauteur,
     blurhash: apercuMinuscule(ctx, canvas),
   };
+}
+
+/**
+ * Pose la marque en bas à gauche, à la même emprise que la surcouche CSS et
+ * que la couche Cloudinary. En cas d'échec — fichier absent, canevas souillé —
+ * la photo part sans marque : mieux vaut une photo nue qu'un envoi perdu.
+ */
+async function incrusterFiligrane(
+  ctx: CanvasRenderingContext2D,
+  largeur: number,
+  hauteur: number
+): Promise<void> {
+  try {
+    const marque = new window.Image();
+    await new Promise<void>((ok, ko) => {
+      marque.onload = () => ok();
+      marque.onerror = () => ko(new Error("Filigrane introuvable"));
+      marque.src = FILIGRANE_SRC;
+    });
+    const l = Math.round(largeur * FILIGRANE_LARGEUR);
+    const h = Math.round((marque.naturalHeight / marque.naturalWidth) * l);
+    const marge = Math.round(largeur * FILIGRANE_MARGE);
+    ctx.save();
+    ctx.globalAlpha = FILIGRANE_OPACITE;
+    ctx.drawImage(marque, marge, hauteur - h - marge, l, h);
+    ctx.restore();
+  } catch {
+    /* Sans marque plutôt que sans photo. */
+  }
 }
 
 async function creerBitmap(fichier: File): Promise<ImageBitmap | HTMLImageElement> {

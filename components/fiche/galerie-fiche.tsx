@@ -4,7 +4,8 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import type { Media } from "@/lib/types";
-import { urlMedia } from "@/lib/cloudinary";
+import { filigraneIncruste, urlMedia } from "@/lib/cloudinary";
+import { Filigrane } from "@/components/ui/filigrane";
 import { pister } from "@/lib/analytics";
 
 export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) {
@@ -46,7 +47,7 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
 
   return (
     <>
-      <div className="relative bg-surface-hi">
+      <div className="photo-protegee relative bg-surface-hi" onContextMenu={(e) => e.preventDefault()}>
         <div
           ref={piste}
           className="defilement-x aspect-[4/3] w-full"
@@ -92,6 +93,9 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
                   Visuel constructeur
                 </span>
               ) : null}
+              {m.origine === "reelle" && !filigraneIncruste(m.cloudinary_id, "galerie", { origine: m.origine }) ? (
+                <Filigrane />
+              ) : null}
             </button>
           ))}
         </div>
@@ -135,14 +139,29 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
               Fermer
             </button>
           </div>
-          <div className="relative flex-1">
-            <Image
-              src={urlMedia(courant.cloudinary_id, "plein", { origine: courant.origine })}
-              alt={courant.alt || alt}
-              fill
-              sizes="100vw"
-              className="object-contain"
-            />
+          {/* La photo dicte la taille de son cadre plutôt que l'inverse : sur un
+              écran portrait, un `object-contain` plein cadre laisse deux bandes
+              noires, et la marque posée sur le cadre flotterait à côté de
+              l'image au lieu d'être dessus — donc hors de la capture recadrée. */}
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <span
+              className="photo-protegee relative inline-flex max-h-full"
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <Image
+                src={urlMedia(courant.cloudinary_id, "plein", { origine: courant.origine })}
+                alt={courant.alt || alt}
+                width={courant.largeur || 1600}
+                height={courant.hauteur || 1200}
+                sizes="100vw"
+                className="object-contain"
+                style={{ width: "auto", height: "auto", maxWidth: "100%", maxHeight: "100%" }}
+              />
+              {courant.origine === "reelle" &&
+              !filigraneIncruste(courant.cloudinary_id, "plein", { origine: courant.origine }) ? (
+                <Filigrane />
+              ) : null}
+            </span>
           </div>
           <div className="flex items-center justify-between gap-4 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2">
             <button type="button" className="btn-fantome flex-1" onClick={() => allerA(Math.max(index - 1, 0))} disabled={index === 0}>

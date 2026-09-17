@@ -160,4 +160,23 @@
   .defilement-x {
     @apply flex snap-x snap-mandatory overflow-x-auto no-scrollbar;
   }
+  /* Photos publiques : on retire les gestes qui produisent un fichier en un
+     seul toucher — glisser-déposer sur le bureau, appui long iOS, menu
+     contextuel (celui-ci est annulé en JS, un attribut CSS ne le fait pas).
+     Cela n'arrête pas quelqu'un qui ouvre les outils de développement, et rien
+     n'arrête une capture d'écran : c'est le filigrane qui s'en charge. Cela
+     arrête la reprise opportuniste, qui est la seule fréquente.
+
+     `pointer-events: none` sur l'image laisse le clic filer jusqu'au bouton ou
+     à la piste de défilement qui l'enveloppe : la galerie continue de se
+     balayer et de s'ouvrir en plein écran. */
+  .photo-protegee {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .photo-protegee img {
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
 }

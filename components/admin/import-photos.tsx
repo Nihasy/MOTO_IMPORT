@@ -9,6 +9,7 @@ import {
   altParDefaut, analyserNomFichier, grouperParReference, vuesManquantes,
 } from "@/lib/medias";
 import { compresser, fileDEnvoi, televerser, versDataUrl } from "@/lib/upload-client";
+import { filigraneALEnvoi } from "@/lib/cloudinary";
 
 type Etat = "depot" | "reconciliation" | "envoi" | "rapport";
 
@@ -82,7 +83,7 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
     const resultats = await fileDEnvoi(
       aTraiter,
       async (x) => {
-        const pret = await compresser(x.fichier);
+        const pret = await compresser(x.fichier, { filigrane: filigraneALEnvoi(x.origine) });
         const moto = motos.find((m) => m.id === x.motoId)!;
         let envoi;
         try {
