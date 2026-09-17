@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:e2e": "node scripts/e2e.mjs",
     "seed": "node scripts/seed.mjs",
+    "vers-supabase": "node scripts/vers-supabase.mjs",
     "filigrane": "node scripts/filigrane.mjs",
     "test:securite": "node scripts/securite.mjs",
     "test:charge": "node scripts/charge.mjs"

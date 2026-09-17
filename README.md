@@ -148,6 +148,17 @@ charges impose ce rendu dynamique pour que les filtres vivent dans l'URL.
 ## Mise en production
 
 1. Créer le projet Supabase, appliquer `supabase/migrations/*.sql` dans l'ordre.
+   Puis reprendre les données du magasin local :
+
+   ```
+   npm run vers-supabase -- --essai      # compte les lignes, n'écrit rien
+   npm run vers-supabase -- --sauf-references=MI-901,MI-903
+   ```
+
+   Les identifiants sont conservés, les liaisons moto → média → lot restent
+   valides, et une seconde exécution met à jour au lieu de dupliquer. Par
+   défaut seuls `fournisseurs`, `motos` et `medias` partent : les demandes et
+   les lots du magasin local sont surtout des artefacts de recette.
 2. Créer les deux comptes dans Supabase Auth, ou renseigner `ADMIN_ACCOUNTS`.
 3. Créer le compte Cloudinary, renseigner les trois variables.
 4. Générer `AUTH_SECRET`, `IP_SALT` et `REVALIDATE_SECRET`.
