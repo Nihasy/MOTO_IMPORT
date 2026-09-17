@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { jsonLdSecurise } from "@/lib/jsonld";
 import { destinationSure } from "@/lib/auth";
 import {
@@ -13,6 +13,15 @@ import {
 /** `NODE_ENV` est declare en lecture seule : on ecrit via la description. */
 const definirEnv = (cle: string, valeur: string) => {
   Object.defineProperty(process.env, cle, { value: valeur, configurable: true, writable: true });
+};
+
+/**
+ * `SITE_URL` est calculee au chargement du module : sans vider le registre,
+ * le second import rendrait la valeur du premier.
+ */
+const importerSite = async () => {
+  vi.resetModules();
+  return import("@/lib/site");
 };
 
 const envInitial = { ...process.env };
@@ -167,6 +176,33 @@ describe("configuration en production", () => {
     const { comptes, authentifier } = await import("@/lib/auth");
     expect(comptes()).toHaveLength(0);
     expect(authentifier("nihasy@moto-import.mg", "moto-import-2026")).toBeNull();
+  });
+
+  /**
+   * Une variable declaree mais vide a fait echouer une construction entiere
+   * sur `new URL("")`, avec un « Invalid URL » qui ne nommait rien.
+   */
+  it("survit a une adresse de site vide", async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "";
+    const { SITE_URL } = await importerSite();
+    expect(() => new URL(SITE_URL)).not.toThrow();
+    expect(SITE_URL).toBe("http://localhost:3000");
+  });
+
+  it("survit a une adresse de site blanche ou illisible", async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "   ";
+    const { SITE_URL: blanche } = await importerSite();
+    expect(blanche).toBe("http://localhost:3000");
+
+    process.env.NEXT_PUBLIC_SITE_URL = "pas-une-url";
+    const { SITE_URL: illisible } = await importerSite();
+    expect(illisible).toBe("http://localhost:3000");
+  });
+
+  it("normalise l'adresse du site : ni barre finale, ni chemin", async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://motoimport.app/";
+    const { SITE_URL } = await importerSite();
+    expect(SITE_URL).toBe("https://motoimport.app");
   });
 
   it("signale les variables bloquantes en production", async () => {
