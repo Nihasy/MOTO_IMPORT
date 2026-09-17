@@ -9,5 +9,3 @@ out
 /data/local-db.json
 coverage
 next-env.d.ts
-
-.vercel
