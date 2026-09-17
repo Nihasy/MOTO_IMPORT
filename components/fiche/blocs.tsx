@@ -126,6 +126,31 @@ export function EtatVehicule({ moto }: { moto: MotoAvecMedias }) {
   );
 }
 
+/**
+ * Description rédigée (9.3, point 8).
+ *
+ * Elle n'était affichée nulle part : le texte saisi au back-office ne servait
+ * qu'aux données structurées, invisibles du visiteur. Le paragraphe respecte les
+ * sauts de ligne de l'auteur et disparaît si la fiche n'en porte pas, la
+ * description étant facultative.
+ */
+export function Description({ moto }: { moto: MotoAvecMedias }) {
+  const texte = moto.description?.trim();
+  if (!texte) return null;
+  return (
+    <section className="my-6">
+      {/* Le titre de la page porte déjà marque, modèle et année : le répéter
+          ici en ferait un doublon pour le visiteur comme pour les moteurs. */}
+      <h2 className="text-[17px] font-semibold">Description</h2>
+      {texte.split(/\n{2,}/).map((paragraphe, i) => (
+        <p key={i} className="mt-2.5 whitespace-pre-line text-corps leading-relaxed text-chrome">
+          {paragraphe}
+        </p>
+      ))}
+    </section>
+  );
+}
+
 const ETAPES = [
   { titre: "Vous choisissez", texte: "Vous repérez une moto au catalogue et vous nous écrivez sur WhatsApp." },
   { titre: "Nous confirmons", texte: "Nous vérifions la disponibilité auprès de l'atelier et figeons le prix rendu Tana." },

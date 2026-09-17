@@ -117,6 +117,19 @@ describe("import CSV des motos (7.4)", () => {
     expect(r.erreurs.map((e) => e.colonne)).toContain("prix_ttc");
   });
 
+  it("accepte un fichier sans colonne description, et une description vide", () => {
+    const sansColonne =
+      "reference,marque,modele,annee,cylindree,categorie,etat,prix_ttc,prix_valable_jusqu_au\n" +
+      "MI-102,Honda,CB500X,2023,471,trail,neuf,14500000,2026-12-31";
+    const r = analyserCsvMotos(sansColonne);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.motos[0].description).toBe("");
+
+    const celluleVide = analyserCsvMotos(`${ENTETE}\n${ligne({ description: "" })}`);
+    expect(celluleVide.ok).toBe(true);
+  });
+
   it("refuse un fichier sans aucune ligne de données", () => {
     expect(analyserCsvMotos(ENTETE).ok).toBe(false);
   });

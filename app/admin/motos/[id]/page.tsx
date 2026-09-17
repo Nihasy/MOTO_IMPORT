@@ -8,8 +8,8 @@ import { GrillePhotos } from "@/components/admin/grille-photos";
 import { ListeControles, controlesPublication } from "@/components/admin/controles-publication";
 import { AjoutPhotos } from "@/components/admin/ajout-photos";
 import { BoutonDanger } from "@/components/admin/bouton-danger";
+import { SelecteurStatut } from "@/components/admin/selecteur-statut";
 import { BarreFiltres, EntetePage, PuceFiltre } from "@/components/admin/ui";
-import { BadgeStatut } from "@/components/ui";
 import { estPublic } from "@/lib/types";
 import { vuesManquantes } from "@/lib/medias";
 import { supprimerMoto } from "@/app/admin/actions";
@@ -52,7 +52,7 @@ export default async function EditionMoto({ params, searchParams }: Props) {
             : "Tous les contrôles sont au vert : cette fiche peut passer en vente."
         }
       >
-        <BadgeStatut statut={moto.statut} />
+        <SelecteurStatut id={moto.id} statut={moto.statut} />
         {estPublic(moto.statut) ? (
           <Link
             href={`/motos/${moto.slug}`}
@@ -86,6 +86,9 @@ export default async function EditionMoto({ params, searchParams }: Props) {
 
       {onglet === "infos" ? (
         <>
+          <div className="mb-5 max-w-xl">
+            <ListeControles controles={controles} />
+          </div>
           <FormulaireMoto moto={moto} fournisseurs={fournisseurs} />
           <div className="mt-6 max-w-xl">
             <BoutonDanger

@@ -7,6 +7,7 @@ import { LIBELLE_VUE, VUES } from "@/lib/types";
 import { analyserNomFichier } from "@/lib/medias";
 import { altParDefaut } from "@/lib/medias";
 import { compresser, fileDEnvoi, televerser, versDataUrl } from "@/lib/upload-client";
+import { filigraneALEnvoi } from "@/lib/cloudinary";
 
 /**
  * Ajout rapide depuis un téléphone (7.6) : prise de photo directe,
@@ -37,7 +38,11 @@ export function AjoutPhotos({
     const resultats = await fileDEnvoi(
       liste,
       async (f, i) => {
-        const pret = await compresser(f);
+        // L'origine est lue avant la compression : c'est elle qui décide si la
+        // marque doit être incrustée dans le fichier envoyé.
+        const analyse = analyserNomFichier(f.name);
+        const origine = analyse.valide ? analyse.origine : ("reelle" as const);
+        const pret = await compresser(f, { filigrane: filigraneALEnvoi(origine) });
         let envoi;
         try {
           envoi = await televerser(pret, `moto-import/${moto.reference}`);
@@ -45,12 +50,11 @@ export function AjoutPhotos({
           // Cloudinary absent ou refusé : on conserve l'image compressée en base.
           envoi = await versDataUrl(pret);
         }
-        const analyse = analyserNomFichier(f.name);
         const vue = analyse.valide ? analyse.vue : "autre";
         return {
           moto_id: moto.id,
           type: "photo" as const,
-          origine: analyse.valide ? analyse.origine : ("reelle" as const),
+          origine,
           vue,
           cloudinary_id: envoi.cloudinary_id,
           largeur: envoi.largeur,
@@ -97,10 +101,11 @@ export function AjoutPhotos({
       <h2 className="text-[17px] font-semibold">Ajouter des photos</h2>
       <p className="mt-1 text-meta text-dim">
         {manquantes.length
-          ? `Vues encore à prendre avant de pouvoir publier (${moto.etat}) : ${manquantes
+          ? `Vues encore à prendre avant de pouvoir publier : ${manquantes
               .map((v) => LIBELLE_VUE[v])
-              .join(", ")}.`
-          : `Plan de prise de vue complet : ${nbExistantes} photo${nbExistantes > 1 ? "s" : ""}.`}{" "}
+              .join(", ")}. Les autres angles sont facultatifs.`
+          : `Les vues exigées sont là : ${nbExistantes} photo${nbExistantes > 1 ? "s" : ""}. ` +
+            `Compteur, moteur, pneus, selle et châssis restent les bienvenus, sans bloquer la publication.`}{" "}
         Les fichiers nommés {moto.reference}_01_34ad.jpg sont classés automatiquement.
       </p>
 

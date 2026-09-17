@@ -101,8 +101,11 @@ describe("plan de prise de vue (7.1)", () => {
     const medias = [{ vue: "34_avant_droit" as const }, { vue: "profil_droit" as const }];
     const manque = vuesManquantes(medias, "neuf");
     expect(manque).not.toContain("34_avant_droit");
-    expect(manque).toContain("compteur");
-    expect(vuesManquantes(medias, "occasion")).toContain("chassis");
+    expect(manque).toEqual(["34_arriere_gauche", "face_avant"]);
+    // Les vues de détail ne sont plus réclamées : elles s'ajoutent si l'atelier
+    // les a envoyées, elles ne retiennent plus la fiche en brouillon.
+    expect(manque).not.toContain("compteur");
+    expect(vuesManquantes(medias, "occasion")).not.toContain("chassis");
   });
 });
 

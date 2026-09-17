@@ -96,7 +96,8 @@ describe("contrôles bloquants avant publication (10.3)", () => {
   ];
 
   it("bloque un plan de prise de vue incomplet, quel que soit le nombre de photos", () => {
-    const c = controlesPublication(moto(), planNeuf.slice(0, 8).map((v, i) => photo(i + 1, v)));
+    // Une seule des trois vues exigées : la couverture sans les autres angles.
+    const c = controlesPublication(moto(), [photo(1, "34_avant_droit")]);
     expect(c.find((x) => x.libelle.startsWith("Plan de prise de vue"))?.ok).toBe(false);
 
     // Vingt clichés du même angle ne remplacent pas les vues absentes : c'est
@@ -111,14 +112,31 @@ describe("contrôles bloquants avant publication (10.3)", () => {
     expect(c.every((x) => x.ok)).toBe(true);
   });
 
+  it("publie une fiche réduite aux trois angles exigés", () => {
+    // Ni compteur, ni moteur, ni pneus, ni selle : ces vues sont facultatives
+    // depuis l'allègement du plan, et leur absence ne bloque plus rien.
+    const troisAngles: Media["vue"][] = ["34_avant_droit", "34_arriere_gauche", "face_avant"];
+    const c = controlesPublication(moto(), troisAngles.map((v, i) => photo(i + 1, v)));
+    expect(c.filter((x) => !x.ok)).toEqual([]);
+  });
+
+  it("publie une occasion sans vue du châssis", () => {
+    const occasion = moto({ etat: "occasion", kilometrage: 12_000, date_photos: "2026-01-10", garantie_mois: 0, garantie_texte: null });
+    const troisAngles: Media["vue"][] = ["34_avant_droit", "34_arriere_gauche", "face_avant"];
+    const c = controlesPublication(occasion, troisAngles.map((v, i) => photo(i + 1, v)));
+    expect(c.filter((x) => !x.ok)).toEqual([]);
+  });
+
   it("bloque une occasion sans kilométrage ni date de photos", () => {
     const c = controlesPublication(moto({ etat: "occasion" }), []);
     expect(c.find((x) => x.libelle.includes("Kilométrage"))?.ok).toBe(false);
   });
 
-  it("bloque une description de moins de 150 mots", () => {
-    const c = controlesPublication(moto({ description: "trop court" }), []);
-    expect(c.find((x) => x.libelle.includes("150 mots"))?.ok).toBe(false);
+  it("bloque une description vide, mais accepte un texte court", () => {
+    const vide = controlesPublication(moto({ description: "   " }), []);
+    expect(vide.find((x) => x.libelle.includes("Description"))?.ok).toBe(false);
+    const court = controlesPublication(moto({ description: "Roadster japonais, deux mains." }), []);
+    expect(court.find((x) => x.libelle.includes("Description"))?.ok).toBe(true);
   });
 
   it("bloque une photo sans texte alternatif", () => {
@@ -251,10 +269,10 @@ describe("verrou de publication (7.1, 10.3, recette 16.1)", () => {
   });
 
   it("nomme chaque point bloquant dans le message", () => {
-    const v = verrouPublication(fiche({ description: "trop court" }), [], "disponible");
+    const v = verrouPublication(fiche({ description: "" }), [], "disponible");
     const message = messageVerrou(v.bloquants);
     expect(message).toMatch(/Publication refusée/);
-    expect(message).toMatch(/150 mots/);
+    expect(message).toMatch(/Description renseignée/);
   });
 
   it("garde brouillon et archive hors des surfaces publiques", () => {

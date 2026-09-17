@@ -32,7 +32,7 @@ export function analyserCsvMotos(texte: string): AnalyseCsv {
 
   const obligatoires = [
     "reference", "marque", "modele", "annee", "cylindree", "categorie", "etat",
-    "prix_ttc", "prix_valable_jusqu_au", "description",
+    "prix_ttc", "prix_valable_jusqu_au",
   ];
   const manquantes = obligatoires.filter((c) => !entetes.includes(c));
   if (manquantes.length) {
@@ -94,7 +94,7 @@ export function analyserCsvMotos(texte: string): AnalyseCsv {
       prix_valable_jusqu_au: v.prix_valable_jusqu_au,
       garantie_mois: nombreOuNull(v.garantie_mois) ?? 0,
       garantie_texte: texteOuNull(v.garantie_texte),
-      description: v.description,
+      description: v.description ?? "",
       points_forts: (v.points_forts ?? "").split("|").map((s) => s.trim()).filter(Boolean),
       date_photos: texteOuNull(v.date_photos),
     };

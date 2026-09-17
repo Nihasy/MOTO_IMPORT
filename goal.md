@@ -403,21 +403,28 @@ C'est le chapitre le plus important du document. Vous recevez des lots de photos
 
 Chaque moto est photographiée dans le **même ordre**, sans exception. Un ordre constant permet à l'acheteur de comparer deux motos vue par vue, et vous évite d'oublier un angle.
 
-| # | Vue | Code | Neuf | Occasion |
-|---|---|---|---|---|
-| 1 | 3/4 avant droit — **photo de couverture** | `34ad` | ✔ | ✔ |
-| 2 | Profil droit complet | `pd` | ✔ | ✔ |
-| 3 | 3/4 arrière gauche | `34ag` | ✔ | ✔ |
-| 4 | Face avant | `fa` | ✔ | ✔ |
-| 5 | Compteur, kilométrage lisible | `cpt` | ✔ | ✔ |
-| 6 | Moteur | `mot` | ✔ | ✔ |
-| 7 | Pneu avant | `pav` | ✔ | ✔ |
-| 8 | Pneu arrière | `par` | ✔ | ✔ |
-| 9 | Selle et commandes | `sel` | ✔ | ✔ |
-| 10 | Numéro de châssis | `cha` | — | ✔ |
-| 11+ | Gros plans des points d'usure | `def1`, `def2`… | — | ✔ |
+**L'ordre est la règle de travail ; seules trois vues conditionnent la mise en
+vente** : 3/4 avant droit (la couverture), 3/4 arrière gauche et face avant —
+la silhouette complète du véhicule. Les autres restent prévues, nommées et
+affichées quand elles existent, mais leur absence ne retient plus la fiche en
+brouillon : exiger le compteur, le moteur, les deux pneus et la selle bloquait
+des motos présentables pour des clichés que les ateliers n'envoient pas toujours.
 
-**Aucun seuil chiffré de photos.** Les lots reçus des trois ateliers partenaires comptent un nombre très variable de clichés, et un nombre ne dit rien de ce qui est montré : quinze photos du même profil valent moins que dix vues distinctes. Le back-office refuse la publication tant qu'une **vue obligatoire** du tableau ci-dessus manque — le nombre total, lui, est libre. C'est l'absence d'angle, pas la maigreur du lot, qui réactive le doute que tout le reste du site cherche à dissiper.
+| # | Vue | Code | Exigée pour publier |
+|---|---|---|---|---|
+| 1 | 3/4 avant droit — **photo de couverture** | `34ad` | ✔ |
+| 2 | Profil droit complet | `pd` | — |
+| 3 | 3/4 arrière gauche | `34ag` | ✔ |
+| 4 | Face avant | `fa` | ✔ |
+| 5 | Compteur, kilométrage lisible | `cpt` | — |
+| 6 | Moteur | `mot` | — |
+| 7 | Pneu avant | `pav` | — |
+| 8 | Pneu arrière | `par` | — |
+| 9 | Selle et commandes | `sel` | — |
+| 10 | Numéro de châssis | `cha` | — |
+| 11+ | Gros plans des points d'usure | `def1`, `def2`… | — |
+
+**Aucun seuil chiffré de photos.** Les lots reçus des trois ateliers partenaires comptent un nombre très variable de clichés, et un nombre ne dit rien de ce qui est montré : quinze photos du même profil valent moins que dix vues distinctes. Le back-office refuse la publication tant qu'une des trois **vues exigées** du tableau ci-dessus manque — le nombre total, lui, est libre. C'est l'absence d'angle, pas la maigreur du lot, qui réactive le doute que tout le reste du site cherche à dissiper.
 
 ## 7.2 Convention de nommage des fichiers
 
@@ -505,7 +512,7 @@ Générés par Cloudinary à la volée, servis via `next/image`.
 
 - Cadrage **4:3 imposé** sur toutes les vignettes et cartes. Des cartes de hauteurs inégales rendent la comparaison impossible, et comparer est le geste central de votre acheteur.
 - Blurhash affiché pendant le chargement, jamais de zone vide.
-- Filigrane discret « MOTO IMPORT » appliqué par Cloudinary en bas à droite des photos d'origine `reelle`. Vos concurrents les reprendront.
+- Filigrane discret « MOTO IMPORT » — médaillon du logo et signature — posé en bas à gauche des photos d'origine `reelle`. Vos concurrents les reprendront. Le coin droit reste au compteur « 3/12 » des galeries. La marque est fabriquée une fois par `npm run filigrane`, puis posée par Cloudinary quand il est branché, incrustée dès l'envoi quand il ne l'est pas, et rappelée en surcouche à l'écran tant que le fichier servi ne la porte pas — une capture d'écran enregistre ce qui est affiché.
 - Photos constructeur sur fond blanc : appliquer une teinte de fond neutre côté Cloudinary pour éviter la rupture visuelle avec l'interface sombre.
 
 ## 7.6 Ajout rapide depuis un téléphone
@@ -692,7 +699,7 @@ Ordre imposé, du plus décisif au moins :
 5. **Trois lignes de réassurance** : délai, carte grise, garantie.
 6. **Fiche technique** en tableau.
 7. **Bloc « État du véhicule »** — occasion uniquement : kilométrage, points d'usure listés honnêtement, mention « Photos prises le JJ/MM/AAAA au dépôt ».
-8. **Description rédigée** — 150 à 300 mots, écrits par vous. Jamais traduits automatiquement du fournisseur : cela se repère immédiatement et détruit la crédibilité.
+8. **Description rédigée** — 150 à 300 mots recommandés, écrits par vous ; le back-office n'impose aucune longueur, seulement un texte non vide pour publier. Jamais traduits automatiquement du fournisseur : cela se repère immédiatement et détruit la crédibilité.
 9. **Comment ça se passe** — les 5 étapes numérotées.
 10. **Motos similaires** — 3 cartes.
 11. **Barre d'action fixe** : Enregistrer + Demander le devis.
@@ -743,13 +750,20 @@ Le passage en `vendu` renseigne automatiquement `date_vente`, retire la moto du 
 
 Trois onglets : **Informations** · **Photos** · **Aperçu public**.
 
+**Le statut ne se règle jamais depuis le formulaire.** Une fiche neuve n'a par
+construction aucune photo — les photos s'ajoutent après l'enregistrement — donc
+un formulaire de création qui proposerait « Disponible » ferait choisir un statut
+que le verrou refuse toujours, en perdant la saisie. La création naît en
+`brouillon` et le statut se change par son sélecteur, sur la ligne de la liste et
+en tête de la fiche, qui affiche le refus sans rien faire perdre.
+
 L'onglet Photos affiche la grille ordonnée, permet le réordonnancement par glisser-déposer, la modification de `vue`, `origine`, `legende`, `alt`, et signale les vues manquantes du plan de prise de vue.
 
 **Contrôles avant publication** — bloquants :
 
 - [ ] Plan de prise de vue complet — aucun seuil sur le nombre de photos
 - [ ] Photo de couverture définie
-- [ ] Description ≥ 150 mots
+- [ ] Description renseignée — aucun minimum de longueur, mais jamais vide
 - [ ] Prix et date de validité renseignés
 - [ ] Kilométrage et date de photos si occasion
 - [ ] Texte de garantie renseigné

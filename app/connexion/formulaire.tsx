@@ -17,12 +17,17 @@ export function FormulaireConnexion({ suite }: { suite: string }) {
   const [etat, action] = useActionState<EtatFormulaire, FormData>(connexion, null);
 
   return (
-    <form action={action} className="mt-4">
+    <form action={action} key={etat?.tentative ?? 0} className="mt-4">
       <input type="hidden" name="suite" value={suite} />
       <label className="etiquette" htmlFor="email">
         Adresse e-mail
       </label>
-      <input id="email" name="email" type="email" required autoComplete="username" className="champ" />
+      {/* React vide le formulaire à chaque soumission : l'adresse est reprise
+          de la réponse, seul le mot de passe est à ressaisir. */}
+      <input
+        id="email" name="email" type="email" required autoComplete="username" className="champ"
+        defaultValue={etat?.valeurs?.email ?? ""}
+      />
 
       <label className="etiquette mt-3" htmlFor="motdepasse">
         Mot de passe

@@ -37,6 +37,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     revalidatePath("/motos");
     revalidatePath(`/motos/${moto.slug}`);
     revalidatePath("/");
+    // Les écrans d'administration affichent eux aussi le statut : sans ces
+    // deux lignes, la liste et la fiche restent sur l'état précédent.
+    revalidatePath("/admin/motos");
+    revalidatePath(`/admin/motos/${id}`);
     return Response.json({
       ok: true,
       moto: { id: moto.id, statut: moto.statut, date_vente: moto.date_vente, updated_at: moto.updated_at },

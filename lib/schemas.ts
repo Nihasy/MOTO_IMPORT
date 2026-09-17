@@ -39,7 +39,9 @@ export const motoSchema = z
     garantie_mois: z.coerce.number().int().min(0).default(0),
     garantie_texte: z.string().nullable().optional(),
 
-    description: z.string().min(1, "Description obligatoire"),
+    // Facultative : une fiche peut naître, et même partir en ligne, sans texte.
+    // Le vide est une valeur valide, pas une absence — d'où le repli sur "".
+    description: z.string().default(""),
     points_forts: z.array(z.string()).default([]),
     etat_details: z
       .object({ points_usure: z.array(z.string()).optional(), note: z.string().optional() })
@@ -170,7 +172,7 @@ export const ligneCsvSchema = z.object({
   prix_valable_jusqu_au: dateSchema,
   garantie_mois: z.string().optional(),
   garantie_texte: z.string().optional(),
-  description: z.string().min(1),
+  description: z.string().optional(),
   points_forts: z.string().optional(),
   fournisseur: z.string().optional(),
   statut: z.string().optional(),

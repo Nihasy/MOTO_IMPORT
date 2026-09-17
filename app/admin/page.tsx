@@ -275,7 +275,7 @@ function PriseEnMain() {
       </ol>
       <VideAdmin
         titre="Une fiche ne part en ligne que complète"
-        texte="Le plan de prise de vue au complet, une description de 150 mots et une couverture en 3/4 avant droit. Le nombre de photos est libre — c'est la liste des angles qui compte. Tant qu'un de ces points manque, le statut ne peut pas passer en vente."
+        texte="Trois angles exigés — 3/4 avant droit en couverture, 3/4 arrière gauche, face avant —, une description même brève et un prix daté. Les autres vues sont facultatives et le nombre de photos est libre. Tant qu'un de ces points manque, le statut ne peut pas passer en vente."
       />
     </div>
   );

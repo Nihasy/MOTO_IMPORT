@@ -111,16 +111,16 @@ export function grouperParReference(noms: string[]): ResultatAnalyse {
  * partenaires comptent un nombre variable de clichés, et un nombre ne dit rien
  * de ce qui est montré. Ce sont ces angles-là qui sont exigés — une fiche peut
  * en compter davantage, jamais moins que cette liste.
+ *
+ * Trois angles seulement : ceux qui donnent la silhouette complète du véhicule.
+ * Exiger le compteur, le moteur, les deux pneus et la selle retenait en
+ * brouillon des motos parfaitement présentables, pour des clichés que les
+ * ateliers n'envoient pas toujours. Ces vues restent prévues et s'affichent
+ * quand elles existent ; elles ne conditionnent plus la mise en vente.
  */
 export const VUES_OBLIGATOIRES: Record<Etat, Vue[]> = {
-  neuf: [
-    "34_avant_droit", "profil_droit", "34_arriere_gauche", "face_avant",
-    "compteur", "moteur", "pneu_avant", "pneu_arriere", "selle",
-  ],
-  occasion: [
-    "34_avant_droit", "profil_droit", "34_arriere_gauche", "face_avant",
-    "compteur", "moteur", "pneu_avant", "pneu_arriere", "selle", "chassis",
-  ],
+  neuf: ["34_avant_droit", "34_arriere_gauche", "face_avant"],
+  occasion: ["34_avant_droit", "34_arriere_gauche", "face_avant"],
 };
 
 export function vuesManquantes(medias: Pick<Media, "vue">[], etat: Etat): Vue[] {

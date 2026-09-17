@@ -7,6 +7,32 @@
 const BASE = process.env.E2E_BASE ?? "http://localhost:3000";
 const COMPTE = { email: "nihasy@moto-import.mg", motdepasse: "moto-import-2026" };
 
+/**
+ * Le script tourne sous Node nu : personne ne lui charge `.env.local`, que Next
+ * lit de son côté. Sans cette lecture, la recette signe son cookie avec un
+ * secret que le serveur ne reconnaît pas, et tout le back-office apparaît en
+ * échec alors qu'il fonctionne.
+ */
+async function chargerEnvLocal() {
+  const { readFile } = await import("node:fs/promises");
+  for (const fichier of [".env.local", ".env"]) {
+    let brut;
+    try {
+      brut = await readFile(fichier, "utf8");
+    } catch {
+      continue;
+    }
+    for (const ligne of brut.split(/\r?\n/)) {
+      const m = ligne.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
+      if (!m) continue;
+      const valeur = m[2].trim().replace(/^(['"])(.*)\1$/, "$2");
+      // L'environnement réel prime : il permet de viser un autre serveur.
+      if (process.env[m[1]] === undefined) process.env[m[1]] = valeur;
+    }
+  }
+}
+await chargerEnvLocal();
+
 let reussis = 0;
 const echecs = [];
 let groupe = "";
@@ -243,7 +269,12 @@ verifier("la page de connexion est accessible", connexion.status === 200);
 
 // On rejoue la signature du jeton comme le fait lib/auth.
 const { createHmac } = await import("node:crypto");
-const secret = process.env.AUTH_SECRET ?? process.env.REVALIDATE_SECRET ?? "dev-secret-moto-import";
+// Repli identique à celui de `lib/config.ts` : deux valeurs différentes et la
+// recette échouerait sur une machine sans AUTH_SECRET.
+const secret =
+  process.env.AUTH_SECRET?.length >= 16
+    ? process.env.AUTH_SECRET
+    : "developpement-uniquement-ne-jamais-utiliser-en-production";
 const charge = Buffer.from(
   JSON.stringify({ email: COMPTE.email, role: "admin", exp: Math.floor(Date.now() / 1000) + 3600 })
 ).toString("base64url");
@@ -319,9 +350,9 @@ verifier("la bascule est refusée sans session", sansSession.statut === 401);
 // ── 9. Import CSV ─────────────────────────────────────────────────────────
 titre("9. Import CSV (7.4)");
 const ENTETE_CSV =
-  "reference,marque,modele,annee,cylindree,categorie,etat,kilometrage,prix_ttc,prix_valable_jusqu_au,description,points_forts,fournisseur,statut";
+  "reference,marque,modele,annee,cylindree,categorie,etat,kilometrage,prix_ttc,prix_valable_jusqu_au,garantie_mois,garantie_texte,description,points_forts,fournisseur,statut";
 const ligneCsv = (ref, prix = "13000000") =>
-  `${ref},Suzuki,GSX-S750,2023,749,roadster,neuf,,${prix},2027-01-31,Roadster quatre cylindres importe sur commande.,Confort|Freinage,Guangzhou Moto Trading,disponible`;
+  `${ref},Suzuki,GSX-S750,2023,749,roadster,neuf,,${prix},2027-01-31,24,Moteur et boite,Roadster quatre cylindres importe sur commande.,Confort|Freinage,Guangzhou Moto Trading,disponible`;
 
 const importer = (csv) =>
   get("/api/import/motos", {
@@ -330,19 +361,32 @@ const importer = (csv) =>
     body: JSON.stringify({ csv, fichier_nom: "recette.csv" }),
   });
 
-const csvInvalide = [ENTETE_CSV, ligneCsv("MI-901"), ligneCsv("MI-902", "gratuit"), ligneCsv("MI-903")].join("\n");
+// Les références du fichier refusé ne sont écrites par aucun autre point de la
+// recette : leur absence reste vraie au second passage, là où un contrôle sur
+// MI-901 signalait à tort la fiche laissée par la veille.
+const csvInvalide = [ENTETE_CSV, ligneCsv("MI-909"), ligneCsv("MI-910", "gratuit"), ligneCsv("MI-911")].join("\n");
 const refus = await importer(csvInvalide);
 verifier("un CSV avec une ligne invalide est refusé en bloc", refus.statut === 422, `statut ${refus.statut}`);
 verifier("le rapport indique la ligne fautive", refus.texte.includes('"ligne":3'));
 verifier("le rapport indique la colonne fautive", refus.texte.includes('"colonne":"prix_ttc"'));
 
 const apresRefus = await get("/admin/motos", { headers: cookie });
-verifier("aucune ligne du fichier refusé n'a été écrite", !apresRefus.texte.includes("MI-901"));
+verifier(
+  "aucune ligne du fichier refusé n'a été écrite",
+  !apresRefus.texte.includes("MI-909") && !apresRefus.texte.includes("MI-911")
+);
 
 const csvValide = [ENTETE_CSV, ligneCsv("MI-901"), ligneCsv("MI-903")].join("\n");
 const ok = await importer(csvValide);
 verifier("un CSV valide est importé", ok.statut === 200, ok.texte.slice(0, 200));
-verifier("deux motos ont été créées", ok.texte.includes('"crees":2'));
+// L'import est idempotent par référence : au second passage les deux fiches
+// sont mises à jour au lieu d'être créées, et la recette doit rester verte.
+const bilan = JSON.parse(ok.texte || "{}");
+verifier(
+  "les deux lignes sont enregistrées",
+  (bilan.crees ?? 0) + (bilan.mis_a_jour ?? 0) === 2,
+  `crees ${bilan.crees}, mis_a_jour ${bilan.mis_a_jour}`
+);
 
 const reimport = await importer(csvValide);
 verifier("un réimport met à jour au lieu de dupliquer", reimport.texte.includes('"mis_a_jour":2'));
@@ -433,6 +477,53 @@ const misEnVente = await get(`/api/motos/${idImportee}/statut`, {
 verifier("la mise en vente d'une fiche sans photo est refusée", misEnVente.statut === 422, `statut ${misEnVente.statut}`);
 verifier("le refus énumère les points bloquants", misEnVente.texte.includes("Plan de prise de vue"));
 
+const catalogueAvant = await get("/motos");
+verifier("la fiche incomplète n'a pas atteint le catalogue", !catalogueAvant.texte.includes("GSX-S750"));
+
+// Trois angles suffisent depuis l'allègement du plan (7.1) : ni compteur, ni
+// moteur, ni pneus, ni selle. La recette le prouve sur le serveur, la règle
+// étant celle qui décide de ce qui part en ligne.
+const vueExigee = (ordre, vue) => ({
+  moto_id: idImportee,
+  type: "photo",
+  origine: "reelle",
+  vue,
+  // Chemin local servable : un identifiant Cloudinary factice ferait échouer
+  // `next/image` sur le catalogue une fois la fiche publiée.
+  cloudinary_id: `/demo/${ordre}.jpeg`,
+  largeur: 1600,
+  hauteur: 1200,
+  ordre,
+  alt: `Suzuki GSX-S750 2023 - ${vue}`,
+});
+const troisAngles = await get("/api/import/medias", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", ...cookie },
+  body: JSON.stringify({
+    fichier_nom: "trois-angles",
+    medias: [
+      vueExigee(1, "34_avant_droit"),
+      vueExigee(2, "34_arriere_gauche"),
+      vueExigee(3, "face_avant"),
+    ],
+  }),
+});
+verifier("les trois vues exigées sont enregistrées", troisAngles.texte.includes('"reussis":3'));
+
+const publiee = await get(`/api/motos/${idImportee}/statut`, {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json", ...cookie },
+  body: JSON.stringify({ statut: "disponible" }),
+});
+verifier(
+  "trois angles suffisent à publier, sans compteur ni moteur ni pneus",
+  publiee.statut === 200,
+  publiee.texte.slice(0, 200)
+);
+
+const catalogueApres = await get("/motos");
+verifier("la fiche publiée rejoint le catalogue", catalogueApres.texte.includes("GSX-S750"));
+
 const versArchive = await get(`/api/motos/${idImportee}/statut`, {
   method: "PATCH",
   headers: { "Content-Type": "application/json", ...cookie },
@@ -440,8 +531,15 @@ const versArchive = await get(`/api/motos/${idImportee}/statut`, {
 });
 verifier("le retrait reste toujours possible", versArchive.statut === 200, versArchive.texte.slice(0, 120));
 
+// La recette rend la fiche à son état d'avant : lot de photos annulé, fiche
+// archivée. Sans cela, le second passage partirait d'une moto déjà publiable.
+const lotTroisAngles = JSON.parse(troisAngles.texte || "{}").lot_id;
+if (lotTroisAngles) {
+  await get(`/api/import/lots/${lotTroisAngles}`, { method: "DELETE", headers: cookie });
+}
+
 const toujoursAbsente = await get("/motos");
-verifier("la fiche incomplète n'a jamais atteint le catalogue", !toujoursAbsente.texte.includes("GSX-S750"));
+verifier("la fiche retirée quitte le catalogue", !toujoursAbsente.texte.includes("GSX-S750"));
 
 // ── 12. Ergonomie du back-office ──────────────────────────────────────────
 titre("12. Back-office : navigation et filtres (10.1, 10.2, 10.5)");

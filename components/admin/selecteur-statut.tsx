@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import type { Statut } from "@/lib/types";
 import { LIBELLE_STATUT } from "@/lib/types";
@@ -25,6 +26,7 @@ const COULEUR: Record<Statut, string> = {
  * précédent en cas d'échec.
  */
 export function SelecteurStatut({ id, statut }: { id: string; statut: Statut }) {
+  const router = useRouter();
   const [valeur, setValeur] = useState<Statut>(statut);
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
@@ -49,7 +51,12 @@ export function SelecteurStatut({ id, statut }: { id: string; statut: Statut }) 
               if (!r.ok) {
                 setValeur(precedent);
                 setErreur(r.erreur);
+                return;
               }
+              // Le reste de l'écran dépend du statut : badge public, colonnes
+              // de la liste, lien vers la fiche en ligne. Seul le serveur sait
+              // ce qu'il devient.
+              router.refresh();
             } catch {
               setValeur(precedent);
               setErreur("Échec réseau — réessayez.");

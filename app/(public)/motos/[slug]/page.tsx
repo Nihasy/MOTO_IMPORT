@@ -9,7 +9,7 @@ import { GalerieFiche } from "@/components/fiche/galerie-fiche";
 import { BlocPrix } from "@/components/fiche/bloc-prix";
 import { BarreActionFixe } from "@/components/fiche/barre-action";
 import {
-  CommentCaSePasse, EtatVehicule, FicheTechnique, Reassurance,
+  CommentCaSePasse, Description, EtatVehicule, FicheTechnique, Reassurance,
 } from "@/components/fiche/blocs";
 import { CarteMoto } from "@/components/catalogue/carte-moto";
 import { BadgeStatut } from "@/components/ui";
@@ -84,7 +84,9 @@ export default async function FicheMoto({ params }: Props) {
       ? { mileageFromOdometer: { "@type": "QuantitativeValue", value: moto.kilometrage, unitCode: "KMT" } }
       : {}),
     itemCondition: moto.etat === "neuf" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
-    description: moto.description,
+    // La description étant facultative, une clé vide vaudrait moins que pas de
+    // clé du tout : les moteurs la liraient comme un descriptif inexistant.
+    ...(moto.description.trim() ? { description: moto.description } : {}),
     image: moto.medias.slice(0, 5).map((m) => urlMedia(m.cloudinary_id, "plein", { origine: m.origine })),
     offers: {
       "@type": "Offer",
@@ -147,6 +149,7 @@ export default async function FicheMoto({ params }: Props) {
           {/* Ordre imposé par le 9.3 : la description, puis les cinq étapes.
               Environ 80 % du trafic arrive directement ici sans passer par
               l'accueil (4.2) — la fiche doit vendre la moto et l'entreprise. */}
+          <Description moto={moto} />
           <CommentCaSePasse statut={moto.statut} />
 
           {similaires.length ? (

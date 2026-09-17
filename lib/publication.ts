@@ -38,10 +38,13 @@ export function controlesPublication(moto: Moto, medias: Media[]): Controle[] {
         ? `Manque : ${manquantes.map((v) => LIBELLE_VUE[v]).join(", ")}`
         : `${medias.length} photo${medias.length > 1 ? "s" : ""}, toutes les vues présentes`,
     },
+    // Aucun minimum de longueur : la fiche appartient au vendeur, qui juge seul
+    // ce qu'une moto demande de texte. Le contrôle ne retient que le vide, qui
+    // laisserait la page publique sans un mot sur le véhicule.
     {
-      libelle: "Description d'au moins 150 mots",
-      ok: mots >= 150,
-      detail: `${mots} mots`,
+      libelle: "Description renseignée",
+      ok: mots >= 1,
+      detail: `${mots} mot${mots > 1 ? "s" : ""}`,
     },
     {
       libelle: "Prix et date de validité renseignés",

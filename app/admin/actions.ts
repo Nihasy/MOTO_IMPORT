@@ -17,7 +17,31 @@ import { messageVerrou, verrouPublication } from "@/lib/publication";
 import { estEnVente } from "@/lib/types";
 import type { DemandeStatut, Moto, Statut } from "@/lib/types";
 
-export type EtatFormulaire = { erreur?: string; champ?: string } | null;
+/**
+ * État renvoyé par les formulaires du back-office.
+ *
+ * `valeurs` renvoie la saisie telle qu'elle est arrivée. React vide tout
+ * formulaire soumis par une action — `startHostTransition` demande un
+ * `requestFormReset` avant même d'appeler l'action —, si bien qu'un refus du
+ * serveur effaçait les vingt champs d'une fiche. `tentative` change à chaque
+ * réponse : le formulaire s'en sert de clé pour se remonter avec la saisie
+ * reprise, au lieu du formulaire vide que React vient de rétablir.
+ */
+export type EtatFormulaire = {
+  erreur?: string;
+  champ?: string;
+  valeurs?: Record<string, string>;
+  tentative?: number;
+} | null;
+
+/** Saisie brute, pour la rendre au formulaire en cas de refus. */
+function valeursSaisies(form: FormData): Record<string, string> {
+  const saisie: Record<string, string> = {};
+  for (const [cle, valeur] of form.entries()) {
+    if (typeof valeur === "string") saisie[cle] = valeur;
+  }
+  return saisie;
+}
 
 export async function connexion(_etat: EtatFormulaire, form: FormData): Promise<EtatFormulaire> {
   // Sans limitation, deux comptes connus et un mot de passe a deviner suffisent
@@ -40,7 +64,15 @@ export async function connexion(_etat: EtatFormulaire, form: FormData): Promise<
   const session = authentifier(email, motDePasse);
   // Message unique : il ne doit pas permettre de distinguer un compte
   // inexistant d'un mot de passe errone.
-  if (!session) return { erreur: "Identifiants incorrects." };
+  // L'adresse est rendue au formulaire : React le vide à chaque tentative, et
+  // seul le mot de passe mérite d'être ressaisi.
+  if (!session) {
+    return {
+      erreur: "Identifiants incorrects.",
+      valeurs: { email },
+      tentative: (_etat?.tentative ?? 0) + 1,
+    };
+  }
 
   await ouvrirSession(session);
   redirect(destinationSure(form.get("suite")));
@@ -60,6 +92,17 @@ async function exigerSession() {
 export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Promise<EtatFormulaire> {
   await exigerSession();
   const id = String(form.get("id") ?? "");
+  // Tout refus repart avec la saisie : sans cela React la vide et l'exploitant
+  // doit ressaisir les vingt champs de la fiche.
+  const refus = (erreur: string, champ?: string): EtatFormulaire => ({
+    erreur,
+    ...(champ ? { champ } : {}),
+    valeurs: valeursSaisies(form),
+    tentative: (_etat?.tentative ?? 0) + 1,
+  });
+
+  const existante = id ? await db().motoParId(id) : null;
+  if (id && !existante) return refus("Moto introuvable : elle a pu être supprimée entre-temps.");
   const texte = (cle: string) => String(form.get(cle) ?? "").trim();
   const liste = (cle: string) =>
     texte(cle)
@@ -75,7 +118,11 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
     cylindree: form.get("cylindree"),
     categorie: form.get("categorie"),
     etat: form.get("etat"),
-    statut: form.get("statut") || "disponible",
+    // Le statut n'est pas un champ de ce formulaire : il a son sélecteur, sous
+    // verrou de publication. Une création naît donc en brouillon, et une
+    // modification conserve le statut en cours — quoi qu'annonce la requête,
+    // qui peut avoir été fabriquée à la main.
+    statut: existante?.statut ?? "brouillon",
     kilometrage: texte("kilometrage") ? form.get("kilometrage") : null,
     couleur: texte("couleur") || null,
     puissance_ch: texte("puissance_ch") ? form.get("puissance_ch") : null,
@@ -101,32 +148,41 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
   const parse = motoSchema.safeParse(brut);
   if (!parse.success) {
     const i = parse.error.issues[0];
-    return { erreur: i.message, champ: String(i.path[0] ?? "") };
+    return refus(i.message, String(i.path[0] ?? ""));
   }
 
-  // Verrou de publication : on ne doit pas pouvoir contourner la bascule de
-  // statut en passant par le formulaire complet (7.1). Sur une création, la
-  // fiche n'a encore aucune photo — le verrou la retient donc en brouillon.
-  if (estEnVente(parse.data.statut)) {
-    const reference = id ? await db().motoParId(id) : null;
-    const medias = id ? await db().mediasDeMoto(id) : [];
-    const candidate = { ...(reference ?? {}), ...parse.data, id: id || "", slug: "" } as Moto;
+  // Verrou de publication (7.1, 10.3). Une création naît en brouillon et ne
+  // passe donc jamais par ici. Le cas visé est la fiche déjà en vente que la
+  // modification rendrait incomplète : vider sa description ou effacer sa
+  // garantie la laisserait en ligne, non conforme.
+  if (estEnVente(parse.data.statut) && existante) {
+    const medias = await db().mediasDeMoto(id);
+    const candidate = { ...existante, ...parse.data } as Moto;
     const verrou = verrouPublication(candidate, medias, parse.data.statut);
     if (!verrou.autorise) {
-      return { erreur: messageVerrou(verrou.bloquants), champ: "statut" };
+      return refus(
+        `Cette moto est en vente : ces modifications la rendraient incomplète. ` +
+          verrou.bloquants.join(" · ") +
+          ` — repassez-la en brouillon si vous voulez la retravailler.`
+      );
     }
   }
 
+  let destination = "/admin/motos";
   try {
-    const moto = id ? await db().majMoto(id, parse.data) : await db().creerMoto(parse.data);
+    const moto = existante ? await db().majMoto(id, parse.data) : await db().creerMoto(parse.data);
     revalidatePath("/motos");
     revalidatePath(`/motos/${moto.slug}`);
     revalidatePath("/");
     revalidatePath("/admin/motos");
+    revalidatePath(`/admin/motos/${moto.id}`);
+    // Après une création, la fiche n'a pas encore de photos : l'étape suivante
+    // est l'onglet qui les reçoit, avec la liste de ce qui reste à faire.
+    if (!existante) destination = `/admin/motos/${moto.id}?onglet=photos`;
   } catch (e) {
-    return { erreur: (e as Error).message };
+    return refus((e as Error).message);
   }
-  redirect("/admin/motos");
+  redirect(destination);
 }
 
 export type ResultatStatut =
@@ -156,6 +212,9 @@ export async function changerStatut(id: string, statut: Statut): Promise<Resulta
   revalidatePath(`/motos/${moto.slug}`);
   revalidatePath("/");
   revalidatePath("/admin/motos");
+  // La fiche d'administration affiche le statut, le lien public et les
+  // contrôles : sans cette ligne elle reste sur l'état précédent.
+  revalidatePath(`/admin/motos/${id}`);
   return { ok: true, statut: moto.statut, date_vente: moto.date_vente };
 }
 
