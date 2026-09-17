@@ -184,6 +184,13 @@ charges impose ce rendu dynamique pour que les filtres vivent dans l'URL.
   `Strict-Transport-Security` est déjà envoyé en production
   (`next.config.mjs`), rien à ajouter.
 
+> **`npm run test:e2e` écrit dans la base que sert le serveur visé.** Une fois
+> Supabase branché, la recette y créerait ses fiches MI-901 et MI-903 et ses
+> lots de photos. Lancez-la contre un magasin local :
+> `LOCAL_DB_PATH=/tmp/recette.json npm run dev` dans un terminal, la recette
+> dans l'autre — ou contre un second projet Supabase, jamais celui de
+> production.
+
 ## Reste à faire avant l'ouverture
 
 Points qui ne relèvent pas du développement mais conditionnent la recette

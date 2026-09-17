@@ -71,19 +71,32 @@ const base = JSON.parse(await readFile(FICHIER, "utf8"));
 const motosRetenues = base.motos.filter((m) => !EXCLUES.has(m.reference.toUpperCase()));
 const idsRetenus = new Set(motosRetenues.map((m) => m.id));
 
+// Ordre impose par les cles etrangeres : fournisseurs avant motos, lots avant
+// medias, motos avant medias et demandes.
+const ORDRE = ["fournisseurs", "import_lots", "motos", "medias", "demandes"];
+const aTransferer = ORDRE.filter((t) => TABLES.includes(t));
+
+/**
+ * `lot_id` ne survit qu'aux lots effectivement transferes. Les lots du magasin
+ * local sont pour l'essentiel des artefacts de recette et restent en arriere
+ * par defaut ; garder leur identifiant sur un media ferait echouer tout le
+ * paquet sur la cle etrangere. Vide, il ne coute que la possibilite d'annuler
+ * un lot deja ancien.
+ */
+const lotsTransferes = new Set(
+  aTransferer.includes("import_lots") ? base.import_lots.map((l) => l.id) : []
+);
+
 /** Les lignes filles suivent le sort de leur moto : sinon la cle etrangere casse. */
 const CONTENU = {
   fournisseurs: base.fournisseurs,
   import_lots: base.import_lots,
   motos: motosRetenues,
-  medias: base.medias.filter((x) => idsRetenus.has(x.moto_id)),
+  medias: base.medias
+    .filter((x) => idsRetenus.has(x.moto_id))
+    .map((x) => (x.lot_id && !lotsTransferes.has(x.lot_id) ? { ...x, lot_id: null } : x)),
   demandes: base.demandes.filter((d) => !d.moto_id || idsRetenus.has(d.moto_id)),
 };
-
-// Ordre impose par les cles etrangeres : fournisseurs avant motos, lots avant
-// medias, motos avant medias et demandes.
-const ORDRE = ["fournisseurs", "import_lots", "motos", "medias", "demandes"];
-const aTransferer = ORDRE.filter((t) => TABLES.includes(t));
 
 console.log(`Source : ${FICHIER}`);
 console.log(`Cible  : ${URL_BASE}`);
