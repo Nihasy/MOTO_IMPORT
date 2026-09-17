@@ -154,6 +154,25 @@ charges impose ce rendu dynamique pour que les filtres vivent dans l'URL.
 5. Déployer sur Vercel, brancher le domaine, activer la sauvegarde quotidienne
    Supabase et **tester une restauration** avant l'ouverture au public.
 
+### Domaine
+
+`motoimport.app`, enregistré chez Cloudflare. Trois points à ne pas manquer :
+
+- `NEXT_PUBLIC_SITE_URL=https://motoimport.app` dans les variables Vercel
+  (portée Production). Elle est **figée à la construction** : la modifier sans
+  redéployer laisse les liens canoniques, le sitemap et les images Open Graph
+  sur l'ancienne adresse.
+- Les enregistrements DNS à créer sont ceux que le tableau de bord Vercel
+  affiche pour le domaine ajouté — ne pas les recopier de mémoire, ils
+  changent. Sur Cloudflare, laisser ces entrées en **DNS seul** (nuage gris) :
+  le proxy orange devant Vercel empile deux CDN, et le mode SSL « Flexible »
+  provoque une boucle de redirection. Si le proxy est voulu malgré tout, mode
+  SSL **Full (strict)** obligatoire.
+- L'extension `.app` est inscrite d'office dans la liste HSTS des navigateurs :
+  le site n'est **joignable qu'en HTTPS**, sans repli en clair. L'en-tête
+  `Strict-Transport-Security` est déjà envoyé en production
+  (`next.config.mjs`), rien à ajouter.
+
 ## Reste à faire avant l'ouverture
 
 Points qui ne relèvent pas du développement mais conditionnent la recette
