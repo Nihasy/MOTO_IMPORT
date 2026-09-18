@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { ar, dateFr, estNouvelle } from "@/lib/format";
-import { urlMedia } from "@/lib/cloudinary";
+import { servieParCloudinary, urlMedia } from "@/lib/cloudinary";
 import { LIBELLE_VUE } from "@/lib/types";
 import {
   GROUPES_ADMIN, effectifsAdmin, estGroupeAdmin, filtrerMotosAdmin, type GroupeAdmin,
@@ -115,7 +115,14 @@ export default async function ListeMotos({ searchParams }: Props) {
                     <div className="flex items-center gap-3">
                       <div className="relative h-14 w-[74px] shrink-0 overflow-hidden rounded bg-surface-hi">
                         {couverture ? (
-                          <Image src={couverture} alt="" fill sizes="74px" className="object-cover" />
+                          <Image
+                            src={couverture}
+                            alt=""
+                            fill
+                            sizes="74px"
+                            className="object-cover"
+                            unoptimized={Boolean(m.couverture && servieParCloudinary(m.couverture.cloudinary_id))}
+                          />
                         ) : (
                           <span className="flex h-full items-center justify-center text-center text-[10px] leading-tight text-dim">
                             sans

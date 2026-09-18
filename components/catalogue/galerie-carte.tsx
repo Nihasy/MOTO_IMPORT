@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import clsx from "clsx";
 import type { Media } from "@/lib/types";
-import { filigraneIncruste, urlMedia } from "@/lib/cloudinary";
+import { filigraneIncruste, servieParCloudinary, urlMedia } from "@/lib/cloudinary";
 import { Filigrane } from "@/components/ui/filigrane";
 
 /**
@@ -75,6 +75,7 @@ export function GalerieCarte({
           <div key={m.id} className="relative aspect-[4/3] w-full shrink-0 snap-center bg-surface-hi">
             <Image
               src={urlMedia(m.cloudinary_id, "carte", { origine: m.origine })}
+              unoptimized={servieParCloudinary(m.cloudinary_id)}
               alt={m.alt || alt}
               fill
               sizes="(max-width: 672px) 100vw, 672px"

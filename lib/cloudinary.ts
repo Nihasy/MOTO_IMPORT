@@ -52,6 +52,16 @@ const transformable = (cloudinaryId: string) =>
   Boolean(CLOUD_NAME) && !/^(https?|data):/.test(cloudinaryId) && !cloudinaryId.startsWith("/");
 
 /**
+ * Vrai quand `urlMedia` rend une adresse Cloudinary pour ce média, déjà mise à
+ * la bonne taille et au bon format (`f_auto,q_auto`). `next/image` doit alors
+ * la servir telle quelle (`unoptimized`) : sans quoi chaque photo repasse par
+ * l'optimiseur d'images de Vercel — un second traitement de la même image,
+ * décompté sur le quota mensuel de l'offre gratuite de Vercel, pour un
+ * résultat que Cloudinary a déjà produit.
+ */
+export const servieParCloudinary = (cloudinaryId: string) => transformable(cloudinaryId);
+
+/**
  * Incrustation du filigrane par Cloudinary. Les barres obliques d'un public id
  * s'écrivent en deux-points dans une couche. `fl_relative` rend la largeur
  * proportionnelle à la photo : la marque garde la même emprise sur une carte

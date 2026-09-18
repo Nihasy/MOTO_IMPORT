@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import type { Media } from "@/lib/types";
-import { filigraneIncruste, urlMedia } from "@/lib/cloudinary";
+import { filigraneIncruste, servieParCloudinary, urlMedia } from "@/lib/cloudinary";
 import { Filigrane } from "@/components/ui/filigrane";
 import { pister } from "@/lib/analytics";
 
@@ -75,6 +75,7 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
             >
               <Image
                 src={urlMedia(m.cloudinary_id, "galerie", { origine: m.origine })}
+                unoptimized={servieParCloudinary(m.cloudinary_id)}
                 alt={m.alt || alt}
                 fill
                 sizes="(max-width: 672px) 100vw, 672px"
@@ -120,6 +121,7 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
           >
             <Image
               src={urlMedia(m.cloudinary_id, "vignette", { origine: m.origine })}
+              unoptimized={servieParCloudinary(m.cloudinary_id)}
               alt=""
               fill
               sizes="80px"
@@ -150,6 +152,7 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
             >
               <Image
                 src={urlMedia(courant.cloudinary_id, "plein", { origine: courant.origine })}
+                unoptimized={servieParCloudinary(courant.cloudinary_id)}
                 alt={courant.alt || alt}
                 width={courant.largeur || 1600}
                 height={courant.hauteur || 1200}

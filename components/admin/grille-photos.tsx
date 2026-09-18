@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import clsx from "clsx";
 import type { Media, Origine, Vue } from "@/lib/types";
 import { LIBELLE_VUE, ORIGINES, VUES } from "@/lib/types";
-import { urlMedia } from "@/lib/cloudinary";
+import { servieParCloudinary, urlMedia } from "@/lib/cloudinary";
 import { majPhoto, reordonnerPhotos, supprimerPhoto } from "@/app/admin/actions";
 
 /**
@@ -60,6 +60,7 @@ export function GrillePhotos({ motoId, medias: initiaux }: { motoId: string; med
           <div className="relative aspect-[4/3] bg-surface-hi">
             <Image
               src={urlMedia(m.cloudinary_id, "vignette", { origine: m.origine })}
+              unoptimized={servieParCloudinary(m.cloudinary_id)}
               alt={m.alt}
               fill
               sizes="200px"

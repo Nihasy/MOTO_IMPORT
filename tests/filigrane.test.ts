@@ -83,3 +83,29 @@ describe("filigrane sans Cloudinary", () => {
     expect(filigraneALEnvoi("reelle")).toBe(false);
   });
 });
+
+/**
+ * Une photo déjà dimensionnée par Cloudinary ne doit pas repasser par
+ * l'optimiseur de Vercel : double traitement, décompté sur son quota gratuit.
+ */
+describe("image déjà optimisée par Cloudinary", () => {
+  it("est servie telle quelle quand Cloudinary la transforme", async () => {
+    const { servieParCloudinary, urlMedia } = await charger({
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "moto-import",
+    });
+    expect(servieParCloudinary("moto-import/MI-047/photo")).toBe(true);
+    expect(urlMedia("moto-import/MI-047/photo", "carte")).toMatch(/^https:\/\/res\.cloudinary\.com\//);
+  });
+
+  it("laisse les photos locales, data URL et adresses externes à next/image", async () => {
+    const { servieParCloudinary } = await charger({ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "moto-import" });
+    expect(servieParCloudinary("/demo/1.jpeg")).toBe(false);
+    expect(servieParCloudinary("data:image/webp;base64,AAAA")).toBe(false);
+    expect(servieParCloudinary("https://exemple.com/photo.jpg")).toBe(false);
+  });
+
+  it("ne réclame rien sans Cloudinary configuré", async () => {
+    const { servieParCloudinary } = await charger({ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "" });
+    expect(servieParCloudinary("moto-import/MI-047/photo")).toBe(false);
+  });
+});
