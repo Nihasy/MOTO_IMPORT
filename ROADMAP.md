@@ -46,7 +46,7 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
   - [x] GitHub → dépôt `MOTO_IMPORT` → Settings → Secrets and variables → Actions → New repository secret : `VERCEL_TOKEN` = le jeton **[Vous]**
   - [x] Lancer le workflow une fois (onglet Actions → Run workflow) et vérifier la mise en ligne **[Ensemble]**
 - [ ] **Mesurer ce qui compte** : le seul indicateur décisif est le nombre de contrats signés attribués au site
-  - [ ] Vercel Analytics **[Claude]**
+  - [x] Vercel Analytics : pages vues, hors `/admin` et `/connexion`, et événements `vue_fiche`, `clic_devis`, etc. Tableau de bord : Vercel → moto-import → Analytics **[Claude]**
   - [ ] Pixel Meta : me donner l'identifiant du pixel **[Vous]**, l'intégrer **[Claude]**
   - [ ] Pixel TikTok : me donner l'identifiant du pixel **[Vous]**, l'intégrer **[Claude]**
   - [ ] Sentry : créer le compte et me donner le DSN **[Vous]**, l'intégrer **[Claude]**

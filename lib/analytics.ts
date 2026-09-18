@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import type { DemandeSource } from "./types";
 
 type Evenement =
@@ -13,14 +14,16 @@ type Evenement =
 type Fenetre = Window & {
   fbq?: (...a: unknown[]) => void;
   ttq?: { track: (n: string, p?: unknown) => void };
-  va?: (...a: unknown[]) => void;
 };
 
-export function pister(evenement: Evenement, donnees: Record<string, unknown> = {}) {
+/** Vercel n'accepte que des valeurs simples dans les données d'un événement. */
+type Donnees = Record<string, string | number | boolean | null>;
+
+export function pister(evenement: Evenement, donnees: Donnees = {}) {
   if (typeof window === "undefined") return;
   const w = window as Fenetre;
   try {
-    w.va?.("event", { name: evenement, data: donnees });
+    track(evenement, donnees);
     w.fbq?.("trackCustom", evenement, donnees);
     w.ttq?.track(evenement, donnees);
   } catch {

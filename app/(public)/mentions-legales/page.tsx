@@ -37,6 +37,11 @@ export default function Page() {
               empreinte anonymisée est stockée, à des fins de protection contre les abus.
             </p>
             <p className="mt-1.5">
+              La fréquentation du site est mesurée avec Vercel Web Analytics, sans cookie et sans
+              identifier les visiteurs : seuls des totaux anonymes de pages vues et d&apos;actions
+              (ouverture d&apos;une fiche, demande de devis) sont conservés.
+            </p>
+            <p className="mt-1.5">
               Vous pouvez demander la suppression de vos données en nous écrivant sur WhatsApp.
             </p>
           </section>

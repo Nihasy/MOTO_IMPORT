@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Open_Sans } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
+import { MesureAudience } from "@/components/ui/mesure-audience";
 import "./globals.css";
 
 const openSans = Open_Sans({
@@ -45,7 +46,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={openSans.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <MesureAudience />
+      </body>
     </html>
   );
 }
