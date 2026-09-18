@@ -6,7 +6,7 @@ mesure en remplaçant `[ ]` par `[x]`.
 Qui s'en charge : **[Vous]** dans vos consoles ou pour vos décisions,
 **[Claude]** dans le code et les déploiements, **[Ensemble]** pour les deux.
 
-Site en ligne : https://moto-import.vercel.app · Dépôt : https://github.com/Nihasy/MOTO_IMPORT
+Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MOTO_IMPORT
 
 ---
 
@@ -30,11 +30,11 @@ Site en ligne : https://moto-import.vercel.app · Dépôt : https://github.com/N
 
 ### Domaine `motoimport.app`
 
-- [ ] Acheter le domaine sur Cloudflare **[Vous]**
-- [ ] L'ajouter dans Vercel (Settings → Domains) **[Vous]**
-- [ ] Créer dans Cloudflare les enregistrements DNS affichés par Vercel, en **DNS seul (nuage gris)** **[Vous]**
-- [ ] Passer `NEXT_PUBLIC_SITE_URL` à `https://motoimport.app` et redéployer **[Claude]**
-- [ ] Vérifier HTTPS, liens canoniques, sitemap et images Open Graph sur le nouveau domaine **[Claude]**
+- [x] Acheter le domaine sur Cloudflare **[Vous]**
+- [x] L'ajouter dans Vercel (Settings → Domains) **[Vous]**
+- [x] Créer dans Cloudflare les enregistrements DNS affichés par Vercel, en **DNS seul (nuage gris)** **[Vous]**
+- [x] Passer `NEXT_PUBLIC_SITE_URL` à `https://motoimport.app` et redéployer **[Claude]**
+- [x] Vérifier HTTPS, liens canoniques, sitemap et images Open Graph sur le nouveau domaine **[Claude]**
 
 ---
 
