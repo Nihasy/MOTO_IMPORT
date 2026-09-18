@@ -6,8 +6,7 @@ import type { Moto, Vue } from "@/lib/types";
 import { LIBELLE_VUE, VUES } from "@/lib/types";
 import { analyserNomFichier } from "@/lib/medias";
 import { altParDefaut } from "@/lib/medias";
-import { compresser, fileDEnvoi, televerser, versDataUrl } from "@/lib/upload-client";
-import { filigraneALEnvoi } from "@/lib/cloudinary";
+import { envoyerPhoto, fileDEnvoi } from "@/lib/upload-client";
 
 /**
  * Ajout rapide depuis un téléphone (7.6) : prise de photo directe,
@@ -38,18 +37,10 @@ export function AjoutPhotos({
     const resultats = await fileDEnvoi(
       liste,
       async (f, i) => {
-        // L'origine est lue avant la compression : c'est elle qui décide si la
-        // marque doit être incrustée dans le fichier envoyé.
+        // L'origine décide si la photo porte la marque : elle se lit avant tout.
         const analyse = analyserNomFichier(f.name);
         const origine = analyse.valide ? analyse.origine : ("reelle" as const);
-        const pret = await compresser(f, { filigrane: filigraneALEnvoi(origine) });
-        let envoi;
-        try {
-          envoi = await televerser(pret, `moto-import/${moto.reference}`);
-        } catch {
-          // Cloudinary absent ou refusé : on conserve l'image compressée en base.
-          envoi = await versDataUrl(pret);
-        }
+        const envoi = await envoyerPhoto(f, origine, `moto-import/${moto.reference}`);
         const vue = analyse.valide ? analyse.vue : "autre";
         return {
           moto_id: moto.id,

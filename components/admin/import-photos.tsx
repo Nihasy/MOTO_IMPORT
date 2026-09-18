@@ -8,8 +8,7 @@ import { LIBELLE_VUE } from "@/lib/types";
 import {
   altParDefaut, analyserNomFichier, grouperParReference, vuesManquantes,
 } from "@/lib/medias";
-import { compresser, fileDEnvoi, televerser, versDataUrl } from "@/lib/upload-client";
-import { filigraneALEnvoi } from "@/lib/cloudinary";
+import { envoyerPhoto, fileDEnvoi } from "@/lib/upload-client";
 
 type Etat = "depot" | "reconciliation" | "envoi" | "rapport";
 
@@ -83,14 +82,8 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
     const resultats = await fileDEnvoi(
       aTraiter,
       async (x) => {
-        const pret = await compresser(x.fichier, { filigrane: filigraneALEnvoi(x.origine) });
         const moto = motos.find((m) => m.id === x.motoId)!;
-        let envoi;
-        try {
-          envoi = await televerser(pret, `moto-import/${moto.reference}`);
-        } catch {
-          envoi = await versDataUrl(pret);
-        }
+        const envoi = await envoyerPhoto(x.fichier, x.origine, `moto-import/${moto.reference}`);
         const vue = x.vue as keyof typeof LIBELLE_VUE;
         return {
           moto_id: x.motoId,
