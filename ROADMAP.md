@@ -40,7 +40,11 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 
 ## 2. Fortement recommandé
 
-- [ ] **Relier Vercel au dépôt GitHub** (Settings → Git) : chaque `git push` redéploiera tout seul. Aujourd'hui les mises en ligne sont manuelles **[Vous]**
+- [ ] **Déploiement automatique à chaque `git push` sur `main`** : le compte GitHub `Nihasy` est déjà relié à un autre compte Vercel, l'intégration Git de Vercel est donc remplacée par GitHub Actions (`.github/workflows/deploy.yml`). Aujourd'hui les mises en ligne sont manuelles
+  - [x] Écrire le workflow de déploiement **[Claude]**
+  - [ ] Vercel (compte `motoimportcontact`) → Account Settings → Tokens : créer un jeton, sans expiration ou d'un an **[Vous]**
+  - [ ] GitHub → dépôt `MOTO_IMPORT` → Settings → Secrets and variables → Actions → New repository secret : `VERCEL_TOKEN` = le jeton **[Vous]**
+  - [ ] Lancer le workflow une fois (onglet Actions → Run workflow) et vérifier la mise en ligne **[Ensemble]**
 - [ ] **Mesurer ce qui compte** : le seul indicateur décisif est le nombre de contrats signés attribués au site
   - [ ] Vercel Analytics **[Claude]**
   - [ ] Pixel Meta : me donner l'identifiant du pixel **[Vous]**, l'intégrer **[Claude]**

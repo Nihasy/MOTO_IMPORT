@@ -1,0 +1,46 @@
+# Mise en production a chaque push sur main.
+# Le compte Vercel (motoimportcontact) n'est pas celui relie a GitHub : on
+# deploie donc par la CLI avec un jeton, sans l'integration Git de Vercel.
+# La construction se fait chez Vercel, qui detient les variables sensibles.
+name: Deploiement production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  VERCEL_ORG_ID: team_q28q02PdQeKXfhjvDe6r0xdJ
+  VERCEL_PROJECT_ID: prj_QI7leI40s1Zou0o2es9SGZ8N25BZ
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Jeton present ?
+        id: jeton
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::warning::Secret VERCEL_TOKEN absent : deploiement ignore."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.jeton.outputs.ok == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.jeton.outputs.ok == 'true'
+        with:
+          node-version: 20
+
+      - name: Deployer sur Vercel
+        if: steps.jeton.outputs.ok == 'true'
+        run: npx --yes vercel@latest deploy --prod --yes --token "${{ secrets.VERCEL_TOKEN }}"
