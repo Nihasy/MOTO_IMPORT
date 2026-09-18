@@ -88,3 +88,5 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 - [x] Tests de sécurité (68 défenses, 0 faille) et de concurrence (20 sur 20)
 - [x] Correction de trois défauts de concurrence du pilote Supabase et du poids des pages (2,8 Mo ramenés à 32 Ko)
 - [x] Base nettoyée, sauvegarde conservée dans `data/sauvegardes/avant-nettoyage-2026-09-18.json`
+- [x] Domaine `motoimport.app` en service : DNS Cloudflare en DNS seul vers la cible Vercel du projet (`CNAME` sur `@` et `www`), `www` redirigé en 308 vers l'adresse sans `www`, liens canoniques, Open Graph, `robots.txt` et sitemap sur le nouveau domaine
+- [x] Mise en ligne automatique à chaque `git push` sur `main` par GitHub Actions
