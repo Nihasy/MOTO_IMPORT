@@ -7,30 +7,8 @@
 const BASE = process.env.E2E_BASE ?? "http://localhost:3000";
 const COMPTE = { email: "nihasy@moto-import.mg", motdepasse: "moto-import-2026" };
 
-/**
- * Le script tourne sous Node nu : personne ne lui charge `.env.local`, que Next
- * lit de son côté. Sans cette lecture, la recette signe son cookie avec un
- * secret que le serveur ne reconnaît pas, et tout le back-office apparaît en
- * échec alors qu'il fonctionne.
- */
-async function chargerEnvLocal() {
-  const { readFile } = await import("node:fs/promises");
-  for (const fichier of [".env.local", ".env"]) {
-    let brut;
-    try {
-      brut = await readFile(fichier, "utf8");
-    } catch {
-      continue;
-    }
-    for (const ligne of brut.split(/\r?\n/)) {
-      const m = ligne.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
-      if (!m) continue;
-      const valeur = m[2].trim().replace(/^(['"])(.*)\1$/, "$2");
-      // L'environnement réel prime : il permet de viser un autre serveur.
-      if (process.env[m[1]] === undefined) process.env[m[1]] = valeur;
-    }
-  }
-}
+import { chargerEnvLocal, secretSession } from "./env-local.mjs";
+
 await chargerEnvLocal();
 
 let reussis = 0;
@@ -269,12 +247,7 @@ verifier("la page de connexion est accessible", connexion.status === 200);
 
 // On rejoue la signature du jeton comme le fait lib/auth.
 const { createHmac } = await import("node:crypto");
-// Repli identique à celui de `lib/config.ts` : deux valeurs différentes et la
-// recette échouerait sur une machine sans AUTH_SECRET.
-const secret =
-  process.env.AUTH_SECRET?.length >= 16
-    ? process.env.AUTH_SECRET
-    : "developpement-uniquement-ne-jamais-utiliser-en-production";
+const secret = secretSession();
 const charge = Buffer.from(
   JSON.stringify({ email: COMPTE.email, role: "admin", exp: Math.floor(Date.now() / 1000) + 3600 })
 ).toString("base64url");

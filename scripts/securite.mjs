@@ -6,6 +6,9 @@
  *   npm run build && npm start &   puis   npm run test:securite
  */
 import { createHmac } from "node:crypto";
+import { SECRET_DEV, chargerEnvLocal, secretSession } from "./env-local.mjs";
+
+await chargerEnvLocal();
 
 const BASE = process.env.E2E_BASE ?? "http://localhost:3000";
 const COMPTE = { email: "nihasy@moto-import.mg", motdepasse: "moto-import-2026" };
@@ -66,7 +69,7 @@ if (!(await attendre())) {
 // Session légitime : forgée avec le secret RÉELLEMENT configuré, comme le
 // ferait le serveur lui-même. Cela isole le test du protocole interne des
 // Server Actions, tout en restant fidèle au format de jeton de production.
-const SECRET = process.env.AUTH_SECRET ?? process.env.REVALIDATE_SECRET ?? "dev-secret-moto-import";
+const SECRET = secretSession();
 
 const forger = (charge, secret) => {
   const c = Buffer.from(JSON.stringify(charge)).toString("base64url");
@@ -121,7 +124,10 @@ if (connexionReelle.indisponible) {
 
 const chargeAdmin = { email: "intrus@ailleurs.com", role: "admin", exp: dansUneHeure() };
 
-const jetonSecretParDefaut = forger(chargeAdmin, "dev-secret-moto-import");
+// Le vrai secret de repli, celui qu'on lit dans le depot public — et non une
+// valeur inventee que le serveur n'a jamais utilisee, qui faisait passer le
+// test sans rien eprouver.
+const jetonSecretParDefaut = forger(chargeAdmin, SECRET_DEV);
 const attaqueSecretDefaut = await req("/admin/fournisseurs", {
   headers: { Cookie: `mi_session=${jetonSecretParDefaut}` },
 });
@@ -144,7 +150,7 @@ for (const [nom, jeton] of [
 }
 
 // Jeton expiré.
-const expire = forger({ email: COMPTE.email, role: "admin", exp: Math.floor(Date.now() / 1000) - 10 }, "dev-secret-moto-import");
+const expire = forger({ email: COMPTE.email, role: "admin", exp: Math.floor(Date.now() / 1000) - 10 }, SECRET);
 verifier(
   "un jeton expire est refuse",
   (await req("/admin", { headers: { Cookie: `mi_session=${expire}` } })).statut !== 200
@@ -293,7 +299,11 @@ for (const q of ["' OR 1=1--", "'; drop table motos;--", "${7*7}", "{{7*7}}", "<
   const r = await req(`/motos?q=${encodeURIComponent(q)}`);
 
   // 1. La page repond, sans trace technique ni erreur serveur.
-  const repondSainement = r.statut === 200 && !/stack|SyntaxError|at Object\./i.test(r.texte);
+  // Une vraie trace, pas le mot « stack » : en developpement, React glisse dans
+  // chaque page des metadonnees de debogage ("stack":[]) qui declenchaient le
+  // test sur des pages parfaitement saines.
+  const trace = /SyntaxError|at Object\.|at \S+ \([^)]*:\d+:\d+\)/;
+  const repondSainement = r.statut === 200 && !trace.test(r.texte);
 
   // 2. Rien n'est evalue : 7*7 ne doit jamais valoir 49 la ou la valeur apparait.
   const zoneEcho = [...r.texte.matchAll(/.{0,80}7\*7.{0,80}/g)].map((m) => m[0]).join(" ");
@@ -434,16 +444,24 @@ verifier("Content-Security-Policy est posee", csp.length > 0);
 verifier("la CSP interdit le cadrage", csp.includes("frame-ancestors 'none'"));
 verifier("la CSP restreint base-uri", csp.includes("base-uri"));
 verifier("la CSP restreint form-action", csp.includes("form-action"));
-verifier(
-  "la CSP n'autorise pas eval",
-  !csp.includes("'unsafe-eval'"),
-  "script-src autorise 'unsafe-eval'"
-);
-verifier(
-  "Strict-Transport-Security est pose",
-  Boolean(h.get("strict-transport-security")),
-  "HSTS absent : premiere visite interceptable en clair"
-);
+// En developpement, Next exige 'unsafe-eval' pour le rechargement a chaud, et
+// HSTS n'a aucun sens sans TLS : next.config.mjs ne les pose qu'en production.
+// Ces deux defenses ne se jugent donc que sur un serveur servi en HTTPS ;
+// les exiger du serveur local produisait deux fausses failles a chaque passage.
+if (BASE.startsWith("https://")) {
+  verifier(
+    "la CSP n'autorise pas eval",
+    !csp.includes("'unsafe-eval'"),
+    "script-src autorise 'unsafe-eval'"
+  );
+  verifier(
+    "Strict-Transport-Security est pose",
+    Boolean(h.get("strict-transport-security")),
+    "HSTS absent : premiere visite interceptable en clair"
+  );
+} else {
+  console.log("  —     CSP sans eval et HSTS : sans objet hors HTTPS, a juger sur la production");
+}
 verifier(
   "Cross-Origin-Opener-Policy est pose",
   Boolean(h.get("cross-origin-opener-policy")),
