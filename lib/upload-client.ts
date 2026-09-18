@@ -5,6 +5,7 @@ import {
   FILIGRANE_MARGE,
   FILIGRANE_OPACITE,
   FILIGRANE_SRC,
+  CLOUD_NAME,
   filigraneALEnvoi,
 } from "./cloudinary";
 import type { Origine } from "./types";
@@ -185,29 +186,27 @@ export async function versDataUrl(pret: FichierPret): Promise<Televersement> {
 }
 
 /**
- * Envoi d'une photo, marquée quel que soit le chemin qu'elle prend.
+ * Envoi d'une photo.
  *
- * La marque n'est incrustée à l'envoi que lorsque Cloudinary ne la posera pas
- * à la livraison (`filigraneALEnvoi`). Or un envoi peut échouer alors même que
- * Cloudinary est configuré : clé d'API absente, quota du plan gratuit épuisé,
- * coupure réseau. La photo repart alors en data URL, que Cloudinary ne sert
- * jamais — elle serait publiée sans aucune marque. Dans ce repli, le fichier
- * est donc recompressé avec la marque incrustée. Un visuel constructeur, lui,
- * n'est jamais marqué, quel que soit le chemin.
+ * Cloudinary configuré, la photo y part, ou l'envoi échoue : **aucun repli**.
+ * L'ancien repli en data URL recopiait l'image, en base64, dans le HTML de
+ * chaque page qui l'affiche — deux fois, avec les données de React. Deux
+ * fiches repliées suffisaient à faire peser 2,8 Mo à la page du catalogue,
+ * pour chaque visiteur : ce qui empêchait le site de tenir la charge. Un envoi
+ * refusé (quota épuisé, coupure réseau) est désormais compté en échec à
+ * l'écran et se relance, au lieu d'alourdir silencieusement le site.
+ *
+ * Sans Cloudinary — développement, démonstration — la data URL reste le seul
+ * stockage possible ; la marque y est alors incrustée d'office
+ * (`filigraneALEnvoi`), puisque personne ne la posera à la livraison.
  */
 export async function envoyerPhoto(
   fichier: File,
   origine: Origine,
   dossier: string
 ): Promise<Televersement> {
-  const marqueDejaIncrustee = filigraneALEnvoi(origine);
-  const pret = await compresser(fichier, { filigrane: marqueDejaIncrustee });
-  try {
-    return await televerser(pret, dossier);
-  } catch {
-    const aMarquer = origine === "reelle" && !marqueDejaIncrustee;
-    return versDataUrl(aMarquer ? await compresser(fichier, { filigrane: true }) : pret);
-  }
+  const pret = await compresser(fichier, { filigrane: filigraneALEnvoi(origine) });
+  return CLOUD_NAME ? televerser(pret, dossier) : versDataUrl(pret);
 }
 
 /** File d'envoi à trois requêtes simultanées (7.3, étape 6). */

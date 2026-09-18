@@ -130,21 +130,28 @@ export function creerPiloteSupabase(): Pilote {
     },
 
     async enregistrerParReference(input) {
-      // `upsert` sur la contrainte unique de `reference` : c'est PostgreSQL
-      // qui arbitre, donc aucune fenetre entre la lecture et l'ecriture.
-      const avant = await sb.from("motos").select("id").eq("reference", input.reference).maybeSingle();
+      // Insertion d'abord : c'est la contrainte unique de `reference` qui
+      // arbitre, et son verdict dit sans ambiguïté qui a créé la fiche. La
+      // version précédente déduisait « créée » d'une lecture faite avant
+      // l'écriture : huit imports simultanés lisaient tous « rien » et se
+      // déclaraient tous créateurs, pour une seule ligne réellement en base.
       const ligne = {
         ...input,
         slug: construireSlug(input.marque, input.modele, input.annee, input.reference),
         updated_at: new Date().toISOString(),
       };
+      const insertion = await sb.from("motos").insert(ligne).select().single();
+      if (!insertion.error) return { moto: insertion.data as Moto, cree: true };
+      if (insertion.error.code !== "23505") err(insertion.error);
+
       const { data, error } = await sb
         .from("motos")
-        .upsert(ligne, { onConflict: "reference" })
+        .update(ligne)
+        .eq("reference", input.reference)
         .select()
         .single();
       err(error);
-      return { moto: data as Moto, cree: !avant.data };
+      return { moto: data as Moto, cree: false };
     },
 
     async majMoto(id, input) {
@@ -158,8 +165,11 @@ export function creerPiloteSupabase(): Pilote {
     },
 
     async majStatut(id, statut: Statut) {
+      // `date_vente` est laissée au déclencheur `synchroniser_date_vente` : il
+      // la pose au premier passage en « vendu » et la conserve ensuite. Forcer
+      // la date du jour ici écrasait la vraie date de vente à chaque nouvelle
+      // sélection de « Vendu », même sur une moto vendue depuis des semaines.
       const patch: Record<string, unknown> = { statut, updated_at: new Date().toISOString() };
-      patch.date_vente = statut === "vendu" ? new Date().toISOString().slice(0, 10) : null;
       const { data, error } = await sb.from("motos").update(patch).eq("id", id).select().single();
       err(error);
       return data as Moto;
@@ -178,8 +188,36 @@ export function creerPiloteSupabase(): Pilote {
     async ajouterMedias(medias, lotId) {
       const lignes = medias.map((m) => ({ ...m, lot_id: lotId ?? null }));
       const { data, error } = await sb.from("medias").insert(lignes).select();
-      err(error);
-      return (data ?? []) as Media[];
+      if (!error) return (data ?? []) as Media[];
+      if (error.code !== "23505") err(error);
+
+      // Collision sur `unique (moto_id, ordre)`. L'ordre est calculé côté
+      // navigateur à partir du nombre de photos : il suffit d'avoir supprimé
+      // une photo au milieu, ou que deux personnes ajoutent en même temps, pour
+      // qu'il tombe sur une place prise — et le lot entier était refusé. On
+      // reprend photo par photo, en plaçant toute photo en conflit après la
+      // dernière, comme le fait déjà le pilote local.
+      const crees: Media[] = [];
+      for (const ligne of lignes) {
+        let tentative = ligne;
+        for (let essai = 0; ; essai++) {
+          const r = await sb.from("medias").insert(tentative).select().single();
+          if (!r.error) {
+            crees.push(r.data as Media);
+            break;
+          }
+          if (r.error.code !== "23505" || essai >= 5) err(r.error);
+          const { data: derniere } = await sb
+            .from("medias")
+            .select("ordre")
+            .eq("moto_id", ligne.moto_id)
+            .order("ordre", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          tentative = { ...ligne, ordre: ((derniere?.ordre as number | undefined) ?? 0) + 1 };
+        }
+      }
+      return crees;
     },
 
     async majMedia(id, patch) {
