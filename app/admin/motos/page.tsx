@@ -10,6 +10,7 @@ import {
 import { SelecteurStatut } from "@/components/admin/selecteur-statut";
 import { PublicationMasse } from "@/components/admin/publication-masse";
 import { verrouPublication } from "@/lib/publication";
+import { miseEnVenteDe, statutDeMiseEnVente } from "@/lib/types";
 import { BarreFiltres, EntetePage, PuceFiltre, VideAdmin } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,10 @@ export default async function ListeMotos({ searchParams }: Props) {
   const brouillons = toutes.filter((m) => m.statut === "brouillon");
   const prets = (
     await Promise.all(
-      brouillons.map(async (m) => verrouPublication(m, await db().mediasDeMoto(m.id), "disponible").autorise)
+      brouillons.map(async (m) => {
+        const cible = statutDeMiseEnVente(miseEnVenteDe(m));
+        return verrouPublication({ ...m, statut: cible }, await db().mediasDeMoto(m.id), cible).autorise;
+      })
     )
   ).filter(Boolean).length;
 

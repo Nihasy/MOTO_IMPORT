@@ -5,7 +5,7 @@ import { analyserCsvMotos } from "@/lib/import-csv";
 import { sessionCourante } from "@/lib/auth";
 import { corpsJsonBorne } from "@/lib/securite";
 import { verrouPublication } from "@/lib/publication";
-import { estEnVente } from "@/lib/types";
+import { estEnVente, miseEnVenteDe } from "@/lib/types";
 import type { MotoInput } from "@/lib/schemas";
 import { champsPrix, reglagesEnVigueur } from "@/lib/tarification-serveur";
 import { prixDynamique } from "@/lib/tarification";
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    for (const { fournisseur, ...moto } of analyse.motos) {
+    for (const { fournisseur, mise_en_vente_fournie, ...moto } of analyse.motos) {
       const fournisseur_id = await resoudreFournisseur(fournisseur);
       // Prix : une ligne sans prix d'achat ne doit pas effacer celui d'une
       // fiche existante, et une fiche au prix figé (réservée, vendue, au
@@ -127,10 +127,18 @@ export async function POST(req: NextRequest) {
       // vente se fait au back-office, une fois les photos en place. Une fiche
       // existante garde le sien : l'import met ses informations à jour sans
       // la retirer de la vente ni l'y mettre.
+      // Mise en vente : celle du fichier pour une nouvelle fiche ou un
+      // brouillon ; une colonne vide ne remet pas à « commande » une fiche qui
+      // était au local, et une fiche déjà en vente garde celle de son statut.
+      const miseEnVente =
+        existante && (existante.statut !== "brouillon" || !mise_en_vente_fournie)
+          ? miseEnVenteDe(existante)
+          : moto.mise_en_vente;
       const donnees = {
         ...moto,
         ...prix,
         statut: existante?.statut ?? "brouillon",
+        mise_en_vente: miseEnVente,
         fournisseur_id,
       } as MotoInput;
       const { moto: enregistree, cree } = await pilote.enregistrerParReference(donnees);

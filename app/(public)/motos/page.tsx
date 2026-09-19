@@ -79,6 +79,9 @@ export default async function PageCatalogue({ searchParams }: { searchParams: Pa
 
   return (
     <Suspense fallback={<SqueletteCatalogue />}>
+      {/* Titre principal pour les moteurs de recherche et les lecteurs
+          d'écran : la page n'en affiche pas, ses filtres tiennent lieu d'en-tête. */}
+      <h1 className="sr-only">Catalogue MOTO IMPORT : motos importées, prix rendu Antananarivo</h1>
       <VueCatalogue motos={motos} marques={marques} annees={annees} catalogue={catalogue} />
     </Suspense>
   );

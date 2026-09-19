@@ -114,6 +114,7 @@ function construireMoto(input: MotoInput): Moto {
     prix_yuan: input.prix_yuan ?? null,
     taux_yuan: input.taux_yuan ?? null,
     acompte_pct: input.acompte_pct ?? null,
+    mise_en_vente: input.mise_en_vente ?? "commande",
     prix_valable_jusqu_au: input.prix_valable_jusqu_au,
     delai_min_jours: input.delai_min_jours ?? 45,
     delai_max_jours: input.delai_max_jours ?? 65,

@@ -17,7 +17,9 @@ import { BadgeStatut, EtatVide, Section } from "@/components/ui";
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "MOTO IMPORT — Motos importées, rendues à Antananarivo carte grise incluse",
+  // `absolute` : le titre contient déjà la marque, le gabarit « | MOTO IMPORT »
+  // l'aurait répétée dans l'onglet et dans les aperçus de partage.
+  title: { absolute: "MOTO IMPORT — Motos importées, rendues à Antananarivo carte grise incluse" },
   description:
     "Motos neuves et d'occasion importées de Chine sur commande. Prix final rendu à Antananarivo, carte grise établie à votre nom, livraison en 45 à 65 jours.",
   alternates: { canonical: "/" },

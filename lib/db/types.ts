@@ -82,16 +82,18 @@ export interface Pilote {
   annulerLot(id: string): Promise<number>;
 }
 
-type Interne = "fournisseur_id" | "prix_yuan" | "taux_yuan";
+type Interne = "fournisseur_id" | "prix_yuan" | "taux_yuan" | "mise_en_vente";
 
 /**
  * Retire toute donnée interne avant exposition publique : le fournisseur, le
  * prix d'achat en yuan et le taux appliqué.
  */
-export const publier = <T extends { fournisseur_id?: string | null; prix_yuan?: number | null; taux_yuan?: number | null }>(
+export const publier = <
+  T extends { fournisseur_id?: string | null; prix_yuan?: number | null; taux_yuan?: number | null; mise_en_vente?: string | null },
+>(
   m: T
 ): Omit<T, Interne> => {
-  const { fournisseur_id: _f, prix_yuan: _p, taux_yuan: _t, ...reste } = m;
+  const { fournisseur_id: _f, prix_yuan: _p, taux_yuan: _t, mise_en_vente: _m, ...reste } = m;
   return reste;
 };
 

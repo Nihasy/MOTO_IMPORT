@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import type { Fournisseur, Moto } from "@/lib/types";
-import { CATEGORIES, ETATS, LIBELLE_CATEGORIE } from "@/lib/types";
+import { CATEGORIES, ETATS, LIBELLE_CATEGORIE, LIBELLE_MISE_EN_VENTE, MISES_EN_VENTE, miseEnVenteDe } from "@/lib/types";
 import { compterMots } from "@/lib/format";
 import { enregistrerMoto, type EtatFormulaire } from "@/app/admin/actions";
 import type { Reglages } from "@/lib/tarification";
@@ -128,6 +128,32 @@ export function FormulaireMoto({
             </select>
           </div>
         </div>
+
+        {/* Où est la moto : décide du statut sous lequel elle partira en vente,
+            y compris par la publication en masse. */}
+        {/* Une fois la moto en vente, c'est son statut qui dit où elle est :
+            le sélecteur de statut met la mise en vente à jour. La modifier ici
+            contredirait le statut affiché au public. */}
+        {!moto || moto.statut === "brouillon" ? (
+          <div>
+            <label className="etiquette" htmlFor="mise_en_vente">Mise en vente *</label>
+            <select
+              id="mise_en_vente"
+              name="mise_en_vente"
+              defaultValue={val("mise_en_vente", moto ? miseEnVenteDe(moto) : "commande")}
+              className="champ"
+            >
+              {MISES_EN_VENTE.map((m) => (
+                <option key={m} value={m}>{LIBELLE_MISE_EN_VENTE[m]}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-meta text-dim">
+              Statut sous lequel la fiche partira en vente, y compris par la publication en masse.
+            </p>
+          </div>
+        ) : (
+          <input type="hidden" name="mise_en_vente" value={miseEnVenteDe(moto)} />
+        )}
 
         {/* Le statut ne se règle pas ici. Une fiche neuve n'a aucune photo :
             proposer « Disponible » revenait à faire choisir un statut que le

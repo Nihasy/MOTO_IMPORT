@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  MISES_EN_VENTE,
   CATEGORIES, DEMANDE_SOURCES, DEMANDE_STATUTS, ETATS, ORIGINES, STATUTS, VUES,
 } from "./types";
 
@@ -38,6 +39,7 @@ export const motoSchema = z
     prix_yuan: z.coerce.number().int().positive("Prix d'achat en yuan invalide").max(10_000_000).nullable().optional(),
     taux_yuan: z.coerce.number().positive().nullable().optional(),
     acompte_pct: z.coerce.number().int().min(0).max(100).nullable().optional(),
+    mise_en_vente: z.enum(MISES_EN_VENTE).default("commande"),
     prix_valable_jusqu_au: dateSchema,
     delai_min_jours: z.coerce.number().int().positive().default(45),
     delai_max_jours: z.coerce.number().int().positive().default(65),
@@ -182,6 +184,7 @@ export const ligneCsvSchema = z.object({
     .optional()
     .refine((v) => !v?.trim() || /^\d[\d\s]*$/.test(v.trim()), "Prix en yuan : un nombre entier, sans décimale"),
   prix_valable_jusqu_au: dateSchema,
+  disponibilite: z.string().optional(),
   garantie_mois: z.string().optional(),
   garantie_texte: z.string().optional(),
   description: z.string().optional(),

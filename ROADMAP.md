@@ -23,13 +23,14 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 
 ### Coordonnées modifiables depuis le back-office
 
-- [ ] Supabase → SQL Editor : coller et exécuter `supabase/migrations/0008_parametres.sql` (crée la table `parametres`) **[Vous]**
+- [x] Supabase → SQL Editor : coller et exécuter `supabase/migrations/0008_parametres.sql` (crée la table `parametres`) **[Vous]**
 - [ ] Back-office → Paramètres : vérifier le numéro WhatsApp, le téléphone, l'adresse et les horaires, puis **Enregistrer** une première fois **[Vous]**
 
 ### Tarification dynamique (prix calculés depuis le yuan)
 
-- [ ] Supabase → SQL Editor : exécuter `supabase/migrations/0009_tarification.sql` **après** la 0008 **[Vous]**
+- [x] Supabase → SQL Editor : exécuter `supabase/migrations/0009_tarification.sql` **après** la 0008 **[Vous]**
 - [ ] Back-office → Tarification : vérifier le taux du yuan, le fret, le bénéfice (2 000 000 Ar + 10 %), puis **Enregistrer** une première fois **[Vous]**
+- [ ] Supabase → SQL Editor : exécuter `supabase/migrations/0010_mise_en_vente.sql` (mise en vente : sur commande ou déjà au local) **[Vous]**
 - [ ] Saisir le prix d'achat en ¥ de chaque fiche : sans lui, une fiche ne peut pas être publiée **[Vous]**
 - [ ] Mettre à jour le taux du yuan chaque semaine **[Vous]**
 - [x] Faire relire les CGV (art. 4 et 5.3) par un juriste : validées **[Vous]**
@@ -113,3 +114,5 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 - [x] CGV : acompte de 45 à 80 % propre à chaque véhicule (art. 4.2), solde à la remise des clés et des papiers (4.3), prix modifiables avant signature (5.3)
 - [x] Import en masse : modèles CSV vide et avec exemples (points-virgules, accents et dates lisibles par Excel), guide des colonnes, virgules ou points-virgules et dates 31/12/2026 acceptées. Toute fiche importée naît en brouillon ; une fiche existante garde son statut
 - [x] Publication en masse des brouillons prêts, sous le même verrou que la publication une à une
+- [x] Mise en vente choisie dès la saisie (fiche ou colonne CSV `disponibilite`) : sur commande ou déjà au local. La publication en masse publie chaque fiche sous son statut (« Disponible sur commande » ou « Disponible de suite »)
+- [x] Recette de production (19 septembre 2026) : pages, HTTPS, redirections, en-têtes de sécurité, référencement, rendu mobile et ordinateur, protections des API et de la base vérifiés ; titre du catalogue pour les moteurs, favicon, titre de l'accueil sans doublon

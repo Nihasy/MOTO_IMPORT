@@ -92,6 +92,31 @@ export type Moto = MotoPublique & {
   prix_yuan: number | null;
   /** Taux ¥ → Ar du dernier calcul. Interne. */
   taux_yuan: number | null;
+  /**
+   * Statut sous lequel la fiche partira en vente : sur commande, ou déjà au
+   * local (« Disponible de suite »). Décidé dès la saisie, parce qu'une fiche
+   * naît en brouillon et se publie souvent plus tard, en masse.
+   */
+  mise_en_vente: MiseEnVente;
+};
+
+export const MISES_EN_VENTE = ["commande", "local"] as const;
+export type MiseEnVente = (typeof MISES_EN_VENTE)[number];
+
+/**
+ * Mise en vente d'une fiche. Les fiches enregistrées avant la colonne n'en
+ * ont pas : une moto déjà « disponible de suite » est au local, les autres
+ * partent sur commande.
+ */
+export const miseEnVenteDe = (m: { mise_en_vente?: MiseEnVente | null; statut: Statut }): MiseEnVente =>
+  m.mise_en_vente ?? (m.statut === "dispo_immediate" ? "local" : "commande");
+
+/** Statut public correspondant à la mise en vente prévue. */
+export const statutDeMiseEnVente = (m: MiseEnVente): Statut => (m === "local" ? "dispo_immediate" : "disponible");
+
+export const LIBELLE_MISE_EN_VENTE: Record<MiseEnVente, string> = {
+  commande: "Sur commande — importée après signature, 45 à 65 jours",
+  local: "Déjà au local — disponible de suite",
 };
 
 /**

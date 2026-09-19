@@ -5,7 +5,7 @@ import { calculerPrix, type Reglages } from "./tarification";
 export type ErreurLigne = { ligne: number; colonne: string; message: string; valeur?: string };
 
 export type AnalyseCsv =
-  | { ok: true; motos: (MotoInput & { fournisseur?: string })[]; total: number }
+  | { ok: true; motos: (MotoInput & { fournisseur?: string; mise_en_vente_fournie: boolean })[]; total: number }
   | { ok: false; erreurs: ErreurLigne[]; total: number };
 
 const bool = (v: string | undefined): boolean =>
@@ -34,6 +34,18 @@ function dateIso(v: string | undefined): string | undefined {
   if (!fr) return v;
   const [, j, m, a] = fr;
   return `${a}-${m.padStart(2, "0")}-${j.padStart(2, "0")}`;
+}
+
+/**
+ * Colonne `disponibilite` : où est la moto, donc sous quel statut elle partira
+ * en vente. Vide : sur commande. Plusieurs façons de l'écrire sont admises.
+ */
+function miseEnVente(v: string | undefined): "commande" | "local" | null | undefined {
+  const s = (v ?? "").trim().toLowerCase();
+  if (!s) return undefined;
+  if (["commande", "sur commande", "disponible sur commande"].includes(s)) return "commande";
+  if (["local", "au local", "de suite", "disponible de suite", "stock", "tana", "sur place"].includes(s)) return "local";
+  return null;
 }
 
 /** Champs de prix calculés depuis le prix d'achat ; tout à vide sans lui. */
@@ -67,7 +79,7 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
     return { ok: false, total: 0, erreurs: [{ ligne: 1, colonne: "-", message: "Fichier sans aucune ligne de donnees" }] };
   }
 
-  const motos: (MotoInput & { fournisseur?: string })[] = [];
+  const motos: (MotoInput & { fournisseur?: string; mise_en_vente_fournie: boolean })[] = [];
   const referencesVues = new Map<string, number>();
 
   lignes.forEach((brut, i) => {
@@ -98,6 +110,17 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
     }
     referencesVues.set(v.reference, numLigne);
 
+    const disponibilite = miseEnVente(v.disponibilite);
+    if (disponibilite === null) {
+      erreurs.push({
+        ligne: numLigne,
+        colonne: "disponibilite",
+        message: "Valeur attendue : commande ou local",
+        valeur: v.disponibilite,
+      });
+      return;
+    }
+
     const candidat = {
       reference: v.reference,
       marque: v.marque,
@@ -110,6 +133,7 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
       // passe en vente depuis le back-office, une fois ses photos en place.
       // Une fiche déjà existante garde son statut (voir la route d'import).
       statut: "brouillon" as MotoInput["statut"],
+      mise_en_vente: disponibilite ?? "commande",
       kilometrage: nombreOuNull(v.kilometrage),
       couleur: texteOuNull(v.couleur),
       puissance_ch: nombreOuNull(v.puissance_ch),
@@ -135,7 +159,11 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
       }
       return;
     }
-    motos.push({ ...complet.data, fournisseur: texteOuNull(v.fournisseur) ?? undefined });
+    motos.push({
+      ...complet.data,
+      fournisseur: texteOuNull(v.fournisseur) ?? undefined,
+      mise_en_vente_fournie: miseEnVente(v.disponibilite) !== undefined,
+    });
   });
 
   if (erreurs.length) return { ok: false, erreurs, total: lignes.length };

@@ -14,7 +14,7 @@ import { ipDepuisEntetes, limiterDebitDouble } from "@/lib/securite";
 import { db } from "@/lib/db";
 import { demandePatchSchema, mediaPatchSchema, motoSchema } from "@/lib/schemas";
 import { messageVerrou, verrouPublication } from "@/lib/publication";
-import { estEnVente } from "@/lib/types";
+import { estEnVente, miseEnVenteDe, statutDeMiseEnVente } from "@/lib/types";
 import { normaliserWhatsapp, parametresSchema } from "@/lib/schemas";
 import { champsPrix, prixAJour, reglagesEnVigueur } from "@/lib/tarification-serveur";
 import { erreurReglages, prixDynamique, recalculerAuPassage, type Reglages } from "@/lib/tarification";
@@ -149,6 +149,14 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
     // modification conserve le statut en cours — quoi qu'annonce la requête,
     // qui peut avoir été fabriquée à la main.
     statut,
+    // Absent du formulaire (ancienne page restée ouverte) : la valeur
+    // enregistrée est conservée plutôt que remise à « sur commande ».
+    // Seul un brouillon la choisit : une fois en vente, c'est le statut qui fait
+    // foi, et le sélecteur de statut la tient à jour.
+    mise_en_vente:
+      existante && existante.statut !== "brouillon"
+        ? miseEnVenteDe(existante)
+        : texte("mise_en_vente") || (existante ? miseEnVenteDe(existante) : "commande"),
     kilometrage: entier(form.get("kilometrage")),
     couleur: texte("couleur") || null,
     puissance_ch: texte("puissance_ch") ? form.get("puissance_ch") : null,
@@ -242,6 +250,15 @@ export async function changerStatut(id: string, statut: Statut): Promise<Resulta
       await db().majMoto(id, prix);
     }
   }
+
+  // Passer une moto en « disponible de suite » ou « sur commande » à la main,
+  // c'est aussi dire où elle se trouve : la mise en vente prévue suit.
+  // Elle est enregistrée explicitement même quand elle ne change pas : une
+  // fiche ancienne sans la colonne la déduit de son statut, déduction qui
+  // se perdrait en repassant en brouillon.
+  const suivie =
+    statut === "dispo_immediate" ? "local" : statut === "disponible" ? "commande" : miseEnVenteDe(avant);
+  if (suivie !== avant.mise_en_vente) await db().majMoto(id, { mise_en_vente: suivie });
 
   const moto = await db().majStatut(id, statut);
   revalidatePath("/motos");
@@ -470,7 +487,8 @@ export type EtatPublicationMasse = { publiees?: string[]; retenues?: number; err
  * geste qui suit un import CSV puis un import de photos. Chaque fiche passe
  * par le même verrou que la publication une à une ; celles qui ne le
  * franchissent pas restent en brouillon, et l'écran dit combien.
- * Elles partent « disponibles sur commande », au prix du taux du jour.
+ * Chacune part sous le statut prévu à sa saisie (sur commande ou disponible
+ * de suite), au prix du taux du jour.
  */
 export async function publierBrouillonsPrets(
   _etat: EtatPublicationMasse,
@@ -484,7 +502,10 @@ export async function publierBrouillonsPrets(
   const publiees: string[] = [];
   let retenues = 0;
   for (const m of brouillons) {
-    const verrou = verrouPublication(m, await pilote.mediasDeMoto(m.id), "disponible");
+    // Chaque fiche part sous le statut prévu à la saisie : sur commande, ou
+    // disponible de suite pour une moto déjà au local.
+    const cible = statutDeMiseEnVente(miseEnVenteDe(m));
+    const verrou = verrouPublication({ ...m, statut: cible }, await pilote.mediasDeMoto(m.id), cible);
     if (!verrou.autorise) {
       retenues++;
       continue;
@@ -493,7 +514,7 @@ export async function publierBrouillonsPrets(
       const prix = champsPrix(m.prix_yuan, reglages);
       if (prix.prix_ttc !== m.prix_ttc || prix.acompte_pct !== m.acompte_pct) await pilote.majMoto(m.id, prix);
     }
-    const moto = await pilote.majStatut(m.id, "disponible");
+    const moto = await pilote.majStatut(m.id, cible);
     revalidatePath(`/motos/${moto.slug}`);
     publiees.push(m.reference);
   }

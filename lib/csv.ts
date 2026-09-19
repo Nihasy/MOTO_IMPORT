@@ -79,6 +79,7 @@ export const COLONNES_CSV: ColonneCsv[] = [
   { nom: "etat", obligatoire: true, format: "neuf ou occasion", exemple: "neuf" },
   { nom: "prix_yuan", obligatoire: true, format: "Prix d'achat en ¥, nombre entier. Réservé à l'administrateur ; vide = fiche sans prix", exemple: "15000" },
   { nom: "prix_valable_jusqu_au", obligatoire: true, format: "Date : 31/12/2026 ou 2026-12-31", exemple: "31/12/2026" },
+  { nom: "disponibilite", obligatoire: false, format: "commande (importée après signature) ou local (déjà à Tana, disponible de suite). Vide = commande", exemple: "commande" },
   { nom: "kilometrage", obligatoire: false, format: "Obligatoire pour une occasion, nombre entier", exemple: "" },
   { nom: "date_photos", obligatoire: false, format: "Obligatoire pour une occasion (CGV art. 3.4)", exemple: "" },
   { nom: "couleur", obligatoire: false, format: "Texte", exemple: "Rouge" },
@@ -112,7 +113,7 @@ export const CSV_MODELE = [
       ({
         reference: "MI-102", marque: "Yamaha", modele: "MT-07", annee: "2021", cylindree: "689",
         categorie: "roadster", etat: "occasion", prix_yuan: "22000", prix_valable_jusqu_au: "31/12/2026",
-        kilometrage: "18400", date_photos: "10/09/2026", couleur: "Gris", puissance_ch: "73",
+        disponibilite: "local", kilometrage: "18400", date_photos: "10/09/2026", couleur: "Gris", puissance_ch: "73",
         poids_kg: "184", hauteur_selle_mm: "805", refroidissement: "liquide", transmission: "6 rapports",
         abs: "oui", garantie_mois: "", garantie_texte: "",
         description: "Roadster vif et léger, entretenu, pneus récents.", points_forts: "Moteur coupleux|Léger",
