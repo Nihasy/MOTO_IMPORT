@@ -208,16 +208,18 @@ export function VueCatalogue({
           resultats et le tri, utiles pendant tout le defilement. */}
       <div
         className={clsx(
-          "sticky top-14 z-30 border-b border-line bg-bg/92 backdrop-blur",
+          "sticky top-14 z-30 border-b border-line bg-bg/92 backdrop-blur lg:top-16",
           "transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
-          !chromeVisible && "-translate-y-14"
+          !chromeVisible && "-translate-y-14 lg:-translate-y-16"
         )}
       >
-        <div className="conteneur-large py-3">
+        {/* Sur ordinateur, les deux etapes du choix tiennent sur une ligne :
+            etire sur 1200px, le selecteur segmente devenait une barre vide. */}
+        <div className="conteneur-large py-3 lg:flex lg:items-center lg:gap-5">
           <div
             role="group"
             aria-label="Neuf, occasion ou tout le catalogue"
-            className="grid grid-cols-3 gap-1 rounded-card border border-line bg-surface p-1"
+            className="grid grid-cols-3 gap-1 rounded-card border border-line bg-surface p-1 lg:w-[340px] lg:shrink-0"
           >
             {ETATS_CHOIX.map((e) => (
               <button
@@ -232,7 +234,7 @@ export function VueCatalogue({
             ))}
           </div>
 
-          <div className="relative mt-2.5">
+          <div className="relative mt-2.5 lg:mt-0 lg:min-w-0 lg:flex-1">
             <div role="group" aria-label="Type de moto" className="defilement-x gap-2 pb-0.5">
               {TYPES.map((t) => (
                 <button

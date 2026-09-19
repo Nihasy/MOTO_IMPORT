@@ -1,4 +1,5 @@
 import Link from "next/link";
+import clsx from "clsx";
 import type { MotoAvecMedias, Statut } from "@/lib/types";
 import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { dateFr } from "@/lib/format";
@@ -176,16 +177,19 @@ const ETAPES_SUR_PLACE = [
 export function CommentCaSePasse({
   compact = false,
   statut,
+  enLigne = false,
 }: {
   compact?: boolean;
   statut?: Statut;
+  /** Sur grand écran, les étapes se lisent de gauche à droite (accueil). */
+  enLigne?: boolean;
 }) {
   const surPlace = statut === "dispo_immediate";
   const etapes = surPlace ? ETAPES_SUR_PLACE : ETAPES;
 
   return (
-    <section className="my-6">
-      <h2 className="mb-3 text-[17px] font-semibold">
+    <section className={clsx("my-6", enLigne && "lg:my-10")}>
+      <h2 className={clsx("mb-3 text-[17px] font-semibold", enLigne && "lg:mb-6 lg:text-[22px]")}>
         {surPlace ? "Comment ça se passe pour cette moto" : "Comment ça se passe"}
       </h2>
       {surPlace ? (
@@ -194,9 +198,15 @@ export function CommentCaSePasse({
           s&apos;applique pas.
         </p>
       ) : null}
-      <ol className="space-y-2.5">
+      <ol className={clsx("space-y-2.5", enLigne && "lg:grid lg:grid-cols-5 lg:gap-4 lg:space-y-0")}>
         {etapes.map((e, i) => (
-          <li key={e.titre} className="flex gap-3">
+          <li
+            key={e.titre}
+            className={clsx(
+              "flex gap-3",
+              enLigne && "lg:flex-col lg:gap-3 lg:rounded-card lg:border lg:border-line lg:bg-surface lg:p-5"
+            )}
+          >
             <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gold text-[15px] font-bold text-gold-light">
               {i + 1}
             </span>
@@ -208,7 +218,7 @@ export function CommentCaSePasse({
         ))}
       </ol>
       {compact ? null : (
-        <p className="mt-3 text-meta text-dim">
+        <p className={clsx("mt-3 text-meta text-dim", enLigne && "lg:mt-5")}>
           <Link href="/faq" className="text-gold-light underline">
             En cas de désistement, l&apos;acompte reste acquis
           </Link>{" "}

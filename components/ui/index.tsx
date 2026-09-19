@@ -75,11 +75,11 @@ export function Section({
   action?: { libelle: string; href: string };
 }) {
   return (
-    <section className="py-6">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="text-[17px] font-semibold">{titre}</h2>
+    <section className="py-6 lg:py-10">
+      <div className="mb-3 flex items-baseline justify-between gap-3 lg:mb-5">
+        <h2 className="text-[17px] font-semibold lg:text-[22px]">{titre}</h2>
         {action ? (
-          <Link href={action.href} className="text-[12.5px] font-semibold text-gold-light">
+          <Link href={action.href} className="text-[12.5px] font-semibold text-gold-light lg:text-[14px] lg:hover:text-gold">
             {action.libelle}
           </Link>
         ) : null}

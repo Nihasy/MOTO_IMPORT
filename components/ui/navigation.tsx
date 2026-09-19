@@ -13,11 +13,13 @@ export function BarreSuperieure({
   filtresActifs = 0,
   onOuvrirFiltres,
   onOuvrirRecherche,
+  className,
 }: {
   titre?: string;
   filtresActifs?: number;
   onOuvrirFiltres?: () => void;
   onOuvrirRecherche?: () => void;
+  className?: string;
 }) {
   const visible = useChromeVisible();
   return (
@@ -25,7 +27,8 @@ export function BarreSuperieure({
       className={clsx(
         "sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur",
         "transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
-        !visible && "-translate-y-full"
+        !visible && "-translate-y-full",
+        className
       )}
     >
       {/* Trois colonnes plutot qu'une rangee justifiee : les deux laterales
@@ -33,8 +36,9 @@ export function BarreSuperieure({
           medaillon reste optiquement au centre de l'ecran — que la page ait
           un titre, deux boutons, ou ni l'un ni l'autre. Une simple rangee le
           decalait des que l'un des cotes changeait de contenu. */}
-      <div className="conteneur-large grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <span className="min-w-0 justify-self-start truncate text-[13px] text-dim">{titre}</span>
+      <div className="conteneur-large grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-2 lg:h-16">
+        <span className="min-w-0 justify-self-start truncate text-[13px] text-dim lg:hidden">{titre}</span>
+        <NavigationBureau />
         {/* Legerement reduit par rapport aux 38/18 d'avant : a pleine taille,
             le verrou de marque et les deux boutons ne tenaient pas ensemble
             sur un telephone, et la colonne de droite debordait de sa part —
@@ -43,6 +47,7 @@ export function BarreSuperieure({
           <Marque taille={32} texte={15} />
         </Link>
         <div className="flex items-center justify-self-end gap-1">
+          <LienEnregistreesBureau />
           {onOuvrirRecherche ? (
             <button
               type="button"
@@ -84,6 +89,70 @@ const ENTREES = [
   { href: "/plus", libelle: "Plus", icone: IconeMenu },
 ];
 
+/**
+ * Sur ordinateur, la barre du bas n'a plus de pouce a servir : ses entrees
+ * remontent dans l'en-tete, completees des pages que le telephone range sous
+ * « Plus ».
+ */
+const ENTREES_BUREAU = [
+  { href: "/motos", libelle: "Catalogue" },
+  { href: "/comment-ca-marche", libelle: "Comment ça marche" },
+  { href: "/faq", libelle: "FAQ" },
+  { href: "/contact", libelle: "Contact" },
+];
+
+function NavigationBureau() {
+  const chemin = usePathname();
+  return (
+    <nav aria-label="Navigation principale" className="hidden justify-self-start lg:block">
+      <ul className="flex items-center gap-7">
+        {ENTREES_BUREAU.map(({ href, libelle }) => {
+          const actif = chemin === href || chemin.startsWith(`${href}/`);
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                aria-current={actif ? "page" : undefined}
+                className={clsx(
+                  "relative py-2 text-[14px] font-medium transition-colors",
+                  actif ? "text-gold-light" : "text-chrome hover:text-text"
+                )}
+              >
+                {libelle}
+                {actif ? <span className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-gold" aria-hidden /> : null}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+function LienEnregistreesBureau() {
+  const chemin = usePathname();
+  const { ids } = useEnregistrees();
+  const actif = chemin.startsWith("/enregistrees");
+  return (
+    <Link
+      href="/enregistrees"
+      aria-current={actif ? "page" : undefined}
+      className={clsx(
+        "mr-1 hidden h-10 items-center gap-2 rounded-card border px-3 text-[14px] font-medium transition-colors lg:flex",
+        actif ? "border-gold text-gold-light" : "border-line text-chrome hover:border-gold/60 hover:text-text"
+      )}
+    >
+      <IconeSignet rempli={ids.length > 0} />
+      Enregistrées
+      {ids.length > 0 ? (
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1 text-[11px] font-bold text-on-gold">
+          {ids.length}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
+
 export function BarreInferieure() {
   const chemin = usePathname();
   const { ids } = useEnregistrees();
@@ -99,7 +168,7 @@ export function BarreInferieure() {
   return (
     <nav
       className={clsx(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden",
         "transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
         !visible && "translate-y-full"
       )}

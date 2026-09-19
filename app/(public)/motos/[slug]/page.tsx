@@ -7,7 +7,7 @@ import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
 import { GalerieFiche } from "@/components/fiche/galerie-fiche";
 import { BlocPrix } from "@/components/fiche/bloc-prix";
-import { BarreActionFixe } from "@/components/fiche/barre-action";
+import { ActionsFiche, BarreActionFixe } from "@/components/fiche/barre-action";
 import {
   CommentCaSePasse, Description, EtatVehicule, FicheTechnique, Reassurance,
 } from "@/components/fiche/blocs";
@@ -16,6 +16,8 @@ import { BadgeStatut } from "@/components/ui";
 import { BadgeNouveau } from "@/components/ui/badge-nouveau";
 import { CompteurVue } from "@/components/fiche/compteur-vue";
 import { EnteteFiche } from "@/components/fiche/entete-fiche";
+import { BarreSuperieure } from "@/components/ui/navigation";
+import Link from "next/link";
 import { jsonLdSecurise } from "@/lib/jsonld";
 
 // Statique genere a la construction, revalide a la demande sur modification (5.3).
@@ -111,12 +113,29 @@ export default async function FicheMoto({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSecurise(jsonLd) }} />
       <CompteurVue id={moto.id} reference={moto.reference} />
 
-      <EnteteFiche marque={moto.marque} modele={moto.modele} reference={moto.reference} />
+      <EnteteFiche marque={moto.marque} modele={moto.modele} reference={moto.reference} className="lg:hidden" />
+      <BarreSuperieure className="hidden lg:block" />
 
       {/* Colonne de fiche calee sur les 680px de motoconcess.com : au-dela, une
-          galerie 4:3 pleine largeur ecrase le reste de la page. */}
-      <main className="mx-auto w-full max-w-[680px] pb-40">
-        <div className="relative">
+          galerie 4:3 pleine largeur ecrase le reste de la page.
+          Sur ordinateur, la fiche passe sur deux colonnes : galerie et detail a
+          gauche, prix et actions dans un panneau qui reste a l'ecran. L'ordre
+          du document ne change pas — le telephone lit toujours la meme fiche. */}
+      <main className="mx-auto w-full max-w-[680px] pb-40 lg:grid lg:max-w-[1200px] lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-x-12 lg:px-4 lg:pb-20 xl:grid-cols-[minmax(0,1fr)_400px]">
+        <nav aria-label="Fil d'Ariane" className="hidden py-5 text-meta text-dim lg:col-span-2 lg:block">
+          <Link href="/motos" className="hover:text-text">
+            Catalogue
+          </Link>
+          <span className="mx-2" aria-hidden>
+            /
+          </span>
+          <span className="text-chrome">
+            {moto.marque} {moto.modele}
+          </span>
+          <span className="ml-2">· {moto.reference}</span>
+        </nav>
+
+        <div className="relative lg:col-start-1 lg:row-start-2 lg:self-start">
           <GalerieFiche medias={moto.medias} alt={`${moto.marque} ${moto.modele} ${moto.annee}`} />
           <div className="pointer-events-none absolute inset-x-4 top-3 flex items-start justify-between gap-2">
             <BadgeStatut statut={moto.statut} className="min-w-0" />
@@ -124,25 +143,30 @@ export default async function FicheMoto({ params }: Props) {
           </div>
         </div>
 
-        <div className="conteneur">
-          <h1 className="mt-4 text-titre-fiche">
-            {moto.marque} {moto.modele} {moto.annee}
-          </h1>
-          <p className="mt-1 text-meta text-chrome">
-            {[
-              `${moto.cylindree} cm³`,
-              LIBELLE_CATEGORIE[moto.categorie],
-              moto.etat === "neuf" ? "Neuf" : "Occasion",
-              moto.kilometrage !== null ? `${moto.kilometrage.toLocaleString("fr-FR")} km` : null,
-              moto.couleur,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
+        <div className="conteneur lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:max-w-none lg:px-0">
+          <div className="lg:sticky lg:top-24">
+            <h1 className="mt-4 text-titre-fiche lg:mt-0 lg:text-[30px] lg:leading-[36px]">
+              {moto.marque} {moto.modele} {moto.annee}
+            </h1>
+            <p className="mt-1 text-meta text-chrome">
+              {[
+                `${moto.cylindree} cm³`,
+                LIBELLE_CATEGORIE[moto.categorie],
+                moto.etat === "neuf" ? "Neuf" : "Occasion",
+                moto.kilometrage !== null ? `${moto.kilometrage.toLocaleString("fr-FR")} km` : null,
+                moto.couleur,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
 
-          <BlocPrix moto={moto} />
-          <Reassurance moto={moto} />
+            <BlocPrix moto={moto} />
+            <ActionsFiche moto={moto} />
+            <Reassurance moto={moto} />
+          </div>
+        </div>
 
+        <div className="conteneur lg:col-start-1 lg:row-start-3 lg:max-w-none lg:px-0 lg:pt-4">
           <FicheTechnique moto={moto} />
           <EtatVehicule moto={moto} />
 
@@ -151,18 +175,20 @@ export default async function FicheMoto({ params }: Props) {
               l'accueil (4.2) — la fiche doit vendre la moto et l'entreprise. */}
           <Description moto={moto} />
           <CommentCaSePasse statut={moto.statut} />
-
-          {similaires.length ? (
-            <section className="my-6">
-              <h2 className="mb-3 text-[17px] font-semibold">Motos similaires</h2>
-              <div className="grille-annonces">
-                {similaires.map((m) => (
-                  <CarteMoto key={m.id} moto={m} />
-                ))}
-              </div>
-            </section>
-          ) : null}
         </div>
+
+        {similaires.length ? (
+          <section className="conteneur my-6 lg:col-span-2 lg:mt-10 lg:max-w-none lg:border-t lg:border-line lg:px-0 lg:pt-8">
+            <h2 className="mb-3 text-[17px] font-semibold lg:mb-5 lg:text-[20px]">Motos similaires</h2>
+            {/* Entre 850 et 1024px, la fiche tient encore dans 680px : trois
+                vignettes n'y entrent pas, deux oui. */}
+            <div className="grille-annonces min-[850px]:max-lg:grid-cols-2 min-[1200px]:grid-cols-3">
+              {similaires.map((m) => (
+                <CarteMoto key={m.id} moto={m} />
+              ))}
+            </div>
+          </section>
+        ) : null}
       </main>
 
       <BarreActionFixe moto={moto} />

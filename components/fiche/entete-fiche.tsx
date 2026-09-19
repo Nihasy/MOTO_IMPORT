@@ -16,10 +16,12 @@ export function EnteteFiche({
   marque,
   modele,
   reference,
+  className,
 }: {
   marque: string;
   modele: string;
   reference: string;
+  className?: string;
 }) {
   const visible = useChromeVisible();
   return (
@@ -27,7 +29,8 @@ export function EnteteFiche({
       className={clsx(
         "sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur",
         "transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
-        !visible && "-translate-y-full"
+        !visible && "-translate-y-full",
+        className
       )}
     >
       <div className="conteneur flex h-14 items-center gap-2">
