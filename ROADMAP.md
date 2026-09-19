@@ -32,14 +32,14 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 - [ ] Back-office → Tarification : vérifier le taux du yuan, le fret, le bénéfice (2 000 000 Ar + 10 %), puis **Enregistrer** une première fois **[Vous]**
 - [ ] Saisir le prix d'achat en ¥ de chaque fiche : sans lui, une fiche ne peut pas être publiée **[Vous]**
 - [ ] Mettre à jour le taux du yuan chaque semaine **[Vous]**
-- [ ] Faire relire les CGV (art. 4 et 5.3) par un juriste **[Vous]**
+- [x] Faire relire les CGV (art. 4 et 5.3) par un juriste : validées **[Vous]**
 
 ### Vos vraies fiches (chemin critique : 8 à 12 fiches complètes)
 
 - [ ] Créer les fournisseurs (onglet réservé à l'admin) **[Vous]**
-- [ ] Créer les fiches, une à une ou par CSV (modèle dans l'onglet Import ; toute valeur contenant une virgule entre guillemets) **[Vous]**
+- [ ] Créer les fiches, une à une ou en masse par CSV : Import → « Modèle vide » ou « Modèle avec 2 exemples », remplir dans Excel, importer. Toutes naissent en brouillon **[Vous]**
 - [ ] Ajouter les photos, trois angles minimum : 3/4 avant droit, 3/4 arrière gauche, face avant. Nommage : `MI-001_01_34ad.jpg` **[Vous]**
-- [ ] Publier chaque fiche depuis le sélecteur de statut une fois les contrôles au vert **[Vous]**
+- [ ] Publier : liste des motos → « Publier les brouillons prêts » (photos, prix en ¥ et description en place), ou fiche par fiche depuis le sélecteur de statut **[Vous]**
 
 ### Domaine `motoimport.app`
 
@@ -111,3 +111,5 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 - [x] Tarification dynamique : prix de vente calculé depuis le prix d'achat en ¥ (taux, fret et papiers fixes, bénéfice = fixe + part du prix d'achat, arrondi), acompte propre à chaque moto (45 à 80 %, couvre l'achat), solde à la remise des clés et des papiers. Section « Tarification » du back-office avec simulateur et aperçu des prix avant recalcul ; prix figés dès la réservation et à l'arrivée au local. Prix d'achat, taux et réglages invisibles du public et du compte éditeur
 - [x] Séparateurs de milliers pendant la saisie dans le back-office (prix en ¥, réglages, kilométrage)
 - [x] CGV : acompte de 45 à 80 % propre à chaque véhicule (art. 4.2), solde à la remise des clés et des papiers (4.3), prix modifiables avant signature (5.3)
+- [x] Import en masse : modèles CSV vide et avec exemples (points-virgules, accents et dates lisibles par Excel), guide des colonnes, virgules ou points-virgules et dates 31/12/2026 acceptées. Toute fiche importée naît en brouillon ; une fiche existante garde son statut
+- [x] Publication en masse des brouillons prêts, sous le même verrou que la publication une à une

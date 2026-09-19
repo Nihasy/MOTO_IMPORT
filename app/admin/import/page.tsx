@@ -25,7 +25,7 @@ export default async function PageImport({
     <div>
       <EntetePage
         titre="Import"
-        sousTitre="Le CSV crée les fiches avant même d'avoir les photos ; elles restent en brouillon tant que les contrôles ne passent pas. L'import photos les range ensuite par référence, d'après le nom des fichiers."
+        sousTitre="Trois étapes : 1. le CSV crée les fiches, toutes en brouillon ; 2. l'import photos les range par référence, d'après le nom des fichiers ; 3. la liste des motos publie d'un coup les brouillons prêts."
       />
 
       <BarreFiltres legende="Type d'import">

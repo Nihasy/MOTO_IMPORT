@@ -8,6 +8,8 @@ import {
   GROUPES_ADMIN, effectifsAdmin, estGroupeAdmin, filtrerMotosAdmin, type GroupeAdmin,
 } from "@/lib/admin-filtres";
 import { SelecteurStatut } from "@/components/admin/selecteur-statut";
+import { PublicationMasse } from "@/components/admin/publication-masse";
+import { verrouPublication } from "@/lib/publication";
 import { BarreFiltres, EntetePage, PuceFiltre, VideAdmin } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +22,14 @@ export default async function ListeMotos({ searchParams }: Props) {
   // La couverture arrive avec la ligne : la réclamer moto par moto produisait
   // une requête par fiche.
   const toutes = await db().listerMotosAdmin();
+
+  // Brouillons prêts à publier : même verrou que la publication une à une.
+  const brouillons = toutes.filter((m) => m.statut === "brouillon");
+  const prets = (
+    await Promise.all(
+      brouillons.map(async (m) => verrouPublication(m, await db().mediasDeMoto(m.id), "disponible").autorise)
+    )
+  ).filter(Boolean).length;
 
   const groupe: GroupeAdmin = estGroupeAdmin(statut) ? statut : "tous";
   const effectifs = effectifsAdmin(toutes);
@@ -62,6 +72,10 @@ export default async function ListeMotos({ searchParams }: Props) {
         </VideAdmin>
       ) : (
         <>
+          {brouillons.length ? (
+            <PublicationMasse prets={prets} incomplets={brouillons.length - prets} />
+          ) : null}
+
           {/* Recherche en GET : l'URL porte le filtre, donc il survit à un
               rechargement et se partage entre les deux comptes. */}
           <form method="get" action="/admin/motos" className="mb-3 flex gap-2">

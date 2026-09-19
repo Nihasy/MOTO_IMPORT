@@ -23,6 +23,19 @@ const texteOuNull = (v: string | undefined): string | null => {
   return s ? s : null;
 };
 
+/**
+ * Date au format ISO. Excel en français réécrit « 2026-12-31 » en
+ * « 31/12/2026 » à l'enregistrement : les deux sont acceptés. Une valeur
+ * méconnaissable passe telle quelle, et la validation la signale.
+ */
+function dateIso(v: string | undefined): string | undefined {
+  const s = (v ?? "").trim();
+  const fr = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
+  if (!fr) return v;
+  const [, j, m, a] = fr;
+  return `${a}-${m.padStart(2, "0")}-${j.padStart(2, "0")}`;
+}
+
 /** Champs de prix calculés depuis le prix d'achat ; tout à vide sans lui. */
 function prixDepuisYuan(yuan: number | null, r: Reglages) {
   if (!yuan || yuan <= 0) return { prix_ttc: 0, prix_yuan: null, taux_yuan: null, acompte_pct: null };
@@ -59,7 +72,11 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
 
   lignes.forEach((brut, i) => {
     const numLigne = i + 2; // en-tete = ligne 1
-    const base = ligneCsvSchema.safeParse(brut);
+    const base = ligneCsvSchema.safeParse({
+      ...brut,
+      prix_valable_jusqu_au: dateIso(brut.prix_valable_jusqu_au),
+      date_photos: dateIso(brut.date_photos),
+    });
     if (!base.success) {
       for (const issue of base.error.issues) {
         const colonne = String(issue.path[0] ?? "-");
@@ -89,7 +106,10 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
       cylindree: v.cylindree,
       categorie: v.categorie,
       etat: v.etat,
-      statut: (texteOuNull(v.statut) ?? "disponible") as MotoInput["statut"],
+      // Toute fiche importée naît en brouillon, quoi que dise le fichier : elle
+      // passe en vente depuis le back-office, une fois ses photos en place.
+      // Une fiche déjà existante garde son statut (voir la route d'import).
+      statut: "brouillon" as MotoInput["statut"],
       kilometrage: nombreOuNull(v.kilometrage),
       couleur: texteOuNull(v.couleur),
       puissance_ch: nombreOuNull(v.puissance_ch),

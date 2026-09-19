@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { analyserCsvMotos } from "@/lib/import-csv";
-import { CSV_MODELE, parserCsv, versCsv } from "@/lib/csv";
+import { COLONNES_CSV, CSV_MODELE, CSV_MODELE_VIDE, parserCsv, versCsv } from "@/lib/csv";
 import { REGLAGES_DEFAUT } from "@/lib/tarification-defaut";
 
 const analyser = (csv: string) => analyserCsvMotos(csv, REGLAGES_DEFAUT);
@@ -178,5 +178,49 @@ ${ligne({ prix_yuan: "" })}`);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.motos[0].prix_ttc).toBe(18_100_000);
+  });
+});
+
+describe("import en masse : modèles et tolérance", () => {
+  it("le modèle avec exemples est valide, en points-virgules et dates françaises", () => {
+    expect(CSV_MODELE.split("\n")[0]).toContain(";");
+    const r = analyser(CSV_MODELE);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.motos).toHaveLength(2);
+    expect(r.motos[0].prix_valable_jusqu_au).toBe("2026-12-31");
+    expect(r.motos[1]).toMatchObject({ etat: "occasion", kilometrage: 18_400, date_photos: "2026-09-10" });
+  });
+
+  it("le modèle vide contient les colonnes obligatoires et aucune colonne statut", () => {
+    const entetes = CSV_MODELE_VIDE.split(";");
+    for (const c of COLONNES_CSV.filter((x) => x.obligatoire)) expect(entetes).toContain(c.nom);
+    expect(entetes).not.toContain("statut");
+    expect(analyser(CSV_MODELE_VIDE).ok).toBe(false);
+  });
+
+  it("toute fiche importée naît en brouillon, même si le fichier dit disponible", () => {
+    const r = analyser(`${ENTETE}\n${ligne({ statut: "disponible" })}`);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.motos[0].statut).toBe("brouillon");
+  });
+
+  it("accepte un fichier en points-virgules avec une virgule dans une cellule", () => {
+    const csv =
+      "reference;marque;modele;annee;cylindree;categorie;etat;prix_yuan;prix_valable_jusqu_au;description\n" +
+      "MI-120;Honda;CB500X;2023;471;trail;neuf;15000;31/12/2026;Trail polyvalent, idéal Tana";
+    const r = analyser(csv);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.motos[0].description).toBe("Trail polyvalent, idéal Tana");
+    expect(r.motos[0].prix_valable_jusqu_au).toBe("2026-12-31");
+  });
+
+  it("signale une date illisible avec sa colonne", () => {
+    const r = analyser(`${ENTETE}\n${ligne({ prix_valable_jusqu_au: "fin décembre" })}`);
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.erreurs[0].colonne).toBe("prix_valable_jusqu_au");
   });
 });

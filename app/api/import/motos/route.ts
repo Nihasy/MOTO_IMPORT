@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
     reference: string;
     action: "cree" | "mis_a_jour";
     retenu_en_brouillon?: string[];
+    sans_prix?: boolean;
   }[] = [];
 
   // Résolution des fournisseurs par nom, création si absent (règle 7.4).
@@ -109,28 +110,35 @@ export async function POST(req: NextRequest) {
       // fiche existante, et une fiche au prix figé (réservée, vendue, au
       // local) garde le sien. Sans prix du tout, la fiche reste en brouillon.
       const existante = await pilote.motoParReference(moto.reference);
+      const prixExistant = existante && {
+        prix_ttc: existante.prix_ttc,
+        prix_yuan: existante.prix_yuan,
+        taux_yuan: existante.taux_yuan,
+        acompte_pct: existante.acompte_pct,
+      };
       let prix = { prix_ttc: moto.prix_ttc, prix_yuan: moto.prix_yuan ?? null, taux_yuan: moto.taux_yuan ?? null, acompte_pct: moto.acompte_pct ?? null };
-      if (existante && !prixDynamique(existante.statut)) {
-        prix = { prix_ttc: existante.prix_ttc, prix_yuan: existante.prix_yuan, taux_yuan: existante.taux_yuan, acompte_pct: existante.acompte_pct };
+      if (prixExistant && (!prixDynamique(existante.statut) || (!prix.prix_yuan && !existante.prix_yuan))) {
+        prix = prixExistant;
       } else if (!prix.prix_yuan && existante?.prix_yuan) {
         prix = champsPrix(existante.prix_yuan, reglages);
       }
-      const sansPrix = prix.prix_ttc <= 0;
+
+      // Statut : une fiche créée par import naît en brouillon — la mise en
+      // vente se fait au back-office, une fois les photos en place. Une fiche
+      // existante garde le sien : l'import met ses informations à jour sans
+      // la retirer de la vente ni l'y mettre.
       const donnees = {
         ...moto,
         ...prix,
-        ...(sansPrix ? { statut: "brouillon" as const } : {}),
+        statut: existante?.statut ?? "brouillon",
         fournisseur_id,
       } as MotoInput;
       const { moto: enregistree, cree } = await pilote.enregistrerParReference(donnees);
 
-      // Le CSV sert justement à créer les fiches « avant même d'avoir les
-      // photos » (7.4). Une ligne qui réclame un statut en vente est donc
-      // retenue en brouillon tant que les contrôles du 10.3 ne passent pas :
-      // l'import reste utile, la publication reste bloquée, et le rapport dit
-      // exactement ce qui manque plutôt que de rejeter le fichier.
-      let retenu: string[] | undefined =
-        sansPrix && moto.statut !== "brouillon" ? ["Prix d'achat en yuan manquant : le prix de vente en découle"] : undefined;
+      // Une fiche déjà en vente que la mise à jour rendrait incomplète (une
+      // description vidée, par exemple) repasse en brouillon, et le rapport
+      // dit ce qui manque plutôt que de laisser en ligne une fiche non conforme.
+      let retenu: string[] | undefined;
       if (estEnVente(enregistree.statut)) {
         const medias = await pilote.mediasDeMoto(enregistree.id);
         const verrou = verrouPublication(enregistree, medias, enregistree.statut);
@@ -144,6 +152,7 @@ export async function POST(req: NextRequest) {
         reference: moto.reference,
         action: cree ? "cree" : "mis_a_jour",
         ...(retenu ? { retenu_en_brouillon: retenu } : {}),
+        ...(enregistree.prix_ttc > 0 ? {} : { sans_prix: true }),
       });
     }
   } catch (e) {
@@ -173,6 +182,7 @@ export async function POST(req: NextRequest) {
     crees: rapport.filter((r) => r.action === "cree").length,
     mis_a_jour: rapport.filter((r) => r.action === "mis_a_jour").length,
     retenus_en_brouillon: rapport.filter((r) => r.retenu_en_brouillon).length,
+    sans_prix: rapport.filter((r) => r.sans_prix).length,
     rapport,
   });
 }

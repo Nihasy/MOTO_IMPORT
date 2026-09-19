@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CSV_MODELE } from "@/lib/csv";
+import Link from "next/link";
+import { COLONNES_CSV, CSV_MODELE, CSV_MODELE_VIDE } from "@/lib/csv";
 import type { ErreurLigne } from "@/lib/import-csv";
 
 type Resultat = {
@@ -12,6 +13,8 @@ type Resultat = {
   total?: number;
   crees?: number;
   mis_a_jour?: number;
+  sans_prix?: number;
+  retenus_en_brouillon?: number;
 };
 
 export function ImportCsv() {
@@ -35,12 +38,14 @@ export function ImportCsv() {
     if (rep.ok) router.refresh();
   };
 
-  const telechargerModele = () => {
-    const blob = new Blob([CSV_MODELE], { type: "text/csv;charset=utf-8" });
+  // Le BOM UTF-8 fait lire les accents correctement à Excel ; sans lui,
+  // « Modèle » s'affiche « ModÃ¨le ».
+  const telecharger = (contenu: string, nom: string) => {
+    const blob = new Blob(["\uFEFF" + contenu], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "modele-motos.csv";
+    a.download = nom;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
@@ -49,16 +54,56 @@ export function ImportCsv() {
     <div className="carte p-5">
       <h2 className="text-[17px] font-semibold">Import de motos par CSV</h2>
       <p className="mt-1.5 text-corps text-chrome">
-        Une référence déjà présente déclenche une mise à jour, jamais un doublon.{" "}
+        <strong className="text-text">Chaque fiche importée naît en brouillon</strong>, invisible du
+        public. Ajoutez ensuite ses photos (onglet « Photos »), puis publiez depuis la liste des motos.
+        Une référence déjà présente met la fiche à jour sans changer son statut, jamais un doublon.{" "}
         <strong className="text-text">
           Si une seule ligne est invalide, rien n&apos;est écrit
         </strong>{" "}
         et le rapport indique la ligne et la colonne fautives.
       </p>
 
-      <button type="button" onClick={telechargerModele} className="mt-3 text-[12.5px] font-semibold text-gold-light underline">
-        Télécharger le modèle CSV
-      </button>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button type="button" onClick={() => telecharger(CSV_MODELE_VIDE, "modele-motos-vide.csv")} className="btn-fantome px-4">
+          Modèle vide (.csv)
+        </button>
+        <button type="button" onClick={() => telecharger(CSV_MODELE, "modele-motos-exemples.csv")} className="btn-fantome px-4">
+          Modèle avec 2 exemples
+        </button>
+      </div>
+      <p className="mt-2 text-meta text-dim">
+        S&apos;ouvre dans Excel, LibreOffice ou Google Sheets. Enregistrez au format CSV : virgules ou
+        points-virgules, dates en 31/12/2026 ou 2026-12-31, les deux sont acceptés.
+      </p>
+
+      <details className="mt-3 rounded-card border border-line bg-surface-hi">
+        <summary className="cursor-pointer px-3 py-2.5 text-corps font-semibold text-text">
+          Guide des colonnes ({COLONNES_CSV.filter((c) => c.obligatoire).length} obligatoires)
+        </summary>
+        <div className="max-h-80 overflow-auto border-t border-line">
+          <table className="w-full text-left text-[12.5px]">
+            <thead className="sticky top-0 bg-surface-hi text-dim">
+              <tr>
+                <th className="px-3 py-1.5">Colonne</th>
+                <th className="px-3 py-1.5">Attendu</th>
+                <th className="px-3 py-1.5">Exemple</th>
+              </tr>
+            </thead>
+            <tbody className="text-chrome">
+              {COLONNES_CSV.map((c) => (
+                <tr key={c.nom} className="border-t border-line/60 align-top">
+                  <td className="whitespace-nowrap px-3 py-1.5 font-mono text-text">
+                    {c.nom}
+                    {c.obligatoire ? <span className="text-gold-light"> *</span> : null}
+                  </td>
+                  <td className="px-3 py-1.5">{c.format}</td>
+                  <td className="px-3 py-1.5 text-dim">{c.exemple}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
 
       <label className="mt-4 flex min-h-[110px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-card border-2 border-dashed border-line bg-surface-hi text-center hover:border-gold">
         <span className="text-corps font-semibold text-gold-light">
@@ -87,8 +132,27 @@ export function ImportCsv() {
 
       {resultat?.ok ? (
         <p role="status" className="mt-4 rounded-card border border-dispo/50 bg-dispo/10 px-3 py-2.5 text-corps text-dispo">
-          Import réussi : {resultat.crees} moto(s) créée(s), {resultat.mis_a_jour} mise(s) à jour sur{" "}
-          {resultat.total} ligne(s).
+          Import réussi : {resultat.crees} moto(s) créée(s) en brouillon, {resultat.mis_a_jour} mise(s) à
+          jour sur {resultat.total} ligne(s).
+          {resultat.sans_prix ? (
+            <span className="mt-1 block text-gold-light">
+              {resultat.sans_prix} fiche(s) sans prix d&apos;achat en ¥ : à compléter avant publication.
+            </span>
+          ) : null}
+          {resultat.retenus_en_brouillon ? (
+            <span className="mt-1 block text-gold-light">
+              {resultat.retenus_en_brouillon} fiche(s) déjà en vente repassée(s) en brouillon : la mise à
+              jour les rendait incomplètes.
+            </span>
+          ) : null}
+          <span className="mt-2 flex flex-wrap gap-2">
+            <Link href="/admin/import?onglet=photos" className="btn-or px-4">
+              Étape suivante : importer les photos
+            </Link>
+            <Link href="/admin/motos?statut=brouillon" className="btn-fantome px-4">
+              Voir les brouillons
+            </Link>
+          </span>
         </p>
       ) : null}
 

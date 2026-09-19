@@ -462,3 +462,44 @@ export async function enregistrerTarification(
   revalidatePath("/", "layout");
   return { recalculees };
 }
+
+export type EtatPublicationMasse = { publiees?: string[]; retenues?: number; erreur?: string } | null;
+
+/**
+ * Publie d'un coup les brouillons dont tous les contrôles sont verts : le
+ * geste qui suit un import CSV puis un import de photos. Chaque fiche passe
+ * par le même verrou que la publication une à une ; celles qui ne le
+ * franchissent pas restent en brouillon, et l'écran dit combien.
+ * Elles partent « disponibles sur commande », au prix du taux du jour.
+ */
+export async function publierBrouillonsPrets(
+  _etat: EtatPublicationMasse,
+  _form: FormData
+): Promise<EtatPublicationMasse> {
+  await exigerSession();
+  const pilote = db();
+  const reglages = await reglagesEnVigueur();
+  const brouillons = (await pilote.listerMotosAdmin()).filter((m) => m.statut === "brouillon");
+
+  const publiees: string[] = [];
+  let retenues = 0;
+  for (const m of brouillons) {
+    const verrou = verrouPublication(m, await pilote.mediasDeMoto(m.id), "disponible");
+    if (!verrou.autorise) {
+      retenues++;
+      continue;
+    }
+    if (m.prix_yuan) {
+      const prix = champsPrix(m.prix_yuan, reglages);
+      if (prix.prix_ttc !== m.prix_ttc || prix.acompte_pct !== m.acompte_pct) await pilote.majMoto(m.id, prix);
+    }
+    const moto = await pilote.majStatut(m.id, "disponible");
+    revalidatePath(`/motos/${moto.slug}`);
+    publiees.push(m.reference);
+  }
+
+  revalidatePath("/motos");
+  revalidatePath("/");
+  revalidatePath("/admin/motos");
+  return { publiees, retenues };
+}
