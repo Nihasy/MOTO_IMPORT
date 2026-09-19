@@ -1,4 +1,5 @@
 import Link from "next/link";
+import clsx from "clsx";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
@@ -45,7 +46,15 @@ export default async function Accueil() {
             chaque carte du catalogue et sur chaque fiche, c'est-à-dire au
             moment où ils servent à décider. Les répéter ici repoussait le
             catalogue hors du premier écran pour dire deux fois la même chose. */}
-        <section className="relative isolate max-w-[740px] py-14 sm:py-20 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-center lg:gap-12 lg:py-16 xl:grid-cols-[minmax(0,1fr)_minmax(0,520px)] xl:gap-20">
+        {/* Deux colonnes seulement quand une moto peut occuper la seconde : sans
+            elle, la colonne vide ecrasait l'accroche sur trois lignes. */}
+        <section
+          className={clsx(
+            "relative isolate max-w-[740px] py-14 sm:py-20",
+            vedette &&
+              "lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-center lg:gap-12 lg:py-16 xl:grid-cols-[minmax(0,1fr)_minmax(0,520px)] xl:gap-20"
+          )}
+        >
           {/* Halo laiton très bas en opacité : la seule ornementation de la
               page. Décoratif, donc hors du flux et hors du pointeur. */}
           <div
