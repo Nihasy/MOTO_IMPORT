@@ -16,6 +16,8 @@ import { demandePatchSchema, mediaPatchSchema, motoSchema } from "@/lib/schemas"
 import { messageVerrou, verrouPublication } from "@/lib/publication";
 import { estEnVente } from "@/lib/types";
 import { normaliserWhatsapp, parametresSchema } from "@/lib/schemas";
+import { champsPrix, prixAJour, reglagesEnVigueur } from "@/lib/tarification-serveur";
+import { erreurReglages, prixDynamique, recalculerAuPassage, type Reglages } from "@/lib/tarification";
 import type { DemandeStatut, Moto, Statut } from "@/lib/types";
 
 /**
@@ -90,8 +92,14 @@ async function exigerSession() {
   return s;
 }
 
+/** Montant saisi avec séparateurs de milliers : « 18 600 000 » → 18600000. */
+const entier = (v: FormDataEntryValue | null): number | null => {
+  const chiffres = String(v ?? "").replace(/[^\d]/g, "");
+  return chiffres ? Number(chiffres) : null;
+};
+
 export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Promise<EtatFormulaire> {
-  await exigerSession();
+  const session = await exigerSession();
   const id = String(form.get("id") ?? "");
   // Tout refus repart avec la saisie : sans cela React la vide et l'exploitant
   // doit ressaisir les vingt champs de la fiche.
@@ -111,6 +119,23 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
       .map((s) => s.trim())
       .filter(Boolean);
 
+  // Prix : jamais saisi, toujours calculé ici, côté serveur, à partir du prix
+  // d'achat en yuan. Seul l'administrateur voit et envoie ce prix d'achat ;
+  // pour le compte éditeur, celui déjà enregistré est conservé. Une moto au
+  // prix figé (réservée, vendue, au local) garde son prix quoi qu'on envoie.
+  const statut = existante?.statut ?? "brouillon";
+  const prixYuan =
+    session.role === "admin" && form.has("prix_yuan") ? entier(form.get("prix_yuan")) : (existante?.prix_yuan ?? null);
+  const prix =
+    existante && !prixDynamique(statut)
+      ? {
+          prix_ttc: existante.prix_ttc,
+          prix_yuan: existante.prix_yuan,
+          taux_yuan: existante.taux_yuan,
+          acompte_pct: existante.acompte_pct,
+        }
+      : champsPrix(prixYuan, await reglagesEnVigueur());
+
   const brut = {
     reference: texte("reference"),
     marque: texte("marque"),
@@ -123,8 +148,8 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
     // verrou de publication. Une création naît donc en brouillon, et une
     // modification conserve le statut en cours — quoi qu'annonce la requête,
     // qui peut avoir été fabriquée à la main.
-    statut: existante?.statut ?? "brouillon",
-    kilometrage: texte("kilometrage") ? form.get("kilometrage") : null,
+    statut,
+    kilometrage: entier(form.get("kilometrage")),
     couleur: texte("couleur") || null,
     puissance_ch: texte("puissance_ch") ? form.get("puissance_ch") : null,
     poids_kg: texte("poids_kg") ? form.get("poids_kg") : null,
@@ -132,7 +157,7 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
     refroidissement: texte("refroidissement") || null,
     transmission: texte("transmission") || null,
     abs: form.get("abs") === "on",
-    prix_ttc: form.get("prix_ttc"),
+    ...prix,
     prix_valable_jusqu_au: texte("prix_valable_jusqu_au"),
     delai_min_jours: form.get("delai_min_jours") || 45,
     delai_max_jours: form.get("delai_max_jours") || 65,
@@ -206,6 +231,16 @@ export async function changerStatut(id: string, statut: Statut): Promise<Resulta
   const verrou = verrouPublication(avant, await db().mediasDeMoto(id), statut);
   if (!verrou.autorise) {
     return { ok: false, erreur: messageVerrou(verrou.bloquants), bloquants: verrou.bloquants };
+  }
+
+  // Prix au taux du jour en entrant dans un statut dynamique (une moto qui
+  // revient après un désistement) et une dernière fois à l'arrivée au local ;
+  // la réservation et la vente figent le prix tel qu'il a été signé.
+  if (recalculerAuPassage(statut) && avant.prix_yuan) {
+    const prix = champsPrix(avant.prix_yuan, await reglagesEnVigueur());
+    if (prix.prix_ttc !== avant.prix_ttc || prix.acompte_pct !== avant.acompte_pct) {
+      await db().majMoto(id, prix);
+    }
   }
 
   const moto = await db().majStatut(id, statut);
@@ -364,4 +399,66 @@ export async function enregistrerParametres(form: FormData) {
   // devis de chaque carte compris) : toutes les pages sont régénérées.
   revalidatePath("/", "layout");
   redirect("/admin/parametres?ok=1");
+}
+
+export type EtatTarification = { erreur?: string; recalculees?: number } | null;
+
+/** Lit les réglages du formulaire Tarification (montants avec séparateurs). */
+function reglagesSaisis(form: FormData): Reglages {
+  const nombre = (cle: string) => Number(String(form.get(cle) ?? "").replace(/\s/g, "").replace(",", "."));
+  return {
+    taux_yuan: nombre("taux_yuan"),
+    fret_ar: entier(form.get("fret_ar")) ?? NaN,
+    benefice_fixe_ar: entier(form.get("benefice_fixe_ar")) ?? NaN,
+    part_achat_pct: nombre("part_achat_pct"),
+    securite_change_pct: nombre("securite_change_pct"),
+    arrondi_ar: entier(form.get("arrondi_ar")) ?? NaN,
+  };
+}
+
+/**
+ * Réglages de tarification, puis recalcul de tous les prix dynamiques
+ * (brouillons et motos disponibles sur commande). Réservé à l'administrateur.
+ * Les prix figés — réservé, vendu, au local — ne bougent pas.
+ */
+export async function enregistrerTarification(
+  _etat: EtatTarification,
+  form: FormData
+): Promise<EtatTarification> {
+  const s = await exigerSession();
+  if (s.role !== "admin") return { erreur: "Réservé au compte administrateur." };
+
+  const reglages = reglagesSaisis(form);
+  const invalide = erreurReglages(reglages);
+  if (invalide) return { erreur: invalide };
+
+  // Garde-fou contre la faute de frappe : un taux qui bouge de plus de 15 %
+  // d'un coup doit être confirmé explicitement.
+  const actuels = await reglagesEnVigueur();
+  const ecartTaux = Math.abs(reglages.taux_yuan - actuels.taux_yuan) / actuels.taux_yuan;
+  if (ecartTaux > 0.15 && form.get("confirmer") !== "on") {
+    return {
+      erreur: `Le taux passe de ${actuels.taux_yuan} à ${reglages.taux_yuan} Ar (${Math.round(ecartTaux * 100)} % d'écart). Cochez la confirmation si c'est voulu.`,
+    };
+  }
+
+  try {
+    await db().enregistrerTarification(reglages);
+  } catch (e) {
+    console.error("[tarification] enregistrement impossible :", (e as Error).message);
+    return {
+      erreur:
+        "Enregistrement impossible. Si la table « tarification » n'existe pas encore, appliquez la migration 0009 dans Supabase.",
+    };
+  }
+
+  let recalculees = 0;
+  for (const m of await db().listerMotosAdmin()) {
+    if (!m.prix_yuan || !prixDynamique(m.statut) || prixAJour(m, reglages)) continue;
+    await db().majMoto(m.id, champsPrix(m.prix_yuan, reglages));
+    recalculees++;
+  }
+
+  revalidatePath("/", "layout");
+  return { recalculees };
 }

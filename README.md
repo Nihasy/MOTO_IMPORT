@@ -5,7 +5,7 @@ Implémentation du cahier des charges `goal.md`, version 2.0.
 
 Ce n'est **pas** une boutique en ligne : ni panier, ni paiement, ni compte
 client. La vente se conclut au local par signature d'un bon de commande et
-versement d'un acompte de 70 % (solde de 30 % à la remise des clés et des papiers). L'application convertit le visiteur en
+versement d'un acompte propre à chaque moto (45 à 80 %, solde à la remise des clés et des papiers). L'application convertit le visiteur en
 conversation WhatsApp qualifiée, et rien de plus.
 
 ## Démarrer
@@ -203,3 +203,28 @@ finale du chapitre 15 :
 - Mesurer Lighthouse mobile sur le catalogue et une fiche réelle, avec de
   vraies photos : la cible de 85 ne peut pas se vérifier sur des placeholders.
 - Brancher Sentry, le Pixel Meta et le Pixel TikTok.
+
+### Tarification (information interne)
+
+Le prix de vente ne se saisit pas : il se calcule à partir du prix d'achat en
+yuan (`lib/tarification.ts`), avec les réglages de l'onglet **Tarification**
+du back-office (compte admin).
+
+- `prix de vente = achat + fret et papiers + bénéfice fixe + part × achat`,
+  arrondi au palier supérieur ;
+- `acompte = achat × (1 + sécurité change) ÷ prix`, arrondi au 5 % supérieur,
+  borné à 45–80 % par les CGV (`lib/conditions.ts`) ;
+- les prix suivent les réglages tant que la moto est en brouillon ou
+  disponible sur commande ; ils sont figés à la réservation, à la vente et à
+  l'arrivée au local.
+
+Le prix en yuan, le taux et les réglages ne quittent jamais le serveur vers le
+public ni vers le compte éditeur : `publier()` les retire, la vue publique ne
+les contient pas, et la migration 0009 restreint la lecture de la table
+`motos` aux seules colonnes publiques. Les chiffres par défaut vivent dans
+`lib/tarification-defaut.ts`, que seul le serveur importe.
+
+En développement avec le magasin JSON local, React joint au code des pages les
+lectures de fichier pour ses outils de débogage : la base locale entière y
+apparaît. Cela n'existe pas en production (vérifié sur une construction de
+production).

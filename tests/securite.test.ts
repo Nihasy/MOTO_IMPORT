@@ -76,7 +76,8 @@ describe("contrôles bloquants avant publication (10.3)", () => {
       annee: 2021, cylindree: 471, categorie: "trail", etat: "neuf", statut: "disponible",
       kilometrage: null, couleur: null, puissance_ch: null, poids_kg: null,
       hauteur_selle_mm: null, refroidissement: null, transmission: null, abs: false,
-      prix_ttc: 12_500_000, prix_valable_jusqu_au: "2026-12-31",
+      prix_ttc: 12_500_000, prix_yuan: 10_000, taux_yuan: 670, acompte_pct: 50,
+      prix_valable_jusqu_au: "2026-12-31",
       delai_min_jours: 45, delai_max_jours: 65, garantie_mois: 12, garantie_texte: "Moteur",
       description: Array(160).fill("mot").join(" "),
       points_forts: [], etat_details: null, date_photos: null, fournisseur_id: null,
@@ -231,7 +232,8 @@ describe("verrou de publication (7.1, 10.3, recette 16.1)", () => {
       annee: 2023, cylindree: 471, categorie: "trail", etat: "neuf", statut: "brouillon",
       kilometrage: null, couleur: null, puissance_ch: null, poids_kg: null,
       hauteur_selle_mm: null, refroidissement: null, transmission: null, abs: false,
-      prix_ttc: 12_500_000, prix_valable_jusqu_au: "2026-12-31",
+      prix_ttc: 12_500_000, prix_yuan: 10_000, taux_yuan: 670, acompte_pct: 50,
+      prix_valable_jusqu_au: "2026-12-31",
       delai_min_jours: 45, delai_max_jours: 65, garantie_mois: 12, garantie_texte: "Moteur",
       description: Array(160).fill("mot").join(" "),
       points_forts: [], etat_details: null, date_photos: null, fournisseur_id: null,
@@ -260,6 +262,12 @@ describe("verrou de publication (7.1, 10.3, recette 16.1)", () => {
 
   it("autorise la mise en vente d'une fiche complète", () => {
     expect(verrouPublication(fiche(), serie(), "disponible").autorise).toBe(true);
+  });
+
+  it("refuse la mise en vente sans prix d'achat en yuan", () => {
+    const v = verrouPublication(fiche({ prix_yuan: null, prix_ttc: 0 }), serie(), "disponible");
+    expect(v.autorise).toBe(false);
+    expect(v.bloquants.join(" ")).toMatch(/yuan/);
   });
 
   it("laisse toujours passer vendu, archive et le retour en brouillon", () => {

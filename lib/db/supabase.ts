@@ -14,7 +14,7 @@ import { appliquerFiltres, similaires, trierCatalogue } from "./filtres";
 const COLONNES_PUBLIQUES = [
   "id", "reference", "slug", "marque", "modele", "annee", "cylindree", "categorie",
   "etat", "statut", "kilometrage", "couleur", "puissance_ch", "poids_kg",
-  "hauteur_selle_mm", "refroidissement", "transmission", "abs", "prix_ttc",
+  "hauteur_selle_mm", "refroidissement", "transmission", "abs", "prix_ttc", "acompte_pct",
   "prix_valable_jusqu_au", "delai_min_jours", "delai_max_jours", "garantie_mois",
   "garantie_texte", "description", "points_forts", "etat_details", "date_photos",
   "date_vente", "vues", "created_at", "updated_at",
@@ -317,6 +317,25 @@ export function creerPiloteSupabase(): Pilote {
         .single();
       err(error);
       return data as import("@/lib/types").Parametres;
+    },
+
+    // Table sans aucune politique : seule la clé de service la lit (migration
+    // 0009). Absente, l'erreur remonte et `lib/tarification-serveur.ts`
+    // retombe sur les réglages par défaut.
+    async lireTarification() {
+      const { data, error } = await sb.from("tarification").select("reglages").eq("id", 1).maybeSingle();
+      err(error);
+      return ((data as { reglages: import("@/lib/tarification").Reglages } | null)?.reglages) ?? null;
+    },
+
+    async enregistrerTarification(r) {
+      const { data, error } = await sb
+        .from("tarification")
+        .upsert({ id: 1, reglages: r, updated_at: new Date().toISOString() })
+        .select("reglages")
+        .single();
+      err(error);
+      return (data as { reglages: import("@/lib/tarification").Reglages }).reglages;
     },
 
     async creerLot(lot) {

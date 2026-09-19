@@ -13,6 +13,8 @@ import { BarreFiltres, EntetePage, PuceFiltre } from "@/components/admin/ui";
 import { estPublic } from "@/lib/types";
 import { vuesManquantes } from "@/lib/medias";
 import { supprimerMoto } from "@/app/admin/actions";
+import { sessionCourante } from "@/lib/auth";
+import { reglagesEnVigueur } from "@/lib/tarification-serveur";
 
 export const dynamic = "force-dynamic";
 
@@ -32,14 +34,25 @@ export default async function EditionMoto({ params, searchParams }: Props) {
   const { onglet = "infos" } = await searchParams;
 
   const pilote = db();
-  const moto = await pilote.motoParId(id);
-  if (!moto) notFound();
+  const complete = await pilote.motoParId(id);
+  if (!complete) notFound();
+
+  // Le prix d'achat et le taux sont réservés à l'administrateur. Pour tout
+  // autre compte, ils sont retirés ici, avant que la fiche ne parte vers les
+  // composants du navigateur : ne pas les afficher ne suffirait pas, ils
+  // voyageraient quand même dans la page.
+  const session = await sessionCourante();
+  const admin = session?.role === "admin";
+  const moto = admin ? complete : { ...complete, prix_yuan: null, taux_yuan: null };
+  const reglages = admin ? await reglagesEnVigueur() : null;
 
   const [medias, fournisseurs] = await Promise.all([
     pilote.mediasDeMoto(id),
     pilote.listerFournisseurs(),
   ]);
-  const controles = controlesPublication(moto, medias);
+  // Contrôles sur la fiche complète : ils affichent un état (vert ou rouge),
+  // jamais le montant du prix d'achat.
+  const controles = controlesPublication(complete, medias);
   const bloquants = controles.filter((c) => !c.ok).length;
 
   return (
@@ -89,7 +102,7 @@ export default async function EditionMoto({ params, searchParams }: Props) {
           <div className="mb-5 max-w-xl">
             <ListeControles controles={controles} />
           </div>
-          <FormulaireMoto moto={moto} fournisseurs={fournisseurs} />
+          <FormulaireMoto moto={moto} fournisseurs={fournisseurs} reglages={reglages} />
           <div className="mt-6 max-w-xl">
             <BoutonDanger
               action={supprimerMoto}
@@ -123,7 +136,7 @@ export default async function EditionMoto({ params, searchParams }: Props) {
           <section className="carte p-4">
             <h2 className="text-[17px] font-semibold">Ce que verra le visiteur</h2>
             <p className="mt-3 text-prix-fiche leading-none text-gold-light">
-              {ar(moto.prix_ttc)}
+              {moto.prix_ttc > 0 ? ar(moto.prix_ttc) : "Prix à fixer"}
             </p>
             <p className="mt-1.5 text-corps text-chrome">
               Prix final, rendu à Antananarivo. Carte grise établie à votre nom, incluse.

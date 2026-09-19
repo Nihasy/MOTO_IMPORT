@@ -62,7 +62,10 @@ export type MotoPublique = {
   refroidissement: "air" | "liquide" | null;
   transmission: string | null;
   abs: boolean;
+  /** Prix de vente, calculé à partir du prix d'achat (lib/tarification.ts). */
   prix_ttc: number;
+  /** Acompte propre à la moto, en % du prix (CGV art. 4.2). Public. */
+  acompte_pct: number | null;
   prix_valable_jusqu_au: string;
   delai_min_jours: number;
   delai_max_jours: number;
@@ -78,8 +81,18 @@ export type MotoPublique = {
   updated_at: string;
 };
 
-/** Moto côté serveur/admin : inclut le lien fournisseur. */
-export type Moto = MotoPublique & { fournisseur_id: string | null };
+/**
+ * Moto côté serveur/admin. Le fournisseur et le prix d'achat sont internes :
+ * `publier()` les retire avant toute exposition, et la base en refuse la
+ * lecture au rôle public (migration 0009).
+ */
+export type Moto = MotoPublique & {
+  fournisseur_id: string | null;
+  /** Prix d'achat en yuan. Interne. */
+  prix_yuan: number | null;
+  /** Taux ¥ → Ar du dernier calcul. Interne. */
+  taux_yuan: number | null;
+};
 
 /**
  * `nb_medias` porte le nombre reel de photos quand `medias` a ete tronquee

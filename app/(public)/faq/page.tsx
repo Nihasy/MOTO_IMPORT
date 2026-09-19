@@ -2,19 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BarreSuperieure } from "@/components/ui/navigation";
 import { jsonLdSecurise } from "@/lib/jsonld";
-import { ACOMPTE_COMMANDE_TEXTE } from "@/lib/conditions";
+import { FOURCHETTE_ACOMPTE_TEXTE } from "@/lib/conditions";
 
 export const metadata: Metadata = {
   title: "FAQ — acompte, délais, carte grise, garantie",
   description:
-    `Pourquoi un acompte de ${ACOMPTE_COMMANDE_TEXTE}, que se passe-t-il en cas de désistement, qui fait la carte grise, d'où viennent les motos, que couvre la garantie, livraison en province.`,
+    `Pourquoi un acompte de ${FOURCHETTE_ACOMPTE_TEXTE}, que se passe-t-il en cas de désistement, qui fait la carte grise, d'où viennent les motos, que couvre la garantie, livraison en province.`,
   alternates: { canonical: "/faq" },
 };
 
 const QUESTIONS = [
   {
-    q: `Pourquoi un acompte de ${ACOMPTE_COMMANDE_TEXTE} ?`,
-    r: "Parce que nous ne tenons aucun stock. Pour une moto disponible sur commande, à la signature de votre bon de commande, nous achetons effectivement la moto chez notre partenaire en Chine et engageons le fret. L'acompte couvre cet engagement. Sans lui, nous devrions immobiliser notre trésorerie sur des véhicules que personne n'a commandés, et les prix affichés seraient plus élevés.",
+    q: `Pourquoi un acompte de ${FOURCHETTE_ACOMPTE_TEXTE} ?`,
+    r: `Parce que nous ne tenons aucun stock. Pour une moto disponible sur commande, à la signature de votre bon de commande, nous achetons effectivement la moto chez notre partenaire en Chine. L'acompte couvre cet achat : c'est pourquoi son pourcentage dépend du prix de la moto, entre ${FOURCHETTE_ACOMPTE_TEXTE}. Il est indiqué sur chaque fiche, en pourcentage et en ariary, et repris au bon de commande. Le solde se règle à la remise des clés et des papiers. Sans lui, nous devrions immobiliser notre trésorerie sur des véhicules que personne n'a commandés, et les prix affichés seraient plus élevés.`,
     cgv: "Article 4 — Commande et acompte",
   },
   {

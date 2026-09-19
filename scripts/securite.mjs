@@ -222,10 +222,10 @@ titre("C. Injection");
 
 const CHARGE_XSS = "</script><script>window.__COMPROMIS=1</script>";
 const CSV_ENTETE =
-  "reference,marque,modele,annee,cylindree,categorie,etat,prix_ttc,prix_valable_jusqu_au,description";
+  "reference,marque,modele,annee,cylindree,categorie,etat,prix_yuan,prix_valable_jusqu_au,description";
 
 {
-  const csv = `${CSV_ENTETE}\n"MI-777","Xss","Test",2023,500,trail,neuf,9000000,2027-01-31,"${CHARGE_XSS} description de test suffisamment longue pour passer la validation."`;
+  const csv = `${CSV_ENTETE}\n"MI-777","Xss","Test",2023,500,trail,neuf,9000,2027-01-31,"${CHARGE_XSS} description de test suffisamment longue pour passer la validation."`;
   const imp = await req("/api/import/motos", {
     method: "POST",
     headers: { "Content-Type": "application/json", ...cookieAdmin },
@@ -350,7 +350,7 @@ verifier(
     CSV_ENTETE +
     "\n" +
     Array.from({ length: 20_000 }, (_, i) =>
-      `MI-${9000 + i},M,M,2023,500,trail,neuf,9000000,2027-01-31,"description de test suffisamment longue pour passer la validation Zod."`
+      `MI-${9000 + i},M,M,2023,500,trail,neuf,9000,2027-01-31,"description de test suffisamment longue pour passer la validation Zod."`
     ).join("\n");
   const t0 = Date.now();
   const r = await req("/api/import/motos", {

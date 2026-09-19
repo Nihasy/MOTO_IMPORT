@@ -31,7 +31,13 @@ export const motoSchema = z
     transmission: z.string().nullable().optional(),
     abs: z.coerce.boolean().default(false),
 
-    prix_ttc: z.coerce.number().int().positive("Prix obligatoire, en Ariary"),
+    // Calculé par le serveur à partir du prix d'achat, jamais saisi. Zéro tant
+    // que le prix en yuan manque : la fiche reste alors en brouillon, le
+    // verrou de publication l'y retient.
+    prix_ttc: z.coerce.number().int().min(0),
+    prix_yuan: z.coerce.number().int().positive("Prix d'achat en yuan invalide").max(10_000_000).nullable().optional(),
+    taux_yuan: z.coerce.number().positive().nullable().optional(),
+    acompte_pct: z.coerce.number().int().min(0).max(100).nullable().optional(),
     prix_valable_jusqu_au: dateSchema,
     delai_min_jours: z.coerce.number().int().positive().default(45),
     delai_max_jours: z.coerce.number().int().positive().default(65),
@@ -168,7 +174,13 @@ export const ligneCsvSchema = z.object({
   refroidissement: z.string().optional(),
   transmission: z.string().optional(),
   abs: z.string().optional(),
-  prix_ttc: z.coerce.number().int().positive(),
+  // Prix d'achat en yuan, facultatif : sans lui la fiche est importée sans
+  // prix et retenue en brouillon. Le prix de vente n'est jamais importé, il
+  // est calculé (lib/tarification.ts).
+  prix_yuan: z
+    .string()
+    .optional()
+    .refine((v) => !v?.trim() || /^\d[\d\s]*$/.test(v.trim()), "Prix en yuan : un nombre entier, sans décimale"),
   prix_valable_jusqu_au: dateSchema,
   garantie_mois: z.string().optional(),
   garantie_texte: z.string().optional(),

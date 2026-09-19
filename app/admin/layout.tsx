@@ -46,6 +46,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
     ...(session.role === "admin"
       ? [
           { href: "/admin/fournisseurs", libelle: "Fournisseurs" } as Onglet,
+          { href: "/admin/tarification", libelle: "Tarification" } as Onglet,
           { href: "/admin/parametres", libelle: "Paramètres" } as Onglet,
         ]
       : []),

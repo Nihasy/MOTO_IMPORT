@@ -4,21 +4,21 @@ import { BarreSuperieure } from "@/components/ui/navigation";
 import { ETAPES_PROCESS } from "@/components/fiche/blocs";
 import { lienRecherche } from "@/lib/whatsapp";
 import { parametres } from "@/lib/parametres";
-import { ACOMPTE_COMMANDE_TEXTE, SOLDE_LIVRAISON_TEXTE } from "@/lib/conditions";
+import { FOURCHETTE_ACOMPTE_TEXTE } from "@/lib/conditions";
 
 export const metadata: Metadata = {
   title: "Comment ça marche — de la commande à la remise des clés",
   description:
-    `Les 5 étapes de l'importation : choix de la moto, confirmation du prix rendu Tana, signature du bon de commande avec acompte de ${ACOMPTE_COMMANDE_TEXTE}, importation, livraison en 45 à 65 jours.`,
+    `Les 5 étapes de l'importation : choix de la moto, confirmation du prix rendu Tana, signature du bon de commande avec un acompte de ${FOURCHETTE_ACOMPTE_TEXTE} selon la moto, importation, livraison en 45 à 65 jours.`,
   alternates: { canonical: "/comment-ca-marche" },
 };
 
 const DETAILS = [
   "Vous parcourez le catalogue, vous ouvrez la fiche, vous voyez le prix final, le délai et l'état exact du véhicule. Vous nous écrivez sur WhatsApp avec la référence.",
   "Nous confirmons la disponibilité auprès de l'atelier, contrôlons les photos, et figeons le prix rendu Antananarivo carte grise incluse. Ce prix est valable jusqu'à la date indiquée sur la fiche.",
-  `Vous venez au local. Vous signez le bon de commande et versez l'acompte de ${ACOMPTE_COMMANDE_TEXTE}. C'est le seul moment où de l'argent change de main avant la livraison, et cela se fait en face à face, avec un document signé.`,
+  `Vous venez au local. Vous signez le bon de commande et versez l'acompte indiqué sur la fiche de la moto, entre ${FOURCHETTE_ACOMPTE_TEXTE} du prix selon le véhicule. C'est le seul moment où de l'argent change de main avant la livraison, et cela se fait en face à face, avec un document signé.`,
   "Nous prenons tout en charge : achat, contrôle avant expédition, fret maritime, dédouanement, mise en conformité et carte grise établie à votre nom.",
-  `Nous vous prévenons dès l'arrivée. Vous réglez le solde de ${SOLDE_LIVRAISON_TEXTE} à la remise des clés et des papiers, au local d'Antananarivo.`,
+  `Nous vous prévenons dès l'arrivée. Vous réglez le solde à la remise des clés et des papiers, au local d'Antananarivo.`,
 ];
 
 export default async function Page() {
@@ -52,7 +52,7 @@ export default async function Page() {
           <p className="mt-2 text-corps text-chrome">
             C'est la question que tout le monde se pose, et elle est légitime. Trois réponses
             concrètes : l'acompte se verse au local, en personne, contre un bon de commande signé
-            qui engage les deux parties ; il représente {ACOMPTE_COMMANDE_TEXTE}, pas la totalité ; et le solde de {SOLDE_LIVRAISON_TEXTE} n'est dû
+            qui engage les deux parties ; il représente {FOURCHETTE_ACOMPTE_TEXTE} du prix selon la moto, pas la totalité ; et le solde n'est dû
             qu'à la remise des clés, une fois la moto sur place et la carte grise à votre nom.
           </p>
           <p className="mt-2 text-corps text-chrome">

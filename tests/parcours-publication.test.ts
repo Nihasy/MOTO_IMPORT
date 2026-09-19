@@ -47,6 +47,9 @@ describe("parcours de publication d'une moto (7.1, 10.3)", () => {
       etat: "neuf",
       statut: "brouillon",
       prix_ttc: 14_500_000,
+      prix_yuan: 12_000,
+      taux_yuan: 670,
+      acompte_pct: 55,
       prix_valable_jusqu_au: "2026-12-31",
     });
 

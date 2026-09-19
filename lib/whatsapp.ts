@@ -1,4 +1,5 @@
 import { ar } from "./format";
+import { montantAcompte } from "./conditions";
 import type { MotoPublique } from "./types";
 
 /**
@@ -13,8 +14,16 @@ const lien = (texte: string, numero: string = NUMERO_WHATSAPP) =>
   `https://wa.me/${numero.replace(/[^\d]/g, "") || NUMERO_WHATSAPP}?text=${encodeURIComponent(texte)}`;
 
 /** Message de devis pour une moto encore proposee. */
-export function messageDevis(m: Pick<MotoPublique, "marque" | "modele" | "annee" | "reference" | "prix_ttc">): string {
-  return `Bonjour MOTO IMPORT, je suis interesse par la ${m.marque} ${m.modele} ${m.annee} (ref. ${m.reference}) a ${ar(m.prix_ttc)}.`;
+export function messageDevis(
+  m: Pick<MotoPublique, "marque" | "modele" | "annee" | "reference" | "prix_ttc"> &
+    Partial<Pick<MotoPublique, "acompte_pct" | "statut">>
+): string {
+  const base = `Bonjour MOTO IMPORT, je suis interesse par la ${m.marque} ${m.modele} ${m.annee} (ref. ${m.reference}) a ${ar(m.prix_ttc)}`;
+  // L'acompte affiché sur la fiche est repris : la conversation part des mêmes
+  // chiffres que ceux que le client a lus (CGV art. 4.2).
+  return m.acompte_pct && m.statut === "disponible"
+    ? `${base}, acompte de ${m.acompte_pct} % (${ar(montantAcompte(m.prix_ttc, m.acompte_pct))}).`
+    : `${base}.`;
 }
 
 /** Message adapte a une moto vendue : la fiche continue de generer des demandes. */

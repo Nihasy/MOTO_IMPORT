@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { FormulaireMoto } from "@/components/admin/formulaire-moto";
 import { EntetePage } from "@/components/admin/ui";
+import { sessionCourante } from "@/lib/auth";
+import { reglagesEnVigueur } from "@/lib/tarification-serveur";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +16,13 @@ function referenceSuivante(references: string[]): string {
 
 export default async function NouvelleMoto() {
   const pilote = db();
-  const [motos, fournisseurs] = await Promise.all([
+  const [motos, fournisseurs, session] = await Promise.all([
     pilote.listerMotosAdmin(),
     pilote.listerFournisseurs(),
+    sessionCourante(),
   ]);
+  // Réglages de tarification (internes) : au seul compte administrateur.
+  const reglages = session?.role === "admin" ? await reglagesEnVigueur() : null;
 
   return (
     <div>
@@ -28,6 +33,7 @@ export default async function NouvelleMoto() {
       <FormulaireMoto
         fournisseurs={fournisseurs}
         referenceSuggeree={referenceSuivante(motos.map((m) => m.reference))}
+        reglages={reglages}
       />
     </div>
   );

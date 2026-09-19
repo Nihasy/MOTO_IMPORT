@@ -46,8 +46,15 @@ export function controlesPublication(moto: Moto, medias: Media[]): Controle[] {
       ok: mots >= 1,
       detail: `${mots} mot${mots > 1 ? "s" : ""}`,
     },
+    // Le prix de vente ne se saisit plus : il découle du prix d'achat en yuan
+    // (lib/tarification.ts). Sans lui, pas de prix, donc pas de mise en vente.
     {
-      libelle: "Prix et date de validité renseignés",
+      libelle: "Prix d'achat en yuan renseigné",
+      ok: Boolean(moto.prix_yuan && moto.prix_yuan > 0),
+      detail: moto.prix_yuan ? undefined : "À saisir par l'administrateur : le prix de vente en découle",
+    },
+    {
+      libelle: "Prix de vente calculé et date de validité renseignée",
       ok: moto.prix_ttc > 0 && Boolean(moto.prix_valable_jusqu_au),
     },
     {

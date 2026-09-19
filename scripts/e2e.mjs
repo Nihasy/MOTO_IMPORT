@@ -323,8 +323,8 @@ verifier("la bascule est refusée sans session", sansSession.statut === 401);
 // ── 9. Import CSV ─────────────────────────────────────────────────────────
 titre("9. Import CSV (7.4)");
 const ENTETE_CSV =
-  "reference,marque,modele,annee,cylindree,categorie,etat,kilometrage,prix_ttc,prix_valable_jusqu_au,garantie_mois,garantie_texte,description,points_forts,fournisseur,statut";
-const ligneCsv = (ref, prix = "13000000") =>
+  "reference,marque,modele,annee,cylindree,categorie,etat,kilometrage,prix_yuan,prix_valable_jusqu_au,garantie_mois,garantie_texte,description,points_forts,fournisseur,statut";
+const ligneCsv = (ref, prix = "12000") =>
   `${ref},Suzuki,GSX-S750,2023,749,roadster,neuf,,${prix},2027-01-31,24,Moteur et boite,Roadster quatre cylindres importe sur commande.,Confort|Freinage,Guangzhou Moto Trading,disponible`;
 
 const importer = (csv) =>
@@ -341,7 +341,7 @@ const csvInvalide = [ENTETE_CSV, ligneCsv("MI-909"), ligneCsv("MI-910", "gratuit
 const refus = await importer(csvInvalide);
 verifier("un CSV avec une ligne invalide est refusé en bloc", refus.statut === 422, `statut ${refus.statut}`);
 verifier("le rapport indique la ligne fautive", refus.texte.includes('"ligne":3'));
-verifier("le rapport indique la colonne fautive", refus.texte.includes('"colonne":"prix_ttc"'));
+verifier("le rapport indique la colonne fautive", refus.texte.includes('"colonne":"prix_yuan"'));
 
 const apresRefus = await get("/admin/motos", { headers: cookie });
 verifier(

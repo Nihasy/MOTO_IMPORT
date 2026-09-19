@@ -1,5 +1,6 @@
 import { ligneCsvSchema, motoSchema, type MotoInput } from "./schemas";
 import { parserCsv } from "./csv";
+import { calculerPrix, type Reglages } from "./tarification";
 
 export type ErreurLigne = { ligne: number; colonne: string; message: string; valeur?: string };
 
@@ -22,17 +23,24 @@ const texteOuNull = (v: string | undefined): string | null => {
   return s ? s : null;
 };
 
+/** Champs de prix calculés depuis le prix d'achat ; tout à vide sans lui. */
+function prixDepuisYuan(yuan: number | null, r: Reglages) {
+  if (!yuan || yuan <= 0) return { prix_ttc: 0, prix_yuan: null, taux_yuan: null, acompte_pct: null };
+  const c = calculerPrix(yuan, r);
+  return { prix_ttc: c.prix_ar, prix_yuan: yuan, taux_yuan: r.taux_yuan, acompte_pct: c.acompte_pct };
+}
+
 /**
  * Valide integralement un CSV avant toute ecriture.
  * Une seule ligne invalide invalide le fichier entier (regle 7.4).
  */
-export function analyserCsvMotos(texte: string): AnalyseCsv {
+export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv {
   const { entetes, lignes } = parserCsv(texte);
   const erreurs: ErreurLigne[] = [];
 
   const obligatoires = [
     "reference", "marque", "modele", "annee", "cylindree", "categorie", "etat",
-    "prix_ttc", "prix_valable_jusqu_au",
+    "prix_yuan", "prix_valable_jusqu_au",
   ];
   const manquantes = obligatoires.filter((c) => !entetes.includes(c));
   if (manquantes.length) {
@@ -90,7 +98,7 @@ export function analyserCsvMotos(texte: string): AnalyseCsv {
       refroidissement: (texteOuNull(v.refroidissement) as "air" | "liquide" | null) ?? null,
       transmission: texteOuNull(v.transmission),
       abs: bool(v.abs),
-      prix_ttc: v.prix_ttc,
+      ...prixDepuisYuan(nombreOuNull(v.prix_yuan), reglages),
       prix_valable_jusqu_au: v.prix_valable_jusqu_au,
       garantie_mois: nombreOuNull(v.garantie_mois) ?? 0,
       garantie_texte: texteOuNull(v.garantie_texte),

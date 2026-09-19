@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { BarreSuperieure } from "@/components/ui/navigation";
-import { ACOMPTE_COMMANDE, SOLDE_LIVRAISON } from "@/lib/conditions";
+import { ACOMPTE_MAX, ACOMPTE_MIN } from "@/lib/conditions";
+
+// Les CGV écrivent les pourcentages en toutes lettres, comme un contrat.
+const EN_LETTRES: Record<number, string> = { 45: "quarante-cinq", 80: "quatre-vingts" };
+const enLettres = (n: number) => EN_LETTRES[n] ?? String(n);
 
 export const metadata: Metadata = {
   title: "Conditions générales de vente",
@@ -8,14 +12,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/cgv" },
   robots: { index: true, follow: true },
 };
-
-// Les CGV écrivent le pourcentage en toutes lettres, comme un contrat.
-const EN_LETTRES: Record<number, string> = {
-  20: "vingt", 25: "vingt-cinq", 30: "trente", 35: "trente-cinq", 40: "quarante", 45: "quarante-cinq",
-  50: "cinquante", 55: "cinquante-cinq", 60: "soixante", 65: "soixante-cinq", 70: "soixante-dix",
-  75: "soixante-quinze", 80: "quatre-vingts",
-};
-const enLettres = (n: number) => EN_LETTRES[n] ?? String(n);
 
 const ARTICLES: [string, string[]][] = [
   ["Article 1 — Objet", [
@@ -31,13 +27,15 @@ const ARTICLES: [string, string[]][] = [
     "3.4 — Les véhicules d'occasion font l'objet de photographies datées prises sur le véhicule réel, mentionnant le kilométrage relevé au compteur ainsi que les points d'usure constatés. La date de prise de vue figure obligatoirement sur la fiche.",
   ]],
   ["Article 4 — Commande et acompte", [
-    "La commande est formée par la signature d'un bon de commande au local de MOTO IMPORT.",
-    `Pour un véhicule « disponible sur commande », la signature du bon de commande est accompagnée du versement d'un acompte de ${enLettres(ACOMPTE_COMMANDE)} pour cent (${ACOMPTE_COMMANDE} %) du prix total. Le solde, soit ${enLettres(SOLDE_LIVRAISON)} pour cent (${SOLDE_LIVRAISON} %), est réglé à la remise des clés et des papiers du véhicule, au local d'Antananarivo.`,
-    "Aucune commande n'est engagée par un échange écrit, téléphonique ou électronique préalable.",
+    "4.1 — La commande est formée par la signature d'un bon de commande au local de MOTO IMPORT, à Antananarivo.",
+    `4.2 — Pour un véhicule « disponible sur commande », la signature du bon de commande est accompagnée du versement d'un acompte. Son pourcentage, compris entre ${enLettres(ACOMPTE_MIN)} pour cent (${ACOMPTE_MIN} %) et ${enLettres(ACOMPTE_MAX)} pour cent (${ACOMPTE_MAX} %) du prix total, est propre à chaque véhicule. Il est indiqué sur la fiche du véhicule, en pourcentage et en ariary, et repris au bon de commande. Le pourcentage applicable est celui en vigueur à la date de signature.`,
+    "4.3 — Le solde du prix est réglé à la remise des clés et des papiers du véhicule, au local de MOTO IMPORT à Antananarivo.",
+    "4.4 — Aucune commande n'est engagée par un échange écrit, téléphonique ou électronique préalable.",
   ]],
   ["Article 5 — Prix", [
     "Les prix affichés s'entendent toutes taxes comprises, rendus à Antananarivo, carte grise établie au nom de l'acheteur incluse.",
     "Chaque prix est valable jusqu'à la date indiquée sur la fiche du véhicule.",
+    "5.3 — Les prix affichés au catalogue peuvent être modifiés à tout moment avant la signature du bon de commande. Seul le prix inscrit au bon de commande engage les parties.",
     "5.4 — Après signature, le prix est ferme. Une révision ne peut intervenir qu'en cas de variation des droits et taxes d'importation excédant huit pour cent (8 %), auquel cas l'acheteur peut renoncer à la commande et obtenir le remboursement intégral de son acompte.",
   ]],
   ["Article 6 — Annulation et désistement", [
@@ -55,7 +53,7 @@ const ARTICLES: [string, string[]][] = [
   ["Article 9 — Livraison", [
     "Le délai de livraison est de quarante-cinq (45) à soixante-cinq (65) jours à compter de la signature du bon de commande.",
     "La livraison s'entend au local de MOTO IMPORT à Antananarivo. Tout acheminement vers une autre localité fait l'objet d'un accord et d'une facturation distincts.",
-    "Le solde du prix est exigible à la remise des clés et des papiers du véhicule.",
+    "Le solde du prix est exigible dans les conditions de l'article 4.3.",
   ]],
   ["Article 10 — Droit applicable", [
     "Les présentes conditions sont soumises au droit malgache. Tout litige relève de la compétence des tribunaux d'Antananarivo.",

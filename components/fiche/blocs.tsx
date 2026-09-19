@@ -4,7 +4,7 @@ import type { MotoAvecMedias, Statut } from "@/lib/types";
 import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { dateFr } from "@/lib/format";
 import { garantieCourte, garantieFiche } from "@/lib/garantie";
-import { ACOMPTE_COMMANDE_TEXTE, SOLDE_LIVRAISON_TEXTE } from "@/lib/conditions";
+import { FOURCHETTE_ACOMPTE_TEXTE } from "@/lib/conditions";
 
 export function Reassurance({ moto }: { moto: MotoAvecMedias }) {
   // La garantie n'apparaît que si le véhicule est réellement couvert : une
@@ -156,9 +156,9 @@ export function Description({ moto }: { moto: MotoAvecMedias }) {
 const ETAPES = [
   { titre: "Vous choisissez", texte: "Vous repérez une moto au catalogue et vous nous écrivez sur WhatsApp." },
   { titre: "Nous confirmons", texte: "Nous vérifions la disponibilité auprès de l'atelier et figeons le prix rendu Tana." },
-  { titre: "Vous signez au local", texte: `Bon de commande signé sur place et acompte de ${ACOMPTE_COMMANDE_TEXTE} versé.` },
+  { titre: "Vous signez au local", texte: `Bon de commande signé sur place et acompte versé : de ${FOURCHETTE_ACOMPTE_TEXTE} selon la moto, indiqué sur sa fiche.` },
   { titre: "Nous importons", texte: "Sourcing, contrôle, expédition, dédouanement et carte grise à votre nom." },
-  { titre: "Vous récupérez", texte: `Livraison en 45 à 65 jours, solde de ${SOLDE_LIVRAISON_TEXTE} réglé à la remise des clés et des papiers.` },
+  { titre: "Vous récupérez", texte: "Livraison en 45 à 65 jours, solde réglé à la remise des clés et des papiers." },
 ];
 
 /**

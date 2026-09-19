@@ -9,6 +9,7 @@ import { construireSlug } from "@/lib/format";
 import { vuesManquantes } from "@/lib/medias";
 import type { MotoInput } from "@/lib/schemas";
 import type { FiltresCatalogue, Pilote } from "./types";
+import type { Reglages } from "@/lib/tarification";
 import { publier } from "./types";
 import { appliquerFiltres, similaires, trierCatalogue } from "./filtres";
 
@@ -19,6 +20,7 @@ type Base = {
   fournisseurs: Fournisseur[];
   import_lots: ImportLot[];
   parametres?: Parametres | null;
+  tarification?: Reglages | null;
 };
 
 const FICHIER = process.env.LOCAL_DB_PATH ?? path.join(process.cwd(), "data", "local-db.json");
@@ -109,6 +111,9 @@ function construireMoto(input: MotoInput): Moto {
     transmission: input.transmission ?? null,
     abs: input.abs ?? false,
     prix_ttc: input.prix_ttc,
+    prix_yuan: input.prix_yuan ?? null,
+    taux_yuan: input.taux_yuan ?? null,
+    acompte_pct: input.acompte_pct ?? null,
     prix_valable_jusqu_au: input.prix_valable_jusqu_au,
     delai_min_jours: input.delai_min_jours ?? 45,
     delai_max_jours: input.delai_max_jours ?? 65,
@@ -398,6 +403,18 @@ export function creerPiloteLocal(): Pilote {
       base.parametres = structuredClone(p);
       await ecrire(base);
       return base.parametres;
+    },
+
+    async lireTarification() {
+      const base = await lire();
+      return base.tarification ?? null;
+    },
+
+    async enregistrerTarification(r) {
+      const base = await lire();
+      base.tarification = { ...r };
+      await ecrire(base);
+      return base.tarification;
     },
 
     async creerLot(lot) {

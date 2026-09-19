@@ -19,6 +19,7 @@ const base = (o: Partial<MotoPublique> = {}): MotoPublique => ({
   couleur: null, puissance_ch: null, poids_kg: null, hauteur_selle_mm: null,
   refroidissement: null, transmission: null, abs: false,
   prix_ttc: o.prix_ttc ?? 12_500_000,
+  acompte_pct: o.acompte_pct ?? null,
   prix_valable_jusqu_au: "2026-12-31",
   delai_min_jours: 45, delai_max_jours: 65,
   garantie_mois: 6, garantie_texte: null,

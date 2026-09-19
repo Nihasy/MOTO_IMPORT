@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { normaliserWhatsapp, parametresSchema } from "@/lib/schemas";
 import { lienTelephone } from "@/lib/parametres";
 import { lienDevis, lienRecherche, NUMERO_WHATSAPP } from "@/lib/whatsapp";
-import { ACOMPTE_COMMANDE, SOLDE_LIVRAISON } from "@/lib/conditions";
+import { ACOMPTE_MAX, ACOMPTE_MIN, montantAcompte } from "@/lib/conditions";
+import { messageDevis } from "@/lib/whatsapp";
 
 describe("numéros saisis dans le back-office", () => {
   it("accepte le format local, international ou 00", () => {
@@ -63,8 +64,15 @@ describe("liens WhatsApp", () => {
 });
 
 describe("conditions de paiement", () => {
-  it("acompte et solde font 100 %", () => {
-    expect(ACOMPTE_COMMANDE).toBe(70);
-    expect(ACOMPTE_COMMANDE + SOLDE_LIVRAISON).toBe(100);
+  it("bornes d'acompte des CGV", () => {
+    expect([ACOMPTE_MIN, ACOMPTE_MAX]).toEqual([45, 80]);
+    expect(montantAcompte(18_100_000, 60)).toBe(10_860_000);
+  });
+
+  it("le message de devis reprend l'acompte d'une moto sur commande", () => {
+    const m = { marque: "Honda", modele: "CB500X", annee: 2023, reference: "MI-001", prix_ttc: 18_100_000 };
+    expect(messageDevis({ ...m, statut: "disponible", acompte_pct: 60 })).toContain("acompte de 60 %");
+    expect(messageDevis({ ...m, statut: "dispo_immediate", acompte_pct: 60 })).not.toContain("acompte");
+    expect(messageDevis(m)).not.toContain("acompte");
   });
 });

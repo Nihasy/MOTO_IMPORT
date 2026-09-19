@@ -7,6 +7,9 @@ import type { Fournisseur, Moto } from "@/lib/types";
 import { CATEGORIES, ETATS, LIBELLE_CATEGORIE } from "@/lib/types";
 import { compterMots } from "@/lib/format";
 import { enregistrerMoto, type EtatFormulaire } from "@/app/admin/actions";
+import type { Reglages } from "@/lib/tarification";
+import { BlocPrixAchat } from "@/components/admin/bloc-prix-achat";
+import { ChampMontant } from "@/components/admin/champ-montant";
 
 function Bouton({ creation }: { creation: boolean }) {
   const { pending } = useFormStatus();
@@ -32,10 +35,13 @@ export function FormulaireMoto({
   moto,
   fournisseurs,
   referenceSuggeree,
+  reglages,
 }: {
   moto?: Moto;
   fournisseurs: Fournisseur[];
   referenceSuggeree?: string;
+  /** Réglages de tarification : transmis au seul compte administrateur. */
+  reglages: Reglages | null;
 }) {
   const [etat, action] = useActionState<EtatFormulaire, FormData>(enregistrerMoto, null);
   const [estOccasion, setEstOccasion] = useState(moto?.etat === "occasion");
@@ -148,11 +154,12 @@ export function FormulaireMoto({
       <fieldset className="carte space-y-3 p-4">
         <legend className="px-1 text-[12.5px] font-semibold text-gold-light">Prix et engagement</legend>
 
-        <div>
-          <label className="etiquette" htmlFor="prix_ttc">Prix rendu Tana, carte grise incluse (Ar) *</label>
-          <input id="prix_ttc" name="prix_ttc" type="number" inputMode="numeric" required min={1}
-            defaultValue={val("prix_ttc", moto?.prix_ttc)} className={`champ ${champEnErreur("prix_ttc")}`} />
-        </div>
+        <BlocPrixAchat
+          moto={moto}
+          reglages={reglages}
+          valeurReprise={repris?.prix_yuan}
+          enErreur={etat?.champ === "prix_yuan"}
+        />
 
         <div>
           <label className="etiquette" htmlFor="prix_valable_jusqu_au">Prix valable jusqu&apos;au *</label>
@@ -217,8 +224,8 @@ export function FormulaireMoto({
             <label className="etiquette" htmlFor="kilometrage">
               Kilométrage {estOccasion ? "*" : "(occasion)"}
             </label>
-            <input id="kilometrage" name="kilometrage" type="number" inputMode="numeric" min={0} required={estOccasion}
-              defaultValue={val("kilometrage", moto?.kilometrage)} className={`champ ${champEnErreur("kilometrage")}`} />
+            <ChampMontant id="kilometrage" name="kilometrage" required={estOccasion} suffixe="km"
+              defaultValue={val("kilometrage", moto?.kilometrage)} className={champEnErreur("kilometrage")} />
           </div>
           <div>
             <label className="etiquette" htmlFor="couleur">Couleur</label>

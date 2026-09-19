@@ -236,8 +236,8 @@ if (idMoto) {
 titre("6. Creation concurrente de la meme reference");
 
 const csv = (ref) =>
-  "reference,marque,modele,annee,cylindree,categorie,etat,prix_ttc,prix_valable_jusqu_au,description\n" +
-  `${ref},Course,Concurrence,2024,600,roadster,neuf,15000000,2027-06-30,"Fiche creee simultanement par plusieurs clients pour eprouver l'unicite de la reference."`;
+  "reference,marque,modele,annee,cylindree,categorie,etat,prix_yuan,prix_valable_jusqu_au,description\n" +
+  `${ref},Course,Concurrence,2024,600,roadster,neuf,15000,2027-06-30,"Fiche creee simultanement par plusieurs clients pour eprouver l'unicite de la reference."`;
 
 const REF = "MI-950";
 // Rejouable : si un passage precedent a deja cree la fiche, les huit imports

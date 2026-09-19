@@ -2,6 +2,7 @@ import type {
   Demande, DemandeStatut, Fournisseur, ImportLot, Media, Moto, MotoAvecMedias,
   MotoPublique, Parametres, Statut, Vue,
 } from "@/lib/types";
+import type { Reglages } from "@/lib/tarification";
 import type { MotoInput } from "@/lib/schemas";
 
 export type FiltresCatalogue = {
@@ -71,15 +72,26 @@ export interface Pilote {
   lireParametres(): Promise<Parametres | null>;
   enregistrerParametres(p: Parametres): Promise<Parametres>;
 
+  /** Réglages de tarification. Interne : jamais lus par une page publique. */
+  lireTarification(): Promise<Reglages | null>;
+  enregistrerTarification(r: Reglages): Promise<Reglages>;
+
   creerLot(lot: Omit<ImportLot, "id" | "created_at">): Promise<ImportLot>;
   majLot(id: string, patch: Partial<ImportLot>): Promise<ImportLot>;
   listerLots(): Promise<ImportLot[]>;
   annulerLot(id: string): Promise<number>;
 }
 
-/** Retire toute trace de fournisseur avant exposition publique. */
-export const publier = <T extends { fournisseur_id?: string | null }>(m: T): Omit<T, "fournisseur_id"> => {
-  const { fournisseur_id: _ignore, ...reste } = m;
+type Interne = "fournisseur_id" | "prix_yuan" | "taux_yuan";
+
+/**
+ * Retire toute donnée interne avant exposition publique : le fournisseur, le
+ * prix d'achat en yuan et le taux appliqué.
+ */
+export const publier = <T extends { fournisseur_id?: string | null; prix_yuan?: number | null; taux_yuan?: number | null }>(
+  m: T
+): Omit<T, Interne> => {
+  const { fournisseur_id: _f, prix_yuan: _p, taux_yuan: _t, ...reste } = m;
   return reste;
 };
 

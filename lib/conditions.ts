@@ -1,18 +1,22 @@
 /**
  * Conditions commerciales citées à plusieurs endroits du site (CGV, FAQ,
- * fiche, « Comment ça marche »). Une seule source : un pourcentage modifié ici
- * se retrouve partout, sans risque de laisser une page contredire les CGV.
+ * fiche, « Comment ça marche »). Une seule source : une borne modifiée ici se
+ * retrouve partout, sans risque de laisser une page contredire les CGV.
  *
  * Moto « disponible sur commande » : acompte à la signature du bon de
- * commande, solde à la remise des clés et des papiers, à Antananarivo.
+ * commande, propre à chaque véhicule (voir `lib/tarification.ts`), solde à la
+ * remise des clés et des papiers, à Antananarivo.
+ *
+ * Les bornes sont écrites dans les CGV (art. 4.2) : elles ne se règlent pas
+ * depuis le back-office, parce qu'en changer revient à changer le contrat.
  */
+export const ACOMPTE_MIN = 45;
+export const ACOMPTE_MAX = 80;
 
-/** Acompte versé à la signature du bon de commande. */
-export const ACOMPTE_COMMANDE = 70;
+/** « 45 à 80 % », avec l'espace insécable de la typographie française. */
+export const FOURCHETTE_ACOMPTE_TEXTE = `${ACOMPTE_MIN} à ${ACOMPTE_MAX} %`;
 
-/** Solde réglé à la remise des clés et des papiers. */
-export const SOLDE_LIVRAISON = 100 - ACOMPTE_COMMANDE;
+export const pourcent = (n: number) => `${n} %`;
 
-/** « 70 % », avec l'espace insécable de la typographie française. */
-export const ACOMPTE_COMMANDE_TEXTE = `${ACOMPTE_COMMANDE} %`;
-export const SOLDE_LIVRAISON_TEXTE = `${SOLDE_LIVRAISON} %`;
+/** Montant de l'acompte en ariary, arrondi à l'ariary. Le solde est le reste. */
+export const montantAcompte = (prix: number, acomptePct: number) => Math.round((prix * acomptePct) / 100);

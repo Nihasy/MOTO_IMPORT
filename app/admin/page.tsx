@@ -123,7 +123,7 @@ export default async function TableauDeBord() {
                     {m.reference} · {m.marque} {m.modele}
                   </span>
                   <span className="block text-meta text-dim">
-                    {ar(m.prix_ttc)} · {m.nb_photos} photos
+                    {m.prix_ttc > 0 ? ar(m.prix_ttc) : "Prix à fixer"} · {m.nb_photos} photos
                   </span>
                 </Link>
                 <Link href={`/admin/motos/${m.id}`} className="btn-or shrink-0 px-3 text-[12px]">
@@ -181,7 +181,7 @@ export default async function TableauDeBord() {
                     {m.reference} · {m.marque} {m.modele}
                   </span>
                   <span className="block text-meta text-dim">
-                    {ar(m.prix_ttc)} · valable jusqu&apos;au {dateFr(m.prix_valable_jusqu_au)}
+                    {m.prix_ttc > 0 ? ar(m.prix_ttc) : "Prix à fixer"} · valable jusqu&apos;au {dateFr(m.prix_valable_jusqu_au)}
                   </span>
                 </Link>
                 <span

@@ -140,7 +140,7 @@ export default async function ListeMotos({ searchParams }: Props) {
                           {m.reference} · {m.marque} {m.modele} {m.annee}
                         </Link>
                         <p className="truncate text-meta text-dim">
-                          {ar(m.prix_ttc)} · {m.etat} · maj {dateFr(m.updated_at)}
+                          {m.prix_ttc > 0 ? ar(m.prix_ttc) : "Prix à fixer"} · {m.etat} · maj {dateFr(m.updated_at)}
                         </p>
                         {estNouvelle(m.created_at) ? (
                           <span className="mt-1 inline-flex border-l-[3px] border-l-gold bg-bg px-1.5 py-0.5 text-[11px] font-bold uppercase leading-none text-gold-light">

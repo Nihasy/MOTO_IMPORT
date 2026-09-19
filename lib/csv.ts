@@ -48,7 +48,7 @@ export function versCsv(lignes: Record<string, unknown>[], entetes?: string[]): 
 export const COLONNES_MODELE = [
   "reference", "marque", "modele", "annee", "cylindree", "categorie", "etat",
   "kilometrage", "couleur", "puissance_ch", "poids_kg", "hauteur_selle_mm",
-  "refroidissement", "transmission", "abs", "prix_ttc", "prix_valable_jusqu_au",
+  "refroidissement", "transmission", "abs", "prix_yuan", "prix_valable_jusqu_au",
   "garantie_mois", "garantie_texte", "description", "points_forts", "fournisseur",
   "statut", "date_photos",
 ];
@@ -57,7 +57,7 @@ export const CSV_MODELE = [
   COLONNES_MODELE.join(","),
   [
     "MI-101", "Honda", "CB500X", "2023", "471", "trail", "neuf", "", "Rouge",
-    "47", "199", "834", "liquide", "6 rapports", "true", "14500000", "2026-12-31",
+    "47", "199", "834", "liquide", "6 rapports", "true", "15000", "2026-12-31",
     "12", "Moteur et boite 12 mois", "\"Trail routier polyvalent, ideal Tana et RN.\"",
     "\"ABS de serie|Selle basse|Consommation contenue\"", "Guangzhou Moto Co", "disponible", "",
   ].join(","),

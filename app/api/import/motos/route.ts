@@ -7,6 +7,8 @@ import { corpsJsonBorne } from "@/lib/securite";
 import { verrouPublication } from "@/lib/publication";
 import { estEnVente } from "@/lib/types";
 import type { MotoInput } from "@/lib/schemas";
+import { champsPrix, reglagesEnVigueur } from "@/lib/tarification-serveur";
+import { prixDynamique } from "@/lib/tarification";
 
 /** Un lot d'import reste un geste humain : quelques dizaines de fiches. */
 const MAX_CORPS = 2 * 1024 * 1024;
@@ -44,7 +46,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const analyse = analyserCsvMotos(corps.csv);
+  const reglages = await reglagesEnVigueur();
+  const analyse = analyserCsvMotos(corps.csv, reglages);
 
   if (!analyse.ok) {
     // Rien n'est écrit : le lot est journalisé en échec avec le détail des lignes.
@@ -64,6 +67,19 @@ export async function POST(req: NextRequest) {
         erreurs: analyse.erreurs,
       },
       { status: 422 }
+    );
+  }
+
+  // Le prix d'achat est une information réservée à l'administrateur : un
+  // fichier qui en contient, importé par un autre compte, est refusé entier.
+  if (session.role !== "admin" && analyse.motos.some((m) => m.prix_yuan)) {
+    return Response.json(
+      {
+        erreur:
+          "Import refusé : la colonne prix_yuan est réservée au compte administrateur. Laissez-la vide, l'administrateur la complétera.",
+        champ: "prix_yuan",
+      },
+      { status: 403 }
     );
   }
 
@@ -89,7 +105,23 @@ export async function POST(req: NextRequest) {
   try {
     for (const { fournisseur, ...moto } of analyse.motos) {
       const fournisseur_id = await resoudreFournisseur(fournisseur);
-      const donnees = { ...moto, fournisseur_id } as MotoInput;
+      // Prix : une ligne sans prix d'achat ne doit pas effacer celui d'une
+      // fiche existante, et une fiche au prix figé (réservée, vendue, au
+      // local) garde le sien. Sans prix du tout, la fiche reste en brouillon.
+      const existante = await pilote.motoParReference(moto.reference);
+      let prix = { prix_ttc: moto.prix_ttc, prix_yuan: moto.prix_yuan ?? null, taux_yuan: moto.taux_yuan ?? null, acompte_pct: moto.acompte_pct ?? null };
+      if (existante && !prixDynamique(existante.statut)) {
+        prix = { prix_ttc: existante.prix_ttc, prix_yuan: existante.prix_yuan, taux_yuan: existante.taux_yuan, acompte_pct: existante.acompte_pct };
+      } else if (!prix.prix_yuan && existante?.prix_yuan) {
+        prix = champsPrix(existante.prix_yuan, reglages);
+      }
+      const sansPrix = prix.prix_ttc <= 0;
+      const donnees = {
+        ...moto,
+        ...prix,
+        ...(sansPrix ? { statut: "brouillon" as const } : {}),
+        fournisseur_id,
+      } as MotoInput;
       const { moto: enregistree, cree } = await pilote.enregistrerParReference(donnees);
 
       // Le CSV sert justement à créer les fiches « avant même d'avoir les
@@ -97,7 +129,8 @@ export async function POST(req: NextRequest) {
       // retenue en brouillon tant que les contrôles du 10.3 ne passent pas :
       // l'import reste utile, la publication reste bloquée, et le rapport dit
       // exactement ce qui manque plutôt que de rejeter le fichier.
-      let retenu: string[] | undefined;
+      let retenu: string[] | undefined =
+        sansPrix && moto.statut !== "brouillon" ? ["Prix d'achat en yuan manquant : le prix de vente en découle"] : undefined;
       if (estEnVente(enregistree.statut)) {
         const medias = await pilote.mediasDeMoto(enregistree.id);
         const verrou = verrouPublication(enregistree, medias, enregistree.statut);

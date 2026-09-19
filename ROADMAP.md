@@ -26,6 +26,14 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 - [ ] Supabase → SQL Editor : coller et exécuter `supabase/migrations/0008_parametres.sql` (crée la table `parametres`) **[Vous]**
 - [ ] Back-office → Paramètres : vérifier le numéro WhatsApp, le téléphone, l'adresse et les horaires, puis **Enregistrer** une première fois **[Vous]**
 
+### Tarification dynamique (prix calculés depuis le yuan)
+
+- [ ] Supabase → SQL Editor : exécuter `supabase/migrations/0009_tarification.sql` **après** la 0008 **[Vous]**
+- [ ] Back-office → Tarification : vérifier le taux du yuan, le fret, le bénéfice (2 000 000 Ar + 10 %), puis **Enregistrer** une première fois **[Vous]**
+- [ ] Saisir le prix d'achat en ¥ de chaque fiche : sans lui, une fiche ne peut pas être publiée **[Vous]**
+- [ ] Mettre à jour le taux du yuan chaque semaine **[Vous]**
+- [ ] Faire relire les CGV (art. 4 et 5.3) par un juriste **[Vous]**
+
 ### Vos vraies fiches (chemin critique : 8 à 12 fiches complètes)
 
 - [ ] Créer les fournisseurs (onglet réservé à l'admin) **[Vous]**
@@ -96,7 +104,10 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 - [x] Domaine `motoimport.app` en service : DNS Cloudflare en DNS seul vers la cible Vercel du projet (`CNAME` sur `@` et `www`), `www` redirigé en 308 vers l'adresse sans `www`, liens canoniques, Open Graph, `robots.txt` et sitemap sur le nouveau domaine
 - [x] Mise en ligne automatique à chaque `git push` sur `main` par GitHub Actions
 - [x] Rendu grand écran (tablette et ordinateur) : navigation dans l'en-tête, fiche sur deux colonnes avec prix et actions dans un panneau fixe, accroche avec moto à la une, filtres du catalogue sur une ligne. Rendu mobile inchangé, vérifié au pixel près
-- [x] Acompte des motos sur commande porté à 70 % à la signature, solde de 30 % à la remise des clés et des papiers : CGV (art. 4 et 9), FAQ, fiche, étapes, « Comment ça marche ». Pourcentage défini une seule fois (`lib/conditions.ts`)
+- [x] ~~Acompte fixe de 70 %~~ remplacé le jour même par la tarification dynamique ci-dessous
 - [x] Adresse, horaires, numéro WhatsApp et téléphone modifiables dans le back-office (onglet Paramètres, compte admin), repris sur la page Contact, les liens de devis et le bouton d'appel
 - [x] Page 404 aux couleurs du site : en-tête, navigation, pied de page, liens utiles
 - [x] Mobile : la barre de navigation du bas ne sort plus de l'écran sur l'accueil (débordement de 18 px sous 408 px) ; toutes les pages vérifiées de 320 à 414 px
+- [x] Tarification dynamique : prix de vente calculé depuis le prix d'achat en ¥ (taux, fret et papiers fixes, bénéfice = fixe + part du prix d'achat, arrondi), acompte propre à chaque moto (45 à 80 %, couvre l'achat), solde à la remise des clés et des papiers. Section « Tarification » du back-office avec simulateur et aperçu des prix avant recalcul ; prix figés dès la réservation et à l'arrivée au local. Prix d'achat, taux et réglages invisibles du public et du compte éditeur
+- [x] Séparateurs de milliers pendant la saisie dans le back-office (prix en ¥, réglages, kilométrage)
+- [x] CGV : acompte de 45 à 80 % propre à chaque véhicule (art. 4.2), solde à la remise des clés et des papiers (4.3), prix modifiables avant signature (5.3)
