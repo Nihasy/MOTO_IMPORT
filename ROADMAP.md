@@ -30,7 +30,7 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 
 - [x] Supabase → SQL Editor : exécuter `supabase/migrations/0009_tarification.sql` **après** la 0008 **[Vous]**
 - [ ] Back-office → Tarification : vérifier le taux du yuan, le fret, le bénéfice (2 000 000 Ar + 10 %), puis **Enregistrer** une première fois **[Vous]**
-- [ ] Supabase → SQL Editor : exécuter `supabase/migrations/0010_mise_en_vente.sql` (mise en vente : sur commande ou déjà au local) **[Vous]**
+- [x] Supabase → SQL Editor : exécuter `supabase/migrations/0010_mise_en_vente.sql` (mise en vente : sur commande ou déjà au local) **[Vous]**
 - [ ] Saisir le prix d'achat en ¥ de chaque fiche : sans lui, une fiche ne peut pas être publiée **[Vous]**
 - [ ] Mettre à jour le taux du yuan chaque semaine **[Vous]**
 - [x] Faire relire les CGV (art. 4 et 5.3) par un juriste : validées **[Vous]**
