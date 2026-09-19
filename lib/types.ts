@@ -91,6 +91,23 @@ export type MotoAvecMedias = MotoPublique & {
   nb_medias?: number;
 };
 
+/** Une ligne d'horaires telle qu'affichée : « Lundi – vendredi » / « 8 h 30 – 17 h 30 ». */
+export type LigneHoraire = { jours: string; heures: string };
+
+/**
+ * Coordonnées du local, modifiables depuis le back-office. Elles vivent en
+ * base plutôt qu'en variables d'environnement : une variable `NEXT_PUBLIC_*`
+ * est figée à la construction, et changer un horaire imposait un redéploiement.
+ */
+export type Parametres = {
+  adresse: string;
+  horaires: LigneHoraire[];
+  /** Numéro WhatsApp, chiffres seuls avec indicatif (261…). */
+  whatsapp: string;
+  /** Numéro à appeler, tel qu'affiché. */
+  telephone: string;
+};
+
 export type Fournisseur = {
   id: string;
   nom: string;

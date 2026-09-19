@@ -296,6 +296,29 @@ export function creerPiloteSupabase(): Pilote {
       err((await sb.from("fournisseurs").delete().eq("id", id)).error);
     },
 
+    // Ligne unique (id = 1). Une table absente — migration 0008 pas encore
+    // appliquée — remonte en erreur : `lib/parametres.ts` retombe alors sur les
+    // valeurs par défaut au lieu de casser toutes les pages publiques.
+    async lireParametres() {
+      const { data, error } = await sb
+        .from("parametres")
+        .select("adresse, horaires, whatsapp, telephone")
+        .eq("id", 1)
+        .maybeSingle();
+      err(error);
+      return (data as import("@/lib/types").Parametres | null) ?? null;
+    },
+
+    async enregistrerParametres(p) {
+      const { data, error } = await sb
+        .from("parametres")
+        .upsert({ id: 1, ...p, updated_at: new Date().toISOString() })
+        .select("adresse, horaires, whatsapp, telephone")
+        .single();
+      err(error);
+      return data as import("@/lib/types").Parametres;
+    },
+
     async creerLot(lot) {
       const { data, error } = await sb.from("import_lots").insert(lot).select().single();
       err(error);

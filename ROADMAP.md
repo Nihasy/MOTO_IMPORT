@@ -21,6 +21,11 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 - [ ] **Comptes du back-office** : choisir deux mots de passe **distincts**, l'actuel étant partagé par les deux comptes **[Vous]**
   - [ ] Mettre à jour `ADMIN_ACCOUNTS` et redéployer **[Claude]**
 
+### Coordonnées modifiables depuis le back-office
+
+- [ ] Supabase → SQL Editor : coller et exécuter `supabase/migrations/0008_parametres.sql` (crée la table `parametres`) **[Vous]**
+- [ ] Back-office → Paramètres : vérifier le numéro WhatsApp, le téléphone, l'adresse et les horaires, puis **Enregistrer** une première fois **[Vous]**
+
 ### Vos vraies fiches (chemin critique : 8 à 12 fiches complètes)
 
 - [ ] Créer les fournisseurs (onglet réservé à l'admin) **[Vous]**
@@ -91,3 +96,7 @@ Site en ligne : https://motoimport.app · Dépôt : https://github.com/Nihasy/MO
 - [x] Domaine `motoimport.app` en service : DNS Cloudflare en DNS seul vers la cible Vercel du projet (`CNAME` sur `@` et `www`), `www` redirigé en 308 vers l'adresse sans `www`, liens canoniques, Open Graph, `robots.txt` et sitemap sur le nouveau domaine
 - [x] Mise en ligne automatique à chaque `git push` sur `main` par GitHub Actions
 - [x] Rendu grand écran (tablette et ordinateur) : navigation dans l'en-tête, fiche sur deux colonnes avec prix et actions dans un panneau fixe, accroche avec moto à la une, filtres du catalogue sur une ligne. Rendu mobile inchangé, vérifié au pixel près
+- [x] Acompte des motos sur commande porté à 70 % à la signature, solde de 30 % à la remise des clés et des papiers : CGV (art. 4 et 9), FAQ, fiche, étapes, « Comment ça marche ». Pourcentage défini une seule fois (`lib/conditions.ts`)
+- [x] Adresse, horaires, numéro WhatsApp et téléphone modifiables dans le back-office (onglet Paramètres, compte admin), repris sur la page Contact, les liens de devis et le bouton d'appel
+- [x] Page 404 aux couleurs du site : en-tête, navigation, pied de page, liens utiles
+- [x] Mobile : la barre de navigation du bas ne sort plus de l'écran sur l'accueil (débordement de 18 px sous 408 px) ; toutes les pages vérifiées de 320 à 414 px

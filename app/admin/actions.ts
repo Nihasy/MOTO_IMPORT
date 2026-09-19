@@ -15,6 +15,7 @@ import { db } from "@/lib/db";
 import { demandePatchSchema, mediaPatchSchema, motoSchema } from "@/lib/schemas";
 import { messageVerrou, verrouPublication } from "@/lib/publication";
 import { estEnVente } from "@/lib/types";
+import { normaliserWhatsapp, parametresSchema } from "@/lib/schemas";
 import type { DemandeStatut, Moto, Statut } from "@/lib/types";
 
 /**
@@ -321,4 +322,46 @@ export async function annulerLot(id: string) {
   revalidatePath("/admin/import");
   revalidatePath("/motos");
   return { ok: true, supprimes };
+}
+
+/**
+ * Coordonnées du local (Paramètres). Réservé à l'administrateur : le numéro
+ * WhatsApp reçoit toutes les demandes de devis, un compte éditeur compromis ne
+ * doit pas pouvoir les détourner.
+ */
+export async function enregistrerParametres(form: FormData) {
+  const s = await exigerSession();
+  if (s.role !== "admin") redirect("/admin");
+
+  const jours = form.getAll("jours").map(String);
+  const heures = form.getAll("heures").map(String);
+  const horaires = jours
+    .map((j, i) => ({ jours: j.trim(), heures: (heures[i] ?? "").trim() }))
+    .filter((l) => l.jours || l.heures);
+
+  const saisie = parametresSchema.safeParse({
+    adresse: String(form.get("adresse") ?? "").trim(),
+    horaires,
+    whatsapp: normaliserWhatsapp(String(form.get("whatsapp") ?? "")),
+    telephone: String(form.get("telephone") ?? "").trim(),
+  });
+  if (!saisie.success) {
+    const probleme = saisie.error.issues[0];
+    redirect(`/admin/parametres?erreur=${encodeURIComponent(probleme?.message ?? "Saisie invalide.")}`);
+  }
+
+  try {
+    await db().enregistrerParametres(saisie.data);
+  } catch (e) {
+    console.error("[parametres] enregistrement impossible :", (e as Error).message);
+    redirect(
+      `/admin/parametres?erreur=${encodeURIComponent(
+        "Enregistrement impossible. Si la table « parametres » n'existe pas encore, appliquez la migration 0008 dans Supabase."
+      )}`
+    );
+  }
+  // Adresse, horaires et numéros s'affichent sur tout le site public (liens de
+  // devis de chaque carte compris) : toutes les pages sont régénérées.
+  revalidatePath("/", "layout");
+  redirect("/admin/parametres?ok=1");
 }

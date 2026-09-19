@@ -1,5 +1,6 @@
 import { ar, dateFr } from "@/lib/format";
 import type { MotoPublique } from "@/lib/types";
+import { ACOMPTE_COMMANDE_TEXTE, SOLDE_LIVRAISON_TEXTE } from "@/lib/conditions";
 
 /**
  * Élément signature du design system (8.4) : le prix traité comme un numéro
@@ -45,8 +46,9 @@ export function BlocPrix({ moto }: { moto: MotoPublique }) {
             Prix final, rendu à Antananarivo. Carte grise établie à votre nom, incluse.
           </p>
           <p className="mt-1 text-meta text-dim">
-            Prix valable jusqu&apos;au {dateFr(moto.prix_valable_jusqu_au)} · Acompte de 35 % à la
-            signature du bon de commande, au local.
+            Prix valable jusqu&apos;au {dateFr(moto.prix_valable_jusqu_au)} · Acompte de {ACOMPTE_COMMANDE_TEXTE} à la
+            signature du bon de commande, au local · solde de {SOLDE_LIVRAISON_TEXTE} à la remise des
+            clés et des papiers.
           </p>
         </>
       )}

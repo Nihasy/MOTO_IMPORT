@@ -2,12 +2,14 @@
 
 import type { MotoAvecMedias } from "@/lib/types";
 import { lienRecherche } from "@/lib/whatsapp";
+import { useWhatsapp } from "@/components/ui/contexte-contact";
 import { BarreSuperieure } from "@/components/ui/navigation";
 import { EtatVide, Squelette } from "@/components/ui";
 import { CarteMoto } from "./carte-moto";
 import { useEnregistrees } from "./enregistrees";
 
 export function VueEnregistrees({ motos }: { motos: MotoAvecMedias[] }) {
+  const whatsapp = useWhatsapp();
   const { ids, pret } = useEnregistrees();
   const selection = motos.filter((m) => ids.includes(m.id));
 
@@ -36,7 +38,7 @@ export function VueEnregistrees({ motos }: { motos: MotoAvecMedias[] }) {
             <EtatVide
               titre="Aucune moto enregistrée"
               texte="Touchez « Enregistrer » sur une fiche pour la retrouver ici et comparer tranquillement avant de nous écrire."
-              action={{ libelle: "Dites-nous ce que vous cherchez", href: lienRecherche() }}
+              action={{ libelle: "Dites-nous ce que vous cherchez", href: lienRecherche(undefined, whatsapp) }}
             />
           )}
         </div>

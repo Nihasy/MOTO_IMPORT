@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BarreSuperieure } from "@/components/ui/navigation";
-import { lienRecherche, NUMERO_WHATSAPP } from "@/lib/whatsapp";
+import { lienRecherche } from "@/lib/whatsapp";
+import { lienTelephone, parametres } from "@/lib/parametres";
 import { jsonLdSecurise } from "@/lib/jsonld";
 
 export const metadata: Metadata = {
@@ -10,27 +11,24 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-const ADRESSE = process.env.NEXT_PUBLIC_ADRESSE ?? "Lot II M 85 Bis, Analamahitsy, Antananarivo 101";
-const HORAIRES = [
-  ["Lundi – vendredi", "8 h 30 – 17 h 30"],
-  ["Samedi", "9 h – 13 h"],
-  ["Dimanche", "Fermé"],
-];
-
-export default function Page() {
-  const tel = "+" + NUMERO_WHATSAPP;
+// Adresse, horaires et numéros se règlent dans le back-office (Paramètres).
+export default async function Page() {
+  const { adresse, horaires, whatsapp, telephone } = await parametres();
+  const tel = lienTelephone(telephone);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "AutoDealer",
     name: "MOTO IMPORT",
-    telephone: tel,
+    telephone: tel.slice(4),
     address: {
       "@type": "PostalAddress",
-      streetAddress: ADRESSE,
+      streetAddress: adresse,
       addressLocality: "Antananarivo",
       addressCountry: "MG",
     },
-    openingHours: ["Mo-Fr 08:30-17:30", "Sa 09:00-13:00"],
+    // Les horaires sont saisis en texte libre dans le back-office : ils ne se
+    // traduisent pas de façon sûre en `openingHours` (« Mo-Fr 08:30-17:30 »).
+    // Mieux vaut ne rien déclarer que déclarer faux aux moteurs de recherche.
   };
 
   return (
@@ -44,19 +42,19 @@ export default function Page() {
         </p>
 
         <div className="mt-5 grid gap-2">
-          <a href={lienRecherche()} target="_blank" rel="noopener noreferrer" className="btn-or">
+          <a href={lienRecherche(undefined, whatsapp)} target="_blank" rel="noopener noreferrer" className="btn-or">
             Écrire sur WhatsApp
           </a>
-          <a href={`tel:${tel}`} className="btn-fantome">
-            Appeler {tel}
+          <a href={tel} className="btn-fantome">
+            Appeler {telephone}
           </a>
         </div>
 
         <section className="carte mt-4 p-4">
           <h2 className="text-[17px] font-semibold">Le local</h2>
-          <p className="mt-2 text-corps text-chrome">{ADRESSE}</p>
+          <p className="mt-2 whitespace-pre-line text-corps text-chrome">{adresse}</p>
           <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ADRESSE)}`}
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(adresse)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 inline-block text-[12.5px] font-semibold text-gold-light"
@@ -65,17 +63,19 @@ export default function Page() {
           </a>
         </section>
 
-        <section className="carte mt-3 p-4">
-          <h2 className="text-[17px] font-semibold">Horaires</h2>
-          <dl className="mt-2">
-            {HORAIRES.map(([j, h]) => (
-              <div key={j} className="flex justify-between border-b border-line py-2 text-corps last:border-0">
-                <dt className="text-chrome">{j}</dt>
-                <dd className="font-medium">{h}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+        {horaires.length ? (
+          <section className="carte mt-3 p-4">
+            <h2 className="text-[17px] font-semibold">Horaires</h2>
+            <dl className="mt-2">
+              {horaires.map(({ jours, heures }, i) => (
+                <div key={i} className="flex justify-between gap-4 border-b border-line py-2 text-corps last:border-0">
+                  <dt className="text-chrome">{jours}</dt>
+                  <dd className="text-right font-medium">{heures}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ) : null}
       </main>
     </>
   );

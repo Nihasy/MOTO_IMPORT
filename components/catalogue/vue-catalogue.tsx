@@ -6,6 +6,7 @@ import clsx from "clsx";
 import type { MotoAvecMedias } from "@/lib/types";
 import { CATEGORIES, LIBELLE_CATEGORIE } from "@/lib/types";
 import { lienRecherche } from "@/lib/whatsapp";
+import { useWhatsapp } from "@/components/ui/contexte-contact";
 import { arCourt } from "@/lib/format";
 import { pister } from "@/lib/analytics";
 import { BarreSuperieure } from "@/components/ui/navigation";
@@ -43,6 +44,7 @@ export function VueCatalogue({
   /** Catalogue complet allege : sert au comptage en direct dans la feuille. */
   catalogue: MotoFiltrable[];
 }) {
+  const whatsapp = useWhatsapp();
   const router = useRouter();
   const params = useSearchParams();
   const [feuilleOuverte, setFeuilleOuverte] = useState(false);
@@ -322,7 +324,7 @@ export function VueCatalogue({
           <EtatVide
             titre="Aucune moto ne correspond"
             texte="Dites-nous ce que vous cherchez : nous sourçons sur commande auprès de nos ateliers partenaires en Chine."
-            action={{ libelle: "Dites-nous ce que vous cherchez", href: lienRecherche(filtres.max) }}
+            action={{ libelle: "Dites-nous ce que vous cherchez", href: lienRecherche(filtres.max, whatsapp) }}
           />
         )}
       </main>

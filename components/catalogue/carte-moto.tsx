@@ -6,6 +6,7 @@ import type { MotoAvecMedias } from "@/lib/types";
 import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { ar } from "@/lib/format";
 import { lienDevis } from "@/lib/whatsapp";
+import { useWhatsapp } from "@/components/ui/contexte-contact";
 import { BadgeStatut } from "@/components/ui";
 import { BadgeNouveau } from "@/components/ui/badge-nouveau";
 import { IconeBulle, IconeSignet } from "@/components/ui/navigation";
@@ -14,6 +15,7 @@ import { useEnregistrees } from "./enregistrees";
 import { enregistrerDemande, pister } from "@/lib/analytics";
 
 export function CarteMoto({ moto }: { moto: MotoAvecMedias }) {
+  const whatsapp = useWhatsapp();
   const { contient, basculer, pret } = useEnregistrees();
   const enregistree = pret && contient(moto.id);
   const vendu = moto.statut === "vendu";
@@ -125,7 +127,7 @@ export function CarteMoto({ moto }: { moto: MotoAvecMedias }) {
           {enregistree ? "Enregistrée" : "Enregistrer"}
         </button>
         <a
-          href={lienDevis(moto)}
+          href={lienDevis(moto, whatsapp)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => {

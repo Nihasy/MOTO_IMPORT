@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type {
-  Demande, Fournisseur, ImportLot, Media, Moto, MotoAvecMedias, Statut,
+  Demande, Fournisseur, ImportLot, Media, Moto, MotoAvecMedias, Parametres, Statut,
 } from "@/lib/types";
 import { estPublic } from "@/lib/types";
 import { construireSlug } from "@/lib/format";
@@ -18,6 +18,7 @@ type Base = {
   demandes: Demande[];
   fournisseurs: Fournisseur[];
   import_lots: ImportLot[];
+  parametres?: Parametres | null;
 };
 
 const FICHIER = process.env.LOCAL_DB_PATH ?? path.join(process.cwd(), "data", "local-db.json");
@@ -385,6 +386,18 @@ export function creerPiloteLocal(): Pilote {
         if (m.fournisseur_id === id) m.fournisseur_id = null;
       });
       await ecrire(base);
+    },
+
+    async lireParametres() {
+      const base = await lire();
+      return base.parametres ?? null;
+    },
+
+    async enregistrerParametres(p) {
+      const base = await lire();
+      base.parametres = structuredClone(p);
+      await ecrire(base);
+      return base.parametres;
     },
 
     async creerLot(lot) {

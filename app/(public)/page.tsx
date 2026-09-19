@@ -8,6 +8,7 @@ import { filigraneIncruste, servieParCloudinary, urlMedia } from "@/lib/cloudina
 import type { MotoAvecMedias } from "@/lib/types";
 import { Filigrane } from "@/components/ui/filigrane";
 import { lienRecherche } from "@/lib/whatsapp";
+import { parametres } from "@/lib/parametres";
 import { BarreSuperieure } from "@/components/ui/navigation";
 import { CarteMoto } from "@/components/catalogue/carte-moto";
 import { CommentCaSePasse } from "@/components/fiche/blocs";
@@ -29,7 +30,10 @@ const PALIERS = [
 ];
 
 export default async function Accueil() {
-  const toutes = await db().listerMotosPubliques({ masquerVendues: true });
+  const [toutes, { whatsapp }] = await Promise.all([
+    db().listerMotosPubliques({ masquerVendues: true }),
+    parametres(),
+  ]);
   const enAvant = toutes
     .filter((m) => m.statut === "dispo_immediate" || m.statut === "disponible")
     .slice(0, 6);
@@ -108,7 +112,7 @@ export default async function Accueil() {
             <EtatVide
               titre="Le catalogue arrive"
               texte="Nos premières motos sont en cours de préparation. Dites-nous ce que vous cherchez : nous sourçons sur commande."
-              action={{ libelle: "Dites-nous ce que vous cherchez", href: lienRecherche() }}
+              action={{ libelle: "Dites-nous ce que vous cherchez", href: lienRecherche(undefined, whatsapp) }}
             />
           )}
         </Section>

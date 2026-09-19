@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import type { MotoAvecMedias } from "@/lib/types";
 import { lienDevis } from "@/lib/whatsapp";
+import { useWhatsapp } from "@/components/ui/contexte-contact";
 import { enregistrerDemande, pister } from "@/lib/analytics";
 import { useEnregistrees } from "@/components/catalogue/enregistrees";
 import { IconeBulle, IconeSignet } from "@/components/ui/navigation";
@@ -42,6 +43,7 @@ export function ActionsFiche({ moto }: { moto: MotoAvecMedias }) {
 }
 
 function BoutonsAction({ moto }: { moto: MotoAvecMedias }) {
+  const whatsapp = useWhatsapp();
   const { contient, basculer, pret } = useEnregistrees();
   const enregistree = pret && contient(moto.id);
   const vendu = moto.statut === "vendu";
@@ -61,7 +63,7 @@ function BoutonsAction({ moto }: { moto: MotoAvecMedias }) {
         <span className="sr-only sm:not-sr-only">{enregistree ? "Enregistrée" : "Enregistrer"}</span>
       </button>
       <a
-        href={lienDevis(moto)}
+        href={lienDevis(moto, whatsapp)}
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => {

@@ -191,3 +191,34 @@ export const filtresSchema = z.object({
   masquer_vendues: z.string().optional(),
   q: z.string().optional(),
 });
+
+/**
+ * Numéro WhatsApp au format de wa.me : chiffres seuls, indicatif compris. Il se
+ * saisit comme on l'écrit (« 034 12 345 67 », « +261 34 12 345 67 »).
+ */
+export function normaliserWhatsapp(brut: string): string {
+  const chiffres = brut.replace(/[^\d]/g, "");
+  if (brut.trim().startsWith("+")) return chiffres;
+  if (chiffres.startsWith("00")) return chiffres.slice(2);
+  if (chiffres.startsWith("0")) return `261${chiffres.slice(1)}`;
+  return chiffres;
+}
+
+export const parametresSchema = z.object({
+  adresse: z.string().min(5, "L'adresse du local est trop courte.").max(300, "L'adresse est trop longue."),
+  horaires: z
+    .array(
+      z.object({
+        jours: z.string().min(1, "Chaque ligne d'horaires doit indiquer les jours.").max(60),
+        heures: z.string().min(1, "Chaque ligne d'horaires doit indiquer les heures.").max(60),
+      })
+    )
+    .max(10, "Dix lignes d'horaires au plus."),
+  whatsapp: z
+    .string()
+    .regex(/^[0-9]{8,15}$/, "Numéro WhatsApp invalide : indiquez-le avec l'indicatif, par exemple +261 34 12 345 67."),
+  telephone: z
+    .string()
+    .max(32, "Numéro de téléphone trop long.")
+    .refine((t) => t.replace(/[^\d]/g, "").length >= 8, "Numéro de téléphone invalide."),
+});

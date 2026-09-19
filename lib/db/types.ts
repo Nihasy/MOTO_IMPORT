@@ -1,6 +1,6 @@
 import type {
   Demande, DemandeStatut, Fournisseur, ImportLot, Media, Moto, MotoAvecMedias,
-  MotoPublique, Statut, Vue,
+  MotoPublique, Parametres, Statut, Vue,
 } from "@/lib/types";
 import type { MotoInput } from "@/lib/schemas";
 
@@ -66,6 +66,10 @@ export interface Pilote {
   creerFournisseur(f: Omit<Fournisseur, "id" | "created_at">): Promise<Fournisseur>;
   majFournisseur(id: string, patch: Partial<Fournisseur>): Promise<Fournisseur>;
   supprimerFournisseur(id: string): Promise<void>;
+
+  /** `null` tant que rien n'a été enregistré : les valeurs par défaut s'appliquent. */
+  lireParametres(): Promise<Parametres | null>;
+  enregistrerParametres(p: Parametres): Promise<Parametres>;
 
   creerLot(lot: Omit<ImportLot, "id" | "created_at">): Promise<ImportLot>;
   majLot(id: string, patch: Partial<ImportLot>): Promise<ImportLot>;

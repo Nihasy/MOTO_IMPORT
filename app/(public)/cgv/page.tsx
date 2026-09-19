@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BarreSuperieure } from "@/components/ui/navigation";
+import { ACOMPTE_COMMANDE, SOLDE_LIVRAISON } from "@/lib/conditions";
 
 export const metadata: Metadata = {
   title: "Conditions générales de vente",
@@ -7,6 +8,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/cgv" },
   robots: { index: true, follow: true },
 };
+
+// Les CGV écrivent le pourcentage en toutes lettres, comme un contrat.
+const EN_LETTRES: Record<number, string> = {
+  20: "vingt", 25: "vingt-cinq", 30: "trente", 35: "trente-cinq", 40: "quarante", 45: "quarante-cinq",
+  50: "cinquante", 55: "cinquante-cinq", 60: "soixante", 65: "soixante-cinq", 70: "soixante-dix",
+  75: "soixante-quinze", 80: "quatre-vingts",
+};
+const enLettres = (n: number) => EN_LETTRES[n] ?? String(n);
 
 const ARTICLES: [string, string[]][] = [
   ["Article 1 — Objet", [
@@ -22,7 +31,8 @@ const ARTICLES: [string, string[]][] = [
     "3.4 — Les véhicules d'occasion font l'objet de photographies datées prises sur le véhicule réel, mentionnant le kilométrage relevé au compteur ainsi que les points d'usure constatés. La date de prise de vue figure obligatoirement sur la fiche.",
   ]],
   ["Article 4 — Commande et acompte", [
-    "La commande est formée par la signature d'un bon de commande au local de MOTO IMPORT, accompagnée du versement d'un acompte de trente-cinq pour cent (35 %) du prix total.",
+    "La commande est formée par la signature d'un bon de commande au local de MOTO IMPORT.",
+    `Pour un véhicule « disponible sur commande », la signature du bon de commande est accompagnée du versement d'un acompte de ${enLettres(ACOMPTE_COMMANDE)} pour cent (${ACOMPTE_COMMANDE} %) du prix total. Le solde, soit ${enLettres(SOLDE_LIVRAISON)} pour cent (${SOLDE_LIVRAISON} %), est réglé à la remise des clés et des papiers du véhicule, au local d'Antananarivo.`,
     "Aucune commande n'est engagée par un échange écrit, téléphonique ou électronique préalable.",
   ]],
   ["Article 5 — Prix", [
@@ -45,7 +55,7 @@ const ARTICLES: [string, string[]][] = [
   ["Article 9 — Livraison", [
     "Le délai de livraison est de quarante-cinq (45) à soixante-cinq (65) jours à compter de la signature du bon de commande.",
     "La livraison s'entend au local de MOTO IMPORT à Antananarivo. Tout acheminement vers une autre localité fait l'objet d'un accord et d'une facturation distincts.",
-    "Le solde du prix est exigible à la remise des clés.",
+    "Le solde du prix est exigible à la remise des clés et des papiers du véhicule.",
   ]],
   ["Article 10 — Droit applicable", [
     "Les présentes conditions sont soumises au droit malgache. Tout litige relève de la compétence des tribunaux d'Antananarivo.",
@@ -58,7 +68,7 @@ export default function Page() {
       <BarreSuperieure titre="CGV" />
       <main className="conteneur pb-24 pt-6">
         <h1 className="text-titre-fiche">Conditions générales de vente</h1>
-        <p className="mt-2 text-meta text-dim">Version en vigueur — MOTO IMPORT, Antananarivo.</p>
+        <p className="mt-2 text-meta text-dim">Version en vigueur au 19 septembre 2026 — MOTO IMPORT, Antananarivo.</p>
         <div className="mt-5 space-y-5">
           {ARTICLES.map(([titre, paragraphes]) => (
             <section key={titre}>

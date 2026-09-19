@@ -5,7 +5,7 @@ Implémentation du cahier des charges `goal.md`, version 2.0.
 
 Ce n'est **pas** une boutique en ligne : ni panier, ni paiement, ni compte
 client. La vente se conclut au local par signature d'un bon de commande et
-versement d'un acompte de 35 %. L'application convertit le visiteur en
+versement d'un acompte de 70 % (solde de 30 % à la remise des clés et des papiers). L'application convertit le visiteur en
 conversation WhatsApp qualifiée, et rien de plus.
 
 ## Démarrer
