@@ -39,7 +39,12 @@ export default async function Accueil() {
     <>
       <BarreSuperieure />
 
-      <main className="conteneur-large pb-24">
+      {/* Le halo de l'accroche depasse de 18px a droite sur un ecran de moins
+          de 408px. Chrome Android elargit alors la page, et la barre de
+          navigation fixe, calee sur cette page elargie, sort en partie de
+          l'ecran. Couper le debordement horizontal ne change rien a ce qui
+          s'affiche : la partie coupee etait deja hors de l'ecran. */}
+      <main className="conteneur-large pb-24 max-sm:overflow-x-clip">
         {/* Accroche. Volontairement dépouillée : elle promet, elle ne détaille
             pas. Les faits imposés par les CGV — prix final rendu Tana, carte
             grise au nom de l'acheteur, délai de 45 à 65 jours — se lisent sur
