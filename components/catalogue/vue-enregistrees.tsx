@@ -4,7 +4,7 @@ import type { MotoAvecMedias } from "@/lib/types";
 import { lienRecherche } from "@/lib/whatsapp";
 import { useWhatsapp } from "@/components/ui/contexte-contact";
 import { BarreSuperieure } from "@/components/ui/navigation";
-import { EtatVide, Squelette } from "@/components/ui";
+import { EtatVide, Squelette, VoileChargement } from "@/components/ui";
 import { CarteMoto } from "./carte-moto";
 import { useEnregistrees } from "./enregistrees";
 
@@ -27,6 +27,7 @@ export function VueEnregistrees({ motos }: { motos: MotoAvecMedias[] }) {
             <div className="space-y-4">
               <Squelette className="h-64 w-full" />
               <Squelette className="h-64 w-full" />
+              <VoileChargement texte="Lecture de votre sélection" />
             </div>
           ) : selection.length ? (
             <div className="grille-annonces">

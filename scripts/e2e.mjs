@@ -59,7 +59,10 @@ if (!(await attendreServeur())) {
 // ── 1. Pages publiques ────────────────────────────────────────────────────
 titre("1. Pages publiques");
 for (const [chemin, attendu] of [
-  ["/", "Votre prochaine moto"],
+  // L'accroche est inchangée, mais le hero coupe désormais la ligne avant
+  // « moto » pour passer la fin en or : « Votre prochaine moto » n'est plus
+  // d'un seul tenant dans le HTML, « moto vous attend » l'est.
+  ["/", "moto vous attend"],
   ["/motos", "Trier par"],
   ["/comment-ca-marche", "acompte"],
   ["/faq", "35 %"],

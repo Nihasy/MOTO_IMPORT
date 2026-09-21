@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Open_Sans } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
+import { Suspense } from "react";
 import { MesureAudience } from "@/components/ui/mesure-audience";
+import { IndicateurNavigation } from "@/components/ui/indicateur-navigation";
 import "./globals.css";
 
 const openSans = Open_Sans({
@@ -47,6 +49,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={openSans.variable}>
       <body>
+        {/* `useSearchParams` suspend au rendu serveur : sans cette frontiere,
+            toutes les pages basculeraient en rendu dynamique. Le repli est
+            vide — l'indicateur n'a rien a montrer avant la premiere
+            navigation. */}
+        <Suspense fallback={null}>
+          <IndicateurNavigation />
+        </Suspense>
         {children}
         <MesureAudience />
       </body>

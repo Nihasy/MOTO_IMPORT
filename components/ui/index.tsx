@@ -92,3 +92,5 @@ export function Section({
 export function Squelette({ className }: { className?: string }) {
   return <div className={clsx("squelette", className)} />;
 }
+
+export { ChargementMoto, VoileChargement } from "./chargement-moto";

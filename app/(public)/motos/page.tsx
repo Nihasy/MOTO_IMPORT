@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { db } from "@/lib/db";
 import { appliquerFiltres, trierCatalogue, TRIS, type Ordre } from "@/lib/db/filtres";
 import { VueCatalogue } from "@/components/catalogue/vue-catalogue";
-import { Squelette } from "@/components/ui";
+import { Squelette, VoileChargement } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +87,18 @@ export default async function PageCatalogue({ searchParams }: { searchParams: Pa
   );
 }
 
+/*
+ * Le catalogue garde ses plaques en forme d'annonce : elles disent la mise en
+ * page qui arrive, ce qu'une animation centrale ne dit pas. Le voile les
+ * floute et porte la moto au centre de l'écran — la silhouette des annonces
+ * transparaît derrière, l'attente est signée sans que l'œil parte la chercher
+ * en haut de la page.
+ *
+ * Cette attente reste tenue par la frontière Suspense de la page, jamais par
+ * un `loading.tsx` : un tel fichier couvrirait aussi `motos/[slug]`, dont la
+ * route interdit toute frontière — elle diffuserait un 200 avant que
+ * `notFound()` puisse répondre (13.1).
+ */
 function SqueletteCatalogue() {
   return (
     <div className="conteneur-large pt-20">
@@ -100,6 +112,7 @@ function SqueletteCatalogue() {
           </div>
         </div>
       ))}
+      <VoileChargement texte="Chargement du catalogue" />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { demarrerNavigation } from "@/components/ui/navigation-en-cours";
 import clsx from "clsx";
 import type { MotoAvecMedias } from "@/lib/types";
 import { CATEGORIES, LIBELLE_CATEGORIE } from "@/lib/types";
@@ -86,6 +87,7 @@ export function VueCatalogue({
         else p.set(k, v);
       }
       const qs = p.toString();
+      demarrerNavigation();
       router.push(qs ? `/motos?${qs}` : "/motos", { scroll: false });
     },
     [params, router]
@@ -306,7 +308,10 @@ export function VueCatalogue({
             ))}
             <button
               type="button"
-              onClick={() => router.push("/motos", { scroll: false })}
+              onClick={() => {
+                demarrerNavigation();
+                router.push("/motos", { scroll: false });
+              }}
               className="text-meta text-gold-light underline"
             >
               Tout effacer
@@ -337,7 +342,10 @@ export function VueCatalogue({
         annees={annees}
         catalogue={catalogue}
         onValider={appliquer}
-        onReinitialiser={() => router.push("/motos", { scroll: false })}
+        onReinitialiser={() => {
+          demarrerNavigation();
+          router.push("/motos", { scroll: false });
+        }}
       />
     </>
   );

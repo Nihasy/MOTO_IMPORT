@@ -180,3 +180,15 @@
     pointer-events: none;
   }
 }
+
+/* Une moto qui roule, trois lignes qui filent et une plaque qui pulse : ce
+   sont des boucles sans fin, exactement ce que « mouvement réduit » désigne.
+   Coupées, elles gardent leur état de repos — la silhouette et ses lignes
+   restent lisibles, l'attente est simplement muette. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-filante,
+  .animate-soubresaut,
+  .squelette {
+    animation: none;
+  }
+}

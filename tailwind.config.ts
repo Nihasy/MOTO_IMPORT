@@ -38,6 +38,37 @@ const config: Config = {
       // gardent le rayon de 5px du site de reference.
       borderRadius: { card: "5px", sheet: "5px" },
       spacing: { touch: "44px" },
+      // Attente du site : trois lignes de vitesse doublent une moto lancée.
+      // Les lignes partent derrière le bord gauche et sortent à droite ; le
+      // décalage entre elles est porté par `animationDelay` cote composant.
+      // Le soubresaut est volontairement minuscule : au-dela de deux pixels,
+      // la moto ne roule plus, elle tressaute.
+      keyframes: {
+        filante: {
+          "0%": { transform: "translateX(-40px)", opacity: "0" },
+          "15%": { opacity: "1" },
+          "75%": { opacity: "1" },
+          "100%": { transform: "translateX(248px)", opacity: "0" },
+        },
+        soubresaut: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-1.5px)" },
+        },
+        // La barre de navigation avance vite puis freine, et s'arrete a 92% :
+        // la duree reelle est inconnue, une barre qui touche le bord puis
+        // attend ment au visiteur.
+        progression: {
+          "0%": { transform: "scaleX(0.02)" },
+          "35%": { transform: "scaleX(0.55)" },
+          "70%": { transform: "scaleX(0.8)" },
+          "100%": { transform: "scaleX(0.92)" },
+        },
+      },
+      animation: {
+        filante: "filante 1.15s linear infinite",
+        soubresaut: "soubresaut 420ms ease-in-out infinite",
+        progression: "progression 8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards",
+      },
     },
   },
   plugins: [],
