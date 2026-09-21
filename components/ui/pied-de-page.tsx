@@ -8,15 +8,17 @@ export function PiedDePage() {
           et d'autre : le pied s'aligne sur la largeur du listing, marque et
           promesse a gauche, liens a droite. */}
       <div className="conteneur lg:grid lg:max-w-[1200px] lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-16">
-        <div>
-          {/* Le verrou de marque est centre, comme dans l'en-tete. Sa racine
-              est deja un conteneur flex pleine largeur : `justify-center` suffit
-              a recentrer les trois elements du verrou. */}
-          <Marque taille={46} texte={20} className="justify-center lg:justify-start" />
-          <p className="mt-2 max-w-md text-meta text-dim">
-            Importation de motocycles neufs et d&apos;occasion. Prix final rendu à Antananarivo, carte
-            grise établie à votre nom. Aucun stock : chaque véhicule est commandé sur mesure.
-          </p>
+        {/* Le verrou de marque est centre, comme dans l'en-tete. Sa racine est
+            deja un conteneur flex pleine largeur : `justify-center` suffit a
+            recentrer les trois elements du verrou.
+
+            La marque porte seule ce cote du pied. Le paragraphe qui la suivait
+            redisait ce que les cartes du catalogue, les fiches et le hero
+            annoncent deja — prix rendu Tana, carte grise au nom de l'acheteur,
+            commande sur mesure : trois lignes de plus a lire, et un logo
+            rapetisse par le texte colle dessous. */}
+        <div className="flex justify-center lg:justify-start">
+          <Marque taille={64} texte={26} className="lg:self-start" />
         </div>
         <nav className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 text-corps sm:grid-cols-3 lg:mt-2 lg:gap-x-12 lg:gap-y-3 lg:self-start">
           <Link href="/motos" className="text-chrome hover:text-text">Catalogue</Link>
