@@ -13,6 +13,7 @@
     "seed": "node scripts/seed.mjs",
     "vers-supabase": "node scripts/vers-supabase.mjs",
     "filigrane": "node scripts/filigrane.mjs",
+    "recette": "node scripts/recette-locale.mjs",
     "test:securite": "node scripts/securite.mjs",
     "test:charge": "node scripts/charge.mjs"
   },

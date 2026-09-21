@@ -61,7 +61,11 @@ const nextConfig = {
    * Deux dossiers distincts suppriment la collision. Vercel et `next start`
    * tournent en production et gardent `.next` : rien ne change au déploiement.
    */
-  distDir: enProduction ? ".next" : ".next-dev",
+  // `NEXT_DIST_DIR` isole la construction de recette : elle est faite sans
+  // variables Supabase, donc ses pages statiques sortent du magasin JSON
+  // local. Servie depuis `.next`, elle remplacerait la construction de
+  // production sans prevenir.
+  distDir: process.env.NEXT_DIST_DIR || (enProduction ? ".next" : ".next-dev"),
   reactStrictMode: true,
   // Ne pas annoncer la pile technique : c'est du renseignement gratuit.
   poweredByHeader: false,

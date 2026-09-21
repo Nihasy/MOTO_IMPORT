@@ -10,3 +10,9 @@ out
 coverage
 next-env.d.ts
 /data/sauvegardes/
+
+# Construction de recette : bâtie sur le magasin JSON local.
+/.next-recette/
+
+# Maquettes et images de référence fournies en cours de route.
+/back/
