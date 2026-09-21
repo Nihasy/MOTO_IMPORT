@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { BarreInferieure, BarreSuperieure } from "@/components/ui/navigation";
 import { PiedDePage } from "@/components/ui/pied-de-page";
-import { FournisseurContact } from "@/components/ui/contexte-contact";
+import { PorteurContact } from "@/components/ui/contexte-contact";
 import { parametres } from "@/lib/parametres";
 import { lienRecherche } from "@/lib/whatsapp";
 
@@ -21,7 +21,7 @@ export default async function Introuvable() {
   const { whatsapp } = await parametres();
 
   return (
-    <FournisseurContact whatsapp={whatsapp}>
+    <PorteurContact whatsapp={whatsapp}>
       <div className="mx-auto min-h-screen w-full max-w-[1200px] pb-16 lg:pb-0">
         <BarreSuperieure />
         <main className="conteneur pb-24 pt-12 text-center sm:pt-20">
@@ -71,6 +71,6 @@ export default async function Introuvable() {
       </div>
       <PiedDePage />
       <BarreInferieure />
-    </FournisseurContact>
+    </PorteurContact>
   );
 }
