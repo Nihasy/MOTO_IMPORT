@@ -8,6 +8,32 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
+/**
+ * Le prix de vente ne se saisit plus : il decoule du prix d'achat en yuan
+ * (lib/tarification.ts), et le controle avant publication refuse desormais
+ * toute fiche sans yuan. Le jeu d'essai, anterieur a cette bascule, ne
+ * portait que le prix de vente : la moitie des bascules de statut de la
+ * recette echouait pour cette seule raison.
+ *
+ * On inverse la formule par defaut — prix = yuan x 670 x 1,1 + 7 000 000 —
+ * pour que les deux chiffres racontent la meme histoire. Le plancher couvre
+ * les motos les moins cheres, dont le prix de vente est presque entierement
+ * absorbe par le fret et le benefice fixe.
+ */
+const yuanDepuisPrix = (prix) => Math.max(1000, Math.round((prix - 7_000_000) / 737));
+
+/**
+ * Acompte du jeu d'essai, calcule comme le fait `lib/tarification.ts` : il
+ * couvre l'achat chez le partenaire, majore de la securite de change, arrondi
+ * au palier de 5 % superieur et borne par les CGV. Sans lui, la fiche affiche
+ * le repli « acompte indique au bon de commande » au lieu du tableau chiffre.
+ */
+const acomptePourPrix = (prix) => {
+  const achat = yuanDepuisPrix(prix) * 670;
+  const requis = Math.ceil((achat * 1.03 / prix) * 20 - 1e-9) * 5;
+  return Math.min(80, Math.max(45, requis));
+};
+
 const RACINE = process.cwd();
 const CIBLE = process.env.LOCAL_DB_PATH ?? path.join(RACINE, "data", "local-db.json");
 
@@ -124,6 +150,9 @@ MOTOS.forEach((m, index) => {
     transmission: m.trans ?? null,
     abs: Boolean(m.abs),
     prix_ttc: m.prix,
+    prix_yuan: yuanDepuisPrix(m.prix),
+    taux_yuan: 670,
+    acompte_pct: acomptePourPrix(m.prix),
     prix_valable_jusqu_au: jours(index === 1 ? 4 : 120 + index * 5), // MI-002 : alerte d'échéance
     delai_min_jours: 45,
     delai_max_jours: 65,

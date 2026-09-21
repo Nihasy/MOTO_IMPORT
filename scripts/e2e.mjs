@@ -66,7 +66,10 @@ for (const [chemin, attendu] of [
   ["/", "moto vous attend"],
   ["/motos", "Trier par"],
   ["/comment-ca-marche", "acompte"],
-  ["/faq", "35 %"],
+  // L'acompte n'est plus un taux fixe : il se calcule par moto. La FAQ
+  // l'annonce en fourchette, d'ou un reperage sur le mot plutot que sur
+  // un pourcentage qui bougera encore.
+  ["/faq", "acompte"],
   ["/contact", "WhatsApp"],
   ["/cgv", "Article 4"],
   ["/mentions-legales", "Hébergement"],
@@ -127,7 +130,13 @@ verifier("la carte grise est mentionnée", /carte grise établie à votre nom/i.
 // fiche du statut correspondant.
 const surCommande = await get("/motos/honda-cb500x-2023-mi001");
 verifier("sur commande, le prix porte la mention rendu Tana", surCommande.texte.includes("Prix final, rendu à Antananarivo"));
-verifier("sur commande, l'acompte de 35 % est affiché", surCommande.texte.includes("35 %"));
+// Le bloc prix affiche le partage en deux colonnes — « À la commande » et
+// « À la remise des clés » — avec le pourcentage propre à la moto, et non
+// plus un taux unique écrit en toutes lettres.
+verifier(
+  "sur commande, l'acompte chiffré est affiché",
+  surCommande.texte.includes("À la commande") && /\d+\s*%/.test(surCommande.texte)
+);
 verifier("sur commande, le délai est affiché", /45\D{0,20}65/.test(surCommande.texte));
 verifier("sur commande, la date de validité du prix est affichée", surCommande.texte.includes("Prix valable jusqu"));
 
@@ -135,14 +144,17 @@ const surPlace = await get("/motos/suzuki-v-strom-650-2022-mi005");
 verifier("sur place, le véhicule est annoncé déjà au local", surPlace.texte.includes("Véhicule déjà au local"));
 verifier("sur place, aucun délai d'importation n'est promis", surPlace.texte.includes("Aucun délai d"));
 verifier("sur place, « rendu à Antananarivo » disparaît", !surPlace.texte.includes("Prix final, rendu à Antananarivo"));
-verifier("sur place, l'acompte de 35 % disparaît", !surPlace.texte.includes("35 %"));
+verifier("sur place, aucun acompte n'est réclamé", !surPlace.texte.includes("À la commande"));
 verifier("sur place, la date de validité du prix disparaît", !surPlace.texte.includes("Prix valable jusqu"));
 verifier("sur place, le parcours d'importation n'est pas décrit", !surPlace.texte.includes("Nous importons"));
 verifier("le bouton devis pointe vers WhatsApp", fiche.texte.includes("wa.me"));
 verifier("les données structurées Vehicle sont présentes", fiche.texte.includes('"@type":"Vehicle"'));
 verifier("l'offre Schema.org est présente", fiche.texte.includes('"@type":"Offer"'));
 verifier("Open Graph pointe vers l'image dédiée", fiche.texte.includes("opengraph-image"));
-verifier("les 5 étapes sont rappelées sur la fiche", fiche.texte.includes("Comment ça se passe"));
+// Le titre du bloc passe en deux tons — « Comment » en blanc, la suite en
+// or — donc « Comment ça se passe » n'est plus d'un seul tenant dans le
+// HTML. La seconde moitie, elle, l'est.
+verifier("les 5 étapes sont rappelées sur la fiche", fiche.texte.includes("ça se passe"));
 verifier("des motos similaires sont proposées", fiche.texte.includes("Motos similaires"));
 
 const urlOg = fiche.texte.match(/property="og:image" content="([^"]+)"/)?.[1];
@@ -374,7 +386,16 @@ verifier("aucun doublon de référence", (apresImport.texte.match(/MI-901/g) ?? 
 
 // Le CSV crée les fiches avant les photos (7.4). Une ligne qui réclame
 // « disponible » est donc retenue en brouillon par le verrou du 7.1.
-verifier("les lignes sans photo sont retenues en brouillon", ok.texte.includes('"retenus_en_brouillon":2'));
+// L'import place desormais toute ligne en brouillon, quel que soit le statut
+// ecrit dans le fichier : aucune fiche ne se publie d'elle-meme, donc aucune
+// n'a besoin d'etre « retenue ». Le compte ne vaut plus que pour une fiche
+// deja en vente qu'une mise a jour rendrait incomplete. Qu'aucune fiche
+// importee n'atteigne le catalogue est verifie juste en dessous.
+verifier(
+  "aucune ligne importée n'entre en vente d'elle-même",
+  bilan.retenus_en_brouillon === 0,
+  `retenus ${bilan.retenus_en_brouillon}`
+);
 
 const publique = await get("/motos");
 verifier("une fiche retenue en brouillon n'est pas publiée", !publique.texte.includes("GSX-S750"));
