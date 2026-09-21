@@ -6,9 +6,10 @@
  *   npm run build && npm start &   puis   npm run test:charge
  */
 import { createHmac } from "node:crypto";
-import { chargerEnvLocal, secretSession } from "./env-local.mjs";
+import { chargerEnvLocal, exigerBaseDeTest, secretSession } from "./env-local.mjs";
 
 await chargerEnvLocal();
+exigerBaseDeTest("Le test de charge");
 
 const BASE = process.env.E2E_BASE ?? "http://localhost:3000";
 const SECRET = secretSession();

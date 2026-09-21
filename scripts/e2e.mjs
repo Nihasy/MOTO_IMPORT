@@ -7,9 +7,10 @@
 const BASE = process.env.E2E_BASE ?? "http://localhost:3000";
 const COMPTE = { email: "nihasy@moto-import.mg", motdepasse: "moto-import-2026" };
 
-import { chargerEnvLocal, secretSession } from "./env-local.mjs";
+import { chargerEnvLocal, exigerBaseDeTest, secretSession } from "./env-local.mjs";
 
 await chargerEnvLocal();
+exigerBaseDeTest("La recette e2e");
 
 let reussis = 0;
 const echecs = [];

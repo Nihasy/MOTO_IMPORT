@@ -6,9 +6,10 @@
  *   npm run build && npm start &   puis   npm run test:securite
  */
 import { createHmac } from "node:crypto";
-import { SECRET_DEV, chargerEnvLocal, secretSession } from "./env-local.mjs";
+import { SECRET_DEV, chargerEnvLocal, exigerBaseDeTest, secretSession } from "./env-local.mjs";
 
 await chargerEnvLocal();
+exigerBaseDeTest("La recette de sécurité");
 
 const BASE = process.env.E2E_BASE ?? "http://localhost:3000";
 const COMPTE = { email: "nihasy@moto-import.mg", motdepasse: "moto-import-2026" };
