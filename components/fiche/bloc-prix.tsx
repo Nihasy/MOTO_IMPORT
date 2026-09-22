@@ -70,7 +70,7 @@ export function BlocPrix({ moto }: { moto: MotoPublique }) {
             </dl>
           ) : (
             <p className="mt-1 text-meta text-dim">
-              Acompte indiqué au bon de commande, solde à la remise des clés et des papiers.
+              Acompte indiqué au bon de commande, solde au retrait de la moto.
             </p>
           )}
         </>

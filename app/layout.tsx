@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Open_Sans } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
+import { FOURCHETTE_DELAI_TEXTE } from "@/lib/conditions";
 import { Suspense } from "react";
 import { MesureAudience } from "@/components/ui/mesure-audience";
 import { IndicateurNavigation } from "@/components/ui/indicateur-navigation";
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | MOTO IMPORT",
   },
   description:
-    "Catalogue de motos neuves et d'occasion importées de Chine. Prix final rendu à Antananarivo, carte grise établie à votre nom, livraison en 45 à 65 jours.",
+    `Catalogue de motos neuves et d'occasion importées de Chine. Prix final rendu à Antananarivo, carte grise établie à votre nom, livraison en ${FOURCHETTE_DELAI_TEXTE}.`,
   keywords: [
     "moto 400cc Madagascar",
     "importation moto Tana",

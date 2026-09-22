@@ -5,7 +5,8 @@ Implémentation du cahier des charges `goal.md`, version 2.0.
 
 Ce n'est **pas** une boutique en ligne : ni panier, ni paiement, ni compte
 client. La vente se conclut au local par signature d'un bon de commande et
-versement d'un acompte propre à chaque moto (45 à 80 %, solde à la remise des clés et des papiers). L'application convertit le visiteur en
+versement d'un acompte propre à chaque moto (45 à 80 %, solde au retrait, sous
+20 jours après l'arrivée à Tana). L'application convertit le visiteur en
 conversation WhatsApp qualifiée, et rien de plus.
 
 ## Démarrer

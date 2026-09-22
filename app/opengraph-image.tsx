@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { FOURCHETTE_DELAI_TEXTE } from "@/lib/conditions";
 
 export const alt = "MOTO IMPORT — motos importées rendues à Antananarivo";
 export const size = { width: 1200, height: 630 };
@@ -38,7 +39,7 @@ export default function Image() {
             color: "#B9C2CB",
           }}
         >
-          Neuf et occasion · Livraison 45 à 65 jours · Prix final, sans frais découverts
+          {`Neuf et occasion · Livraison ${FOURCHETTE_DELAI_TEXTE} · Prix final, sans frais découverts`}
         </div>
       </div>
     ),

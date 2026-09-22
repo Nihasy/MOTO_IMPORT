@@ -5,6 +5,15 @@ import { controlesPublication } from "@/components/admin/controles-publication";
 import { garantieCourte, garantieFiche } from "@/lib/garantie";
 import { messageVerrou, verrouPublication } from "@/lib/publication";
 import { motoSchema } from "@/lib/schemas";
+import {
+  ACOMPTE_MIN,
+  DELAI_MAX,
+  GARDIENNAGE_AR_JOUR,
+  GARDIENNAGE_PLAFOND_JOURS,
+  INDEMNITE_RESOLUTION_PCT,
+  RESOLUTION_JOURS,
+  RETRAIT_JOURS,
+} from "@/lib/conditions";
 import { estEnVente, estPublic } from "@/lib/types";
 import type { Media, Moto } from "@/lib/types";
 
@@ -187,6 +196,30 @@ describe("garantie : seul le neuf est couvert (CGV art. 8)", () => {
     // Pas de ligne « sans garantie » : le silence, pas la case vide.
     expect(garantieFiche({ etat: "occasion", garantie_mois: 0, garantie_texte: null })).toBeNull();
     expect(garantieCourte({ etat: "occasion", garantie_mois: 0, garantie_texte: null })).toBeNull();
+  });
+
+  it("plafonne le délai de livraison au maximum des CGV (art. 9.1)", () => {
+    // Le délai dépend de la compagnie maritime, mais les CGV posent un plafond
+    // ferme : au-delà, l'acheteur peut déjà annuler (art. 9.4). Une fiche qui
+    // annoncerait davantage promettrait un délai que le contrat lui refuse.
+    expect(motoSchema.safeParse({ ...neuf, delai_max_jours: DELAI_MAX }).success).toBe(true);
+    const r = motoSchema.safeParse({ ...neuf, delai_max_jours: DELAI_MAX + 1 });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.error.issues[0].path).toEqual(["delai_max_jours"]);
+      expect(r.error.issues[0].message).toMatch(/art\. 9\.1/);
+    }
+  });
+
+  it("retient les bornes du retrait telles que les CGV les écrivent (art. 11)", () => {
+    // Le plafond de gardiennage et la résolution tombent le même jour : sans
+    // cela, passé le plafond, la moto resterait au local sans compteur ni sortie.
+    expect(RETRAIT_JOURS + GARDIENNAGE_PLAFOND_JOURS).toBe(RESOLUTION_JOURS);
+    expect(RESOLUTION_JOURS).toBe(30);
+    expect(GARDIENNAGE_AR_JOUR * GARDIENNAGE_PLAFOND_JOURS).toBe(1_000_000);
+    // L'indemnité doit rester très inférieure à l'acompte encaissé, faute de
+    // quoi la revente indemniserait deux fois le même préjudice.
+    expect(INDEMNITE_RESOLUTION_PCT).toBeLessThan(ACOMPTE_MIN);
   });
 
   it("ne mentionne rien non plus sur un neuf dont la garantie n'est pas saisie", () => {

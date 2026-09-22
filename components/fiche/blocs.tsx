@@ -4,7 +4,7 @@ import type { MotoAvecMedias, Statut } from "@/lib/types";
 import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { dateFr } from "@/lib/format";
 import { garantieCourte, garantieFiche } from "@/lib/garantie";
-import { FOURCHETTE_ACOMPTE_TEXTE } from "@/lib/conditions";
+import { FOURCHETTE_ACOMPTE_TEXTE, FOURCHETTE_DELAI_TEXTE, RETRAIT_JOURS } from "@/lib/conditions";
 
 export function Reassurance({ moto }: { moto: MotoAvecMedias }) {
   // La garantie n'apparaît que si le véhicule est réellement couvert : une
@@ -157,8 +157,12 @@ const ETAPES = [
   { titre: "Vous choisissez", icone: "catalogue", texte: "Vous repérez une moto au catalogue et vous nous écrivez sur WhatsApp." },
   { titre: "Nous confirmons", icone: "etiquette", texte: "Nous vérifions la disponibilité auprès de l'atelier et figeons le prix rendu Tana." },
   { titre: "Vous signez au local", icone: "lieu", texte: `Bon de commande signé sur place et acompte versé : de ${FOURCHETTE_ACOMPTE_TEXTE} selon la moto, indiqué sur sa fiche.` },
-  { titre: "Nous importons", icone: "bateau", texte: "Sourcing, contrôle, expédition, dédouanement et carte grise à votre nom." },
-  { titre: "Vous récupérez", icone: "moto", texte: "Livraison en 45 à 65 jours, solde réglé à la remise des clés et des papiers." },
+  { titre: "Nous importons", icone: "bateau", texte: "Sourcing, contrôle, expédition et dédouanement. Le délai dépend de la ligne maritime empruntée." },
+  // Pas de délai chiffré ici : le parcours est le même pour toutes les motos,
+  // alors que chaque fiche porte sa propre fourchette. Un « 45 à 75 jours »
+  // générique contredisait, sur la même page, le « 45 à 65 » de la moto lue.
+  // Le délai reste sur la ligne de réassurance et sur la carte, où il est juste.
+  { titre: "Vous récupérez", icone: "moto", texte: `Nous vous prévenons dès l'arrivée à Tana. Vous avez ${RETRAIT_JOURS} jours pour régler le solde et repartir avec les clés.` },
 ];
 
 /**
@@ -184,7 +188,7 @@ const ETAPES_SUR_PLACE = [
  * rayon de 5 px du site et non ses coins très arrondis, l'or #C08A2E, la
  * graisse d'Open Sans, aucune lueur portée. La maquette annonçait « simple,
  * rapide et sécurisée ! » ; le sous-titre dit plutôt ce que le visiteur va
- * lire, sans promesse de rapidité que le délai de 45 à 65 jours contredirait.
+ * lire, sans promesse de rapidité que le délai d'importation contredirait.
  *
  * Cinq cartes sur une grille de trois font deux rangées, 3 + 2, comme la
  * maquette. Sur la fiche produit, la colonne de 680 px n'en tient que deux de
@@ -222,7 +226,7 @@ export function CommentCaSePasse({
       </h2>
       <p className={clsx("mt-2 text-chrome", enLigne ? "text-corps sm:text-[17px]" : "text-meta")}>
         {surPlace
-          ? "Ce véhicule est déjà à Antananarivo : le parcours d'importation en 45 à 65 jours ne s'applique pas."
+          ? `Ce véhicule est déjà à Antananarivo : le parcours d'importation en ${FOURCHETTE_DELAI_TEXTE} ne s'applique pas.`
           : "Cinq étapes, du premier message à la remise des clés."}
       </p>
 

@@ -2,24 +2,35 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BarreSuperieure } from "@/components/ui/navigation";
 import { jsonLdSecurise } from "@/lib/jsonld";
-import { FOURCHETTE_ACOMPTE_TEXTE } from "@/lib/conditions";
+import {
+  FOURCHETTE_ACOMPTE_TEXTE,
+  FOURCHETTE_DELAI_TEXTE,
+  GARDIENNAGE_AR_JOUR,
+  GARDIENNAGE_PLAFOND_JOURS,
+  GRACE_LIVRAISON_JOURS,
+  INDEMNITE_RESOLUTION_PCT,
+  RESOLUTION_JOURS,
+  RETRAIT_JOURS,
+} from "@/lib/conditions";
+
+const ar = (n: number) => `${n.toLocaleString("fr-FR").replace(/ /g, " ")} Ar`;
 
 export const metadata: Metadata = {
   title: "FAQ — acompte, délais, carte grise, garantie",
   description:
-    `Pourquoi un acompte de ${FOURCHETTE_ACOMPTE_TEXTE}, que se passe-t-il en cas de désistement, qui fait la carte grise, d'où viennent les motos, que couvre la garantie, livraison en province.`,
+    `Pourquoi un acompte de ${FOURCHETTE_ACOMPTE_TEXTE}, que se passe-t-il en cas de désistement, combien de temps pour venir chercher la moto, qui fait la carte grise, d'où viennent les motos, que couvre la garantie, livraison en province.`,
   alternates: { canonical: "/faq" },
 };
 
 const QUESTIONS = [
   {
     q: `Pourquoi un acompte de ${FOURCHETTE_ACOMPTE_TEXTE} ?`,
-    r: `Parce que nous ne tenons aucun stock. Pour une moto disponible sur commande, à la signature de votre bon de commande, nous achetons effectivement la moto chez notre partenaire en Chine. L'acompte couvre cet achat : c'est pourquoi son pourcentage dépend du prix de la moto, entre ${FOURCHETTE_ACOMPTE_TEXTE}. Il est indiqué sur chaque fiche, en pourcentage et en ariary, et repris au bon de commande. Le solde se règle à la remise des clés et des papiers. Sans lui, nous devrions immobiliser notre trésorerie sur des véhicules que personne n'a commandés, et les prix affichés seraient plus élevés.`,
+    r: `Parce que nous ne tenons aucun stock. Pour une moto disponible sur commande, à la signature de votre bon de commande, nous achetons effectivement la moto chez notre partenaire en Chine. L'acompte couvre cet achat : c'est pourquoi son pourcentage dépend du prix de la moto, entre ${FOURCHETTE_ACOMPTE_TEXTE}. Il est indiqué sur chaque fiche, en pourcentage et en ariary, et repris au bon de commande. Le solde se règle au retrait de la moto. Sans lui, nous devrions immobiliser notre trésorerie sur des véhicules que personne n'a commandés, et les prix affichés seraient plus élevés.`,
     cgv: "Article 4 — Commande et acompte",
   },
   {
     q: "Que se passe-t-il si je me désiste ?",
-    r: "Après signature du bon de commande, l'acompte reste acquis à MOTO IMPORT. Le véhicule a déjà été acheté et expédié à votre demande. Nous le disons clairement avant la signature, jamais après. Avant signature, vous ne devez rien et vous pouvez changer d'avis librement.",
+    r: "Après signature du bon de commande et avant l'arrivée de la moto à Tana, l'acompte reste acquis à MOTO IMPORT. Le véhicule a déjà été acheté et expédié à votre demande. Nous le disons clairement avant la signature, jamais après. Avant signature, vous ne devez rien et vous pouvez changer d'avis librement. Une fois la moto arrivée, c'est un autre régime qui s'applique, plus favorable : voir la question sur le délai de retrait.",
     cgv: "Article 6 — Annulation et désistement",
   },
   {
@@ -28,8 +39,18 @@ const QUESTIONS = [
     cgv: "Article 5 — Prix",
   },
   {
+    q: `Combien de temps ai-je pour venir chercher la moto ?`,
+    r: `${RETRAIT_JOURS} jours à compter de son arrivée à Antananarivo, dont nous vous prévenons le jour même par WhatsApp et par téléphone. Pendant ces ${RETRAIT_JOURS} jours, vous ne devez rien de plus que le solde. Au-delà, des frais de gardiennage de ${ar(GARDIENNAGE_AR_JOUR)} par jour s'appliquent, plafonnés à ${GARDIENNAGE_PLAFOND_JOURS} jours : ils paient la place occupée et la surveillance, pas une punition. Si au bout de ${RESOLUTION_JOURS} jours la moto n'est toujours pas retirée, la vente est annulée et le véhicule remis en vente ; nous conservons alors les frais échus et ${INDEMNITE_RESOLUTION_PCT} % du prix, et nous vous remboursons le reste de l'acompte dans les 30 jours de la revente. Si vous avez un empêchement, écrivez-nous avant la fin des ${RETRAIT_JOURS} jours : une prorogation écrite est possible.`,
+    cgv: "Article 11 — Retrait du véhicule et frais de gardiennage",
+  },
+  {
+    q: "Pourquoi le délai varie-t-il d'une moto à l'autre ?",
+    r: `Parce qu'il dépend de la compagnie maritime et de la ligne empruntée : la fréquence des départs, le port de transbordement et la durée de traversée ne sont pas les mêmes d'un transporteur à l'autre. Chaque fiche porte donc sa propre fourchette, généralement ${FOURCHETTE_DELAI_TEXTE}, et elle ne peut jamais dépasser le maximum inscrit aux CGV. Si nous dépassons le délai de votre bon de commande de plus de ${GRACE_LIVRAISON_JOURS} jours, vous pouvez annuler et récupérer la totalité de votre acompte.`,
+    cgv: "Article 9 — Délai de livraison",
+  },
+  {
     q: "Qui fait la carte grise ?",
-    r: "Nous. La carte grise malgache est établie à votre nom et son coût est déjà compris dans le prix affiché. Vous n'avez aucune démarche administrative à effectuer : vous récupérez la moto et ses papiers en même temps.",
+    r: "Nous. La carte grise malgache est établie à votre nom et son coût est déjà compris dans le prix affiché. Vous n'avez aucune démarche administrative à effectuer. La demande est déposée le jour où vous retirez la moto, pas avant : jusque-là le véhicule n'est immatriculé à aucun nom. Vous repartez donc avec les clés et le récépissé de dépôt, qui vous autorise à circuler, et nous vous remettons la carte grise définitive dès que l'administration la délivre.",
     cgv: "Article 7 — Immatriculation",
   },
   {
@@ -50,7 +71,7 @@ const QUESTIONS = [
   {
     q: "Livrez-vous en province ?",
     r: "La livraison est comprise jusqu'à notre local d'Antananarivo. Un acheminement vers une autre ville est possible, à organiser et à chiffrer avec nous au moment de la commande.",
-    cgv: "Article 9 — Livraison",
+    cgv: "Article 9 — Délai de livraison",
   },
 ];
 
@@ -72,8 +93,8 @@ export default function Page() {
       <main className="conteneur pb-24 pt-6">
         <h1 className="text-titre-fiche">Questions fréquentes</h1>
         <p className="mt-2 text-corps text-chrome">
-          Les huit questions qu&apos;on nous pose systématiquement. Chaque réponse renvoie à
-          l&apos;article correspondant de nos conditions générales de vente.
+          Les {QUESTIONS.length} questions qu&apos;on nous pose systématiquement. Chaque réponse
+          renvoie à l&apos;article correspondant de nos conditions générales de vente.
         </p>
 
         <div className="mt-5 space-y-3">

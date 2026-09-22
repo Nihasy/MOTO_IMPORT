@@ -7,6 +7,7 @@ import type {
 import { estPublic } from "@/lib/types";
 import { construireSlug } from "@/lib/format";
 import { vuesManquantes } from "@/lib/medias";
+import { DELAI_MAX, DELAI_MIN } from "@/lib/conditions";
 import type { MotoInput } from "@/lib/schemas";
 import type { FiltresCatalogue, Pilote } from "./types";
 import type { Reglages } from "@/lib/tarification";
@@ -116,8 +117,8 @@ function construireMoto(input: MotoInput): Moto {
     acompte_pct: input.acompte_pct ?? null,
     mise_en_vente: input.mise_en_vente ?? "commande",
     prix_valable_jusqu_au: input.prix_valable_jusqu_au,
-    delai_min_jours: input.delai_min_jours ?? 45,
-    delai_max_jours: input.delai_max_jours ?? 65,
+    delai_min_jours: input.delai_min_jours ?? DELAI_MIN,
+    delai_max_jours: input.delai_max_jours ?? DELAI_MAX,
     garantie_mois: input.garantie_mois ?? 0,
     garantie_texte: input.garantie_texte ?? null,
     description: input.description,

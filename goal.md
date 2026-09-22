@@ -66,7 +66,8 @@ Ces règles doivent être visibles dans l'interface, pas seulement dans le docum
 |---|---|
 | Aucun stock, commande sur mesure | Statut `disponible` signifie « sourçable », jamais « en stock » |
 | Acompte 35 % à la signature | Affiché sur chaque fiche et dans « Comment ça se passe » |
-| Délai 45 à 65 jours | Affiché sur chaque fiche et sur les cartes du catalogue |
+| Délai 45 à 75 jours | Affiché sur chaque fiche et sur les cartes du catalogue ; varie selon la compagnie maritime, plafonné par les CGV art. 9.1 |
+| Retrait sous 20 jours | Compté depuis l'arrivée à Tana ; gardiennage 100 000 Ar/jour plafonné à 10 jours, puis résolution (CGV art. 11) |
 | Prix rendu Tana, carte grise incluse | Sous le prix, systématiquement, sans exception |
 | Prix valable jusqu'à une date | Champ `prix_valable_jusqu_au`, alerte back-office à échéance |
 | Désistement : acompte acquis | Page FAQ dédiée, liée depuis chaque fiche |
@@ -267,7 +268,7 @@ create table motos (
   prix_ttc              bigint not null check (prix_ttc > 0),   -- Ariary
   prix_valable_jusqu_au date not null,
   delai_min_jours       int not null default 45,
-  delai_max_jours       int not null default 65,
+  delai_max_jours       int not null default 75,   -- plafond CGV art. 9.1
 
   garantie_mois         int not null default 0,
   garantie_texte        text,
@@ -640,7 +641,7 @@ C'est le seul endroit où l'interface hausse le ton. Tout le reste reste sobre. 
 ## 9.1 Accueil `/`
 
 1. Bandeau : logo, accroche, deux boutons — « Voir le catalogue » et « Trouvez ma moto ».
-2. Les trois faits imposés par les CGV — livraison 45-65 jours · carte grise à votre nom · prix final rendu Tana — ne sont pas répétés dans l'accroche : ils figurent sur chaque carte du catalogue et sur chaque fiche, là où ils servent à décider.
+2. Les trois faits imposés par les CGV — livraison 45-75 jours · carte grise à votre nom · prix final rendu Tana — ne sont pas répétés dans l'accroche : ils figurent sur chaque carte du catalogue et sur chaque fiche, là où ils servent à décider.
 3. **Six motos disponibles** en avant, lien vers le catalogue.
 4. **Entrée par budget** : trois paliers cliquables (moins de 10 M, 10-15 M, plus de 15 M Ar).
 5. Le process en 5 étapes, condensé.
@@ -650,7 +651,7 @@ C'est le seul endroit où l'interface hausse le ton. Tout le reste reste sobre. 
 
 **En-tête fixe** : logo, loupe, bouton filtres (en or si un filtre est actif).
 **Rangée de puces** : Toutes · Neuf · Occasion · Trail · Sportive · Roadster · Motocross · Custom.
-**Compteur** : « 8 motos · commande 45 à 65 jours ».
+**Compteur** : « 8 motos · commande 45 à 75 jours ».
 
 **Feuille de filtres :**
 

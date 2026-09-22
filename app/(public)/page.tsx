@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { arCourt } from "@/lib/format";
 import { lienRecherche } from "@/lib/whatsapp";
 import { parametres } from "@/lib/parametres";
+import { FOURCHETTE_DELAI_TEXTE } from "@/lib/conditions";
 import { BarreSuperieure } from "@/components/ui/navigation";
 import { Hero } from "@/components/accueil/hero";
 import { CarteMoto } from "@/components/catalogue/carte-moto";
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   // l'aurait répétée dans l'onglet et dans les aperçus de partage.
   title: { absolute: "MOTO IMPORT — Motos importées, rendues à Antananarivo carte grise incluse" },
   description:
-    "Motos neuves et d'occasion importées de Chine sur commande. Prix final rendu à Antananarivo, carte grise établie à votre nom, livraison en 45 à 65 jours.",
+    `Motos neuves et d'occasion importées de Chine sur commande. Prix final rendu à Antananarivo, carte grise établie à votre nom, livraison en ${FOURCHETTE_DELAI_TEXTE}.`,
   alternates: { canonical: "/" },
 };
 

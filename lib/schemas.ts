@@ -3,6 +3,7 @@ import {
   MISES_EN_VENTE,
   CATEGORIES, DEMANDE_SOURCES, DEMANDE_STATUTS, ETATS, ORIGINES, STATUTS, VUES,
 } from "./types";
+import { DELAI_MAX, DELAI_MIN } from "./conditions";
 
 export const referenceSchema = z
   .string()
@@ -41,8 +42,8 @@ export const motoSchema = z
     acompte_pct: z.coerce.number().int().min(0).max(100).nullable().optional(),
     mise_en_vente: z.enum(MISES_EN_VENTE).default("commande"),
     prix_valable_jusqu_au: dateSchema,
-    delai_min_jours: z.coerce.number().int().positive().default(45),
-    delai_max_jours: z.coerce.number().int().positive().default(65),
+    delai_min_jours: z.coerce.number().int().positive().default(DELAI_MIN),
+    delai_max_jours: z.coerce.number().int().positive().default(DELAI_MAX),
 
     garantie_mois: z.coerce.number().int().min(0).default(0),
     garantie_texte: z.string().nullable().optional(),
@@ -72,6 +73,15 @@ export const motoSchema = z
     }
     if (v.delai_max_jours < v.delai_min_jours) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["delai_max_jours"], message: "Délai maximum inférieur au délai minimum" });
+    }
+    // Les CGV (art. 9.1) plafonnent le délai : une fiche qui annoncerait plus
+    // promettrait au client un délai que le contrat lui permet déjà de refuser.
+    if (v.delai_max_jours > DELAI_MAX) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["delai_max_jours"],
+        message: `Délai maximum plafonné à ${DELAI_MAX} jours par les CGV (art. 9.1)`,
+      });
     }
     // SAV : seul le neuf est garanti, dans les termes fixés par la marque et le
     // concessionnaire. Une occasion est vendue en l'état, sans garantie (CGV

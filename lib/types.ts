@@ -1,3 +1,5 @@
+import { FOURCHETTE_DELAI_TEXTE } from "./conditions";
+
 export const ETATS = ["neuf", "occasion"] as const;
 export const STATUTS = [
   "brouillon", "dispo_immediate", "disponible", "reserve", "vendu", "archive",
@@ -115,7 +117,7 @@ export const miseEnVenteDe = (m: { mise_en_vente?: MiseEnVente | null; statut: S
 export const statutDeMiseEnVente = (m: MiseEnVente): Statut => (m === "local" ? "dispo_immediate" : "disponible");
 
 export const LIBELLE_MISE_EN_VENTE: Record<MiseEnVente, string> = {
-  commande: "Sur commande — importée après signature, 45 à 65 jours",
+  commande: `Sur commande — importée après signature, ${FOURCHETTE_DELAI_TEXTE}`,
   local: "Déjà au local — disponible de suite",
 };
 

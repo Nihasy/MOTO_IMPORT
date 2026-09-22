@@ -137,7 +137,7 @@ verifier(
   "sur commande, l'acompte chiffré est affiché",
   surCommande.texte.includes("À la commande") && /\d+\s*%/.test(surCommande.texte)
 );
-verifier("sur commande, le délai est affiché", /45\D{0,20}65/.test(surCommande.texte));
+verifier("sur commande, le délai est affiché", /45\D{0,20}75/.test(surCommande.texte));
 verifier("sur commande, la date de validité du prix est affichée", surCommande.texte.includes("Prix valable jusqu"));
 
 const surPlace = await get("/motos/suzuki-v-strom-650-2022-mi005");

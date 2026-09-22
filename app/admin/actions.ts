@@ -14,6 +14,7 @@ import { ipDepuisEntetes, limiterDebitDouble } from "@/lib/securite";
 import { db } from "@/lib/db";
 import { demandePatchSchema, mediaPatchSchema, motoSchema } from "@/lib/schemas";
 import { messageVerrou, verrouPublication } from "@/lib/publication";
+import { DELAI_MAX, DELAI_MIN } from "@/lib/conditions";
 import { estEnVente, miseEnVenteDe, statutDeMiseEnVente } from "@/lib/types";
 import { normaliserWhatsapp, parametresSchema } from "@/lib/schemas";
 import { champsPrix, prixAJour, reglagesEnVigueur } from "@/lib/tarification-serveur";
@@ -167,8 +168,8 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
     abs: form.get("abs") === "on",
     ...prix,
     prix_valable_jusqu_au: texte("prix_valable_jusqu_au"),
-    delai_min_jours: form.get("delai_min_jours") || 45,
-    delai_max_jours: form.get("delai_max_jours") || 65,
+    delai_min_jours: form.get("delai_min_jours") || DELAI_MIN,
+    delai_max_jours: form.get("delai_max_jours") || DELAI_MAX,
     garantie_mois: form.get("garantie_mois") || 0,
     garantie_texte: texte("garantie_texte") || null,
     description: texte("description"),

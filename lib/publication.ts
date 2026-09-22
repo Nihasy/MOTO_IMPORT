@@ -89,7 +89,7 @@ export function controlesPublication(moto: Moto, medias: Media[]): Controle[] {
     // La description est du texte libre : elle ne suit pas le statut. Une fiche
     // rédigée « disponible de suite » puis repassée en commande continuerait à
     // promettre une remise de clés immédiate, sur la page même où le reste de
-    // l'interface annonce 45 à 65 jours. Le contrôle attrape la contradiction
+    // l'interface annonce un délai d'importation. Le contrôle attrape la contradiction
     // plutôt que de laisser le client la découvrir.
     {
       libelle: "Description cohérente avec le statut",

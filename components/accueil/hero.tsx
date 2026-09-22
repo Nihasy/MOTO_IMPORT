@@ -8,7 +8,7 @@ import Link from "next/link";
  * Disposition reprise de la maquette de référence, couleurs et vocabulaire du
  * site : l'or #C08A2E et son clair, le fond #0E1215, et l'accroche telle
  * qu'elle était déjà écrite. Les faits imposés par les CGV — prix rendu Tana,
- * carte grise au nom de l'acheteur, 45 à 65 jours — restent où ils servent à
+ * carte grise au nom de l'acheteur, délai d'importation — restent où ils servent à
  * décider : sur chaque carte du catalogue et sur chaque fiche.
  *
  * Mobile d'abord : une colonne, les deux actions calées sur la largeur de la

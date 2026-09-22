@@ -269,7 +269,7 @@ export function VueCatalogue({
         <div className="mb-3 flex flex-col items-center gap-2.5 sm:flex-row sm:justify-between sm:gap-3">
           {/* Le compteur ne rappelle plus le delai d'importation : la liste
               melange des motos a commander et des motos deja sur place, et un
-              « 45 a 65 jours » pose au-dessus de tout contredisait les fiches
+              « 45 a 75 jours » pose au-dessus de tout contredisait les fiches
               « disponible de suite ». Le delai reste sur chaque carte, ou il
               correspond bien au vehicule qu'il annonce. */}
           <p className="text-meta text-chrome">

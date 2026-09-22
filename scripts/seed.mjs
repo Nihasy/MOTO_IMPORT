@@ -85,7 +85,7 @@ const PLAN_OCCASION = [
 // (bandeau de la carte, ligne de reassurance de la fiche), mais la description
 // est ce que reprennent Facebook et Google : y laisser un texte qui parle
 // d'importation sur commande contredit l'argument de vente le plus fort.
-const DISPO_IMMEDIATE = `Cette moto est déjà à Antananarivo, dans notre local. Vous n'attendez pas les quarante-cinq à soixante-cinq jours d'importation : vous pouvez venir la voir avant de signer, puis repartir avec dès le solde réglé. Le fret et le dédouanement sont déjà réglés, la carte grise sera établie à votre nom comme sur toute commande, et le prix affiché reste le prix final. Un seul exemplaire est concerné : c'est le premier bon de commande signé qui l'emporte.`;
+const DISPO_IMMEDIATE = `Cette moto est déjà à Antananarivo, dans notre local. Vous n'attendez pas les quarante-cinq à soixante-quinze jours d'importation : vous pouvez venir la voir avant de signer, puis repartir avec dès le solde réglé. Le fret et le dédouanement sont déjà réglés, la carte grise sera établie à votre nom comme sur toute commande, et le prix affiché reste le prix final. Un seul exemplaire est concerné : c'est le premier bon de commande signé qui l'emporte.`;
 
 const texte = (marque, modele, cc, categorie, etat, statut) =>
   `La ${marque} ${modele} est une ${categorie} de ${cc} cm³ que nous avons retenue pour une raison simple : elle encaisse les routes malgaches sans réclamer un atelier tous les mois. Sur les axes défoncés autour de Tana comme sur la RN7, la partie-cycle reste saine et la selle ne devient pas un supplice au bout d'une heure.
@@ -155,7 +155,7 @@ MOTOS.forEach((m, index) => {
     acompte_pct: acomptePourPrix(m.prix),
     prix_valable_jusqu_au: jours(index === 1 ? 4 : 120 + index * 5), // MI-002 : alerte d'échéance
     delai_min_jours: 45,
-    delai_max_jours: 65,
+    delai_max_jours: 75,
     // Seul le neuf est garanti, selon la marque et le concessionnaire. Une
     // occasion part a zero quoi qu'annonce la fiche source (CGV art. 8).
     garantie_mois: m.etat === "occasion" ? 0 : (m.garantie ?? 0),

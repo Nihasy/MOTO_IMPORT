@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { appliquerFiltres, trierCatalogue, TRIS, type Ordre } from "@/lib/db/filtres";
 import { VueCatalogue } from "@/components/catalogue/vue-catalogue";
 import { Squelette, VoileChargement } from "@/components/ui";
+import { FOURCHETTE_DELAI_TEXTE } from "@/lib/conditions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ const VUES_PAR_CARTE = 5;
 export const metadata: Metadata = {
   title: "Catalogue — motos importées disponibles",
   description:
-    "Motos neuves et d'occasion importées : routière, sportive, roadster, trail, custom, cross, scooter. Prix final rendu à Antananarivo, carte grise incluse, livraison 45 à 65 jours.",
+    `Motos neuves et d'occasion importées : routière, sportive, roadster, trail, custom, cross, scooter. Prix final rendu à Antananarivo, carte grise incluse, livraison ${FOURCHETTE_DELAI_TEXTE}.`,
   alternates: { canonical: "/motos" },
 };
 
