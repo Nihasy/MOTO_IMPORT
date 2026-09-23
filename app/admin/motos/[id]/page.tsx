@@ -7,6 +7,7 @@ import { FormulaireMoto } from "@/components/admin/formulaire-moto";
 import { GrillePhotos } from "@/components/admin/grille-photos";
 import { ListeControles, controlesPublication } from "@/components/admin/controles-publication";
 import { AjoutPhotos } from "@/components/admin/ajout-photos";
+import { TelechargerPhotos } from "@/components/admin/telecharger-photos";
 import { BoutonDanger } from "@/components/admin/bouton-danger";
 import { SelecteurStatut } from "@/components/admin/selecteur-statut";
 import { BarreFiltres, EntetePage, PuceFiltre } from "@/components/admin/ui";
@@ -127,6 +128,7 @@ export default async function EditionMoto({ params, searchParams }: Props) {
             manquantes={vuesManquantes(medias, moto.etat)}
           />
           <GrillePhotos motoId={moto.id} medias={medias} />
+          <TelechargerPhotos moto={moto} medias={medias} />
         </div>
       ) : null}
 

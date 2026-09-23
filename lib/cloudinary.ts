@@ -34,12 +34,18 @@ const PRESETS: Record<Usage, string> = {
 const FOND_NEUTRE = "b_rgb:171C21";
 
 /**
- * Le filigrane ne couvre que nos propres clichés (7.5) : marquer un visuel
- * constructeur reviendrait à s'attribuer une image qui n'est pas de nous. Il
- * est également inutile sur la vignette de 200 px, qui ne sort jamais du
- * back-office et où la marque serait de toute façon illisible.
+ * Toute image que nous publions porte la marque — décision de l'exploitant du
+ * 23/09/2026, qui revient sur le 7.5 du cahier des charges. Celui-ci épargnait
+ * les visuels constructeur, au motif qu'y poser notre marque reviendrait à
+ * s'attribuer une image qui n'est pas de nous. L'exploitation tranche l'inverse :
+ * ces visuels partent sur Facebook au milieu des nôtres, ils se font reprendre
+ * comme les autres, et la marque est le seul fil qui les ramène à la boutique.
+ *
+ * Reste une exception, de lisibilité et non de propriété : la vignette de
+ * 200 px du back-office, qui ne sort jamais de l'administration et où la marque
+ * ne serait qu'une tache.
  */
-const marquable = (usage: Usage, origine?: Origine) => origine === "reelle" && usage !== "vignette";
+const marquable = (usage: Usage) => usage !== "vignette";
 
 /**
  * Une transformation n'est possible que sur un média hébergé par Cloudinary.
@@ -95,7 +101,7 @@ export function urlMedia(
   // quelle : utile en developpement et pour le repli sans Cloudinary.
   if (!transformable(cloudinaryId)) return cloudinaryId;
   const parts = [PRESETS[usage]];
-  if (marquable(usage, opts.origine)) parts.push(couche());
+  if (marquable(usage)) parts.push(couche());
   if (opts.origine === "constructeur") parts.push(FOND_NEUTRE);
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${parts.join("/")}/${cloudinaryId}`;
 }
@@ -110,15 +116,16 @@ export function filigraneIncruste(
   usage: Usage = "carte",
   opts: { origine?: Origine } = {}
 ): boolean {
-  return transformable(cloudinaryId) && marquable(usage, opts.origine);
+  return transformable(cloudinaryId) && marquable(usage);
 }
 
 /**
  * Faut-il incruster la marque au moment de l'envoi ? Oui dès qu'aucune
  * transformation Cloudinary ne viendra la poser à la livraison — sans quoi le
- * fichier stocké, celui qu'un téléchargement rapporte, partirait nu.
+ * fichier stocké, celui qu'un téléchargement rapporte, partirait nu. L'origine
+ * n'entre plus en compte : toutes nos images sont marquées.
  */
-export const filigraneALEnvoi = (origine: Origine): boolean => origine === "reelle" && !CLOUD_NAME;
+export const filigraneALEnvoi = (): boolean => !CLOUD_NAME;
 
 export const LARGEURS: Record<Usage, number> = {
   vignette: 200,
@@ -126,3 +133,31 @@ export const LARGEURS: Record<Usage, number> = {
   galerie: 1400,
   plein: 2400,
 };
+
+/**
+ * Photo prête à partir sur les réseaux : pleine taille, marquée comme sur le
+ * site, servie en JPEG sous un nom lisible.
+ *
+ * `fl_attachment` fait de l'adresse un téléchargement plutôt qu'un affichage.
+ * Il est indispensable : l'attribut `download` d'un lien est ignoré par les
+ * navigateurs dès que le fichier vient d'un autre domaine, et nos photos sont
+ * chez Cloudinary. C'est donc Cloudinary qui doit annoncer la pièce jointe.
+ *
+ * Le format est forcé en JPEG, là où l'affichage laisse `f_auto` choisir du
+ * WebP : une image destinée à la pellicule d'un téléphone puis à Facebook doit
+ * être lisible partout, et le gain de poids ne compte plus une fois le fichier
+ * enregistré.
+ */
+export function urlTelechargement(
+  cloudinaryId: string,
+  opts: { origine?: Origine; nom?: string } = {}
+): string {
+  // Sans Cloudinary, le fichier stocké porte déjà la marque (`filigraneALEnvoi`) :
+  // le servir tel quel est le bon repli, pas une perte.
+  if (!transformable(cloudinaryId)) return cloudinaryId;
+  const parts = ["c_limit,w_2400,f_jpg,q_auto:best"];
+  if (marquable("plein")) parts.push(couche());
+  if (opts.origine === "constructeur") parts.push(FOND_NEUTRE);
+  if (opts.nom) parts.push(`fl_attachment:${opts.nom}`);
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${parts.join("/")}/${cloudinaryId}`;
+}

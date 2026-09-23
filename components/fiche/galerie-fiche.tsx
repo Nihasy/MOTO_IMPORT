@@ -138,7 +138,7 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
                   Visuel constructeur
                 </span>
               ) : null}
-              {m.origine === "reelle" && !filigraneIncruste(m.cloudinary_id, "galerie", { origine: m.origine }) ? (
+              {!filigraneIncruste(m.cloudinary_id, "galerie", { origine: m.origine }) ? (
                 <Filigrane />
               ) : null}
             </button>
@@ -256,8 +256,7 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
                         <ChargementMoto taille="compact" texte="Chargement de la photo" />
                       </span>
                     ) : null}
-                    {m.origine === "reelle" &&
-                    !filigraneIncruste(m.cloudinary_id, "plein", { origine: m.origine }) ? (
+                    {!filigraneIncruste(m.cloudinary_id, "plein", { origine: m.origine }) ? (
                       <Filigrane />
                     ) : null}
                   </span>

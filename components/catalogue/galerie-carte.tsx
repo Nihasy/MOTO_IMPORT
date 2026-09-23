@@ -84,7 +84,7 @@ export function GalerieCarte({
               placeholder={m.blurhash ? "blur" : "empty"}
               blurDataURL={m.blurhash ?? undefined}
             />
-            {m.origine === "reelle" && !filigraneIncruste(m.cloudinary_id, "carte", { origine: m.origine }) ? (
+            {!filigraneIncruste(m.cloudinary_id, "carte", { origine: m.origine }) ? (
               <Filigrane />
             ) : null}
           </div>

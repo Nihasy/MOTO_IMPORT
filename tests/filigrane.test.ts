@@ -26,12 +26,17 @@ describe("filigrane servi par Cloudinary (7.5)", () => {
     expect(filigraneIncruste("motos/mi-047-01", "galerie", { origine: "reelle" })).toBe(true);
   });
 
-  it("épargne le visuel constructeur : la photo n'est pas de nous", async () => {
+  /**
+   * Décision de l'exploitant du 23/09/2026 : toutes nos images sortent marquées,
+   * visuels constructeur compris. Le fond neutre qui leur est propre reste, lui,
+   * une affaire de présentation et ne bouge pas.
+   */
+  it("marque aussi le visuel constructeur", async () => {
     const { urlMedia, filigraneIncruste } = await charger(env);
     const url = urlMedia("motos/mi-051-01", "galerie", { origine: "constructeur" });
-    expect(url).not.toContain("l_moto-import:filigrane");
+    expect(url).toContain("l_moto-import:filigrane");
     expect(url).toContain("b_rgb:171C21");
-    expect(filigraneIncruste("motos/mi-051-01", "galerie", { origine: "constructeur" })).toBe(false);
+    expect(filigraneIncruste("motos/mi-051-01", "galerie", { origine: "constructeur" })).toBe(true);
   });
 
   it("épargne la vignette du back-office, où la marque serait illisible", async () => {
@@ -71,8 +76,7 @@ describe("filigrane sans Cloudinary", () => {
 
   it("réclame l'incrustation dès l'envoi, seule à survivre à un téléchargement", async () => {
     const { filigraneALEnvoi } = await charger(env);
-    expect(filigraneALEnvoi("reelle")).toBe(true);
-    expect(filigraneALEnvoi("constructeur")).toBe(false);
+    expect(filigraneALEnvoi()).toBe(true);
   });
 
   it("laisse Cloudinary faire quand il est branché : jamais deux marques", async () => {
@@ -80,7 +84,7 @@ describe("filigrane sans Cloudinary", () => {
       NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "moto-import",
       NEXT_PUBLIC_CLOUDINARY_FILIGRANE_ID: "moto-import/filigrane",
     });
-    expect(filigraneALEnvoi("reelle")).toBe(false);
+    expect(filigraneALEnvoi()).toBe(false);
   });
 });
 
@@ -107,5 +111,69 @@ describe("image déjà optimisée par Cloudinary", () => {
   it("ne réclame rien sans Cloudinary configuré", async () => {
     const { servieParCloudinary } = await charger({ NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "" });
     expect(servieParCloudinary("moto-import/MI-047/photo")).toBe(false);
+  });
+});
+
+describe("téléchargement des photos filigranées", () => {
+  const env = {
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "moto-import",
+    NEXT_PUBLIC_CLOUDINARY_FILIGRANE_ID: "moto-import/filigrane",
+  };
+
+  it("marque la photo réelle et l'annonce en pièce jointe", async () => {
+    const { urlTelechargement } = await charger(env);
+    const url = urlTelechargement("motos/mi-047-01", { origine: "reelle", nom: "mi-047-kove-400x-01" });
+    expect(url).toContain("l_moto-import:filigrane");
+    expect(url).toContain("fl_attachment:mi-047-kove-400x-01");
+  });
+
+  /**
+   * L'attribut `download` d'un lien est ignoré sur un domaine tiers : sans
+   * `fl_attachment`, le navigateur afficherait la photo au lieu de la
+   * télécharger, et le bouton ne ferait rien d'utile.
+   */
+  it("porte toujours fl_attachment quand un nom est donné", async () => {
+    const { urlTelechargement } = await charger(env);
+    const url = urlTelechargement("motos/mi-051-01", { origine: "constructeur", nom: "mi-051-honda-01" });
+    expect(url).toContain("fl_attachment:mi-051-honda-01");
+  });
+
+  it("marque le visuel constructeur, comme partout ailleurs", async () => {
+    const { urlTelechargement } = await charger(env);
+    const url = urlTelechargement("motos/mi-051-01", { origine: "constructeur", nom: "x" });
+    expect(url).toContain("l_moto-import:filigrane");
+  });
+
+  /** Une pellicule de téléphone et Facebook lisent le JPEG partout. */
+  it("force le JPEG plutôt que le format négocié de l'affichage", async () => {
+    const { urlTelechargement } = await charger(env);
+    const url = urlTelechargement("motos/mi-047-01", { origine: "reelle", nom: "x" });
+    expect(url).toContain("f_jpg");
+    expect(url).not.toContain("f_auto");
+  });
+
+  /**
+   * Sans Cloudinary, la marque est incrustée dès l'envoi (`filigraneALEnvoi`) :
+   * le fichier stocké la porte déjà, le servir tel quel ne perd rien.
+   */
+  it("sert le fichier tel quel quand Cloudinary n'est pas configuré", async () => {
+    const { urlTelechargement } = await charger({ ...env, NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "" });
+    expect(urlTelechargement("/demo/1.jpeg", { origine: "reelle", nom: "x" })).toBe("/demo/1.jpeg");
+  });
+});
+
+describe("nom du fichier téléchargé", () => {
+  it("place la référence en tête et garde l'ordre de la galerie", async () => {
+    const { nomTelechargement } = await import("@/lib/medias");
+    expect(nomTelechargement("MI-047", "Kove", "400X Trois valises", 3)).toBe(
+      "mi-047-kove-400x-trois-valises-03"
+    );
+  });
+
+  it("aplatit les accents, qu'un système de fichiers rend mal", async () => {
+    const { nomTelechargement } = await import("@/lib/medias");
+    expect(nomTelechargement("MI-036", "Zhangxue", "500RR Monobras", 1)).toBe(
+      "mi-036-zhangxue-500rr-monobras-01"
+    );
   });
 });

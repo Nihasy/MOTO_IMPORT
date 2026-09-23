@@ -1,3 +1,4 @@
+import { slugifier } from "./format";
 import type { Etat, Media, Origine, Vue } from "./types";
 
 /** Codes de vue de l'annexe 17.2 -> enum `vue_photo`. */
@@ -137,4 +138,22 @@ export function altParDefaut(
   libelleVue: string
 ): string {
   return `${marque} ${modele} ${annee} - ${libelleVue}`.trim() || `${marque} ${modele} ${vue}`;
+}
+
+/**
+ * Nom du fichier rapporté par un téléchargement. Il se lit dans une pellicule
+ * de téléphone, où les photos de plusieurs motos se mélangent vite : la
+ * référence d'abord, puisque c'est elle qui relie le fichier à la fiche, la
+ * moto ensuite pour la reconnaître sans l'ouvrir, le rang enfin pour garder
+ * l'ordre de la galerie. Sans extension : Cloudinary ajoute celle du format
+ * qu'il livre.
+ */
+export function nomTelechargement(
+  reference: string,
+  marque: string,
+  modele: string,
+  ordre: number
+): string {
+  const base = slugifier(`${reference} ${marque} ${modele}`);
+  return `${base}-${String(ordre).padStart(2, "0")}`;
 }

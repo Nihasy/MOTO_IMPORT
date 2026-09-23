@@ -205,7 +205,7 @@ export async function envoyerPhoto(
   origine: Origine,
   dossier: string
 ): Promise<Televersement> {
-  const pret = await compresser(fichier, { filigrane: filigraneALEnvoi(origine) });
+  const pret = await compresser(fichier, { filigrane: filigraneALEnvoi() });
   return CLOUD_NAME ? televerser(pret, dossier) : versDataUrl(pret);
 }
 

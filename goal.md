@@ -513,7 +513,7 @@ Générés par Cloudinary à la volée, servis via `next/image`.
 
 - Cadrage **4:3 imposé** sur toutes les vignettes et cartes. Des cartes de hauteurs inégales rendent la comparaison impossible, et comparer est le geste central de votre acheteur.
 - Blurhash affiché pendant le chargement, jamais de zone vide.
-- Filigrane discret « MOTO IMPORT » — médaillon du logo et signature — posé en bas à gauche des photos d'origine `reelle`. Vos concurrents les reprendront. Le coin droit reste au compteur « 3/12 » des galeries. La marque est fabriquée une fois par `npm run filigrane`, puis posée par Cloudinary quand il est branché, incrustée dès l'envoi quand il ne l'est pas, et rappelée en surcouche à l'écran tant que le fichier servi ne la porte pas — une capture d'écran enregistre ce qui est affiché.
+- Filigrane discret « MOTO IMPORT » — médaillon du logo et signature — posé en bas à gauche de **toutes** les photos publiées, visuels constructeur compris (décision du 23/09/2026, qui revient sur la réserve d'origine limitant la marque aux clichés `reelle`). Seule la vignette de 200 px du back-office en est dispensée, où la marque serait illisible. Vos concurrents les reprendront. Le coin droit reste au compteur « 3/12 » des galeries. La marque est fabriquée une fois par `npm run filigrane`, puis posée par Cloudinary quand il est branché, incrustée dès l'envoi quand il ne l'est pas, et rappelée en surcouche à l'écran tant que le fichier servi ne la porte pas — une capture d'écran enregistre ce qui est affiché.
 - Photos constructeur sur fond blanc : appliquer une teinte de fond neutre côté Cloudinary pour éviter la rupture visuelle avec l'interface sombre.
 
 ## 7.6 Ajout rapide depuis un téléphone
