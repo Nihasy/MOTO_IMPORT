@@ -4,7 +4,7 @@ import { sessionCourante } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { estPublic } from "@/lib/types";
 import { NavAdmin, type Onglet } from "@/components/admin/nav";
-import { Marque } from "@/components/ui/logo";
+import { Logo, Marque } from "@/components/ui/logo";
 import { deconnexion } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -56,23 +56,30 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
         <div className="conteneur-large flex h-14 items-center justify-between gap-3">
-          <Link href="/admin" className="flex items-center gap-2.5">
-            <Marque taille={28} texte={15} />
+          {/* Sous 480 px, le mot-marque entier poussait « Voir le site » sur
+              quatre lignes et coupait « Déconnexion » : le logo seul suffit
+              à dire où l'on est. */}
+          <Link href="/admin" className="flex min-w-0 items-center gap-2.5">
+            <Logo taille={28} className="min-[480px]:hidden" />
+            <Marque taille={28} texte={15} className="max-[479px]:hidden" />
             <span className="rounded-card border border-line px-2 py-0.5 text-[10px] font-semibold uppercase text-dim">
               {session.role}
             </span>
           </Link>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <Link
               href="/motos"
               target="_blank"
               rel="noopener"
-              className="min-h-touch px-2 text-[12.5px] text-chrome hover:text-text"
+              className="flex min-h-touch items-center whitespace-nowrap px-2 text-[12.5px] text-chrome hover:text-text"
             >
               Voir le site ↗
             </Link>
             <form action={deconnexion}>
-              <button type="submit" className="min-h-touch px-2 text-[12.5px] text-dim hover:text-text">
+              <button
+                type="submit"
+                className="min-h-touch whitespace-nowrap px-2 text-[12.5px] text-dim hover:text-text"
+              >
                 Déconnexion
               </button>
             </form>
