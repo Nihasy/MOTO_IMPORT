@@ -89,6 +89,13 @@ Toute image publiée porte la marque, **visuels constructeur compris** (décisio
 du 23/09/2026, qui revient sur le 7.5 du cahier des charges). Seule exception :
 la vignette de 200 px du back-office, affaire de lisibilité et non de propriété.
 
+Le filigrane Cloudinary est le fichier `moto-import/filigrane`
+(`NEXT_PUBLIC_CLOUDINARY_FILIGRANE_ID`). Aucune ligne `medias` ne le référence,
+mais **sans lui, toute photo non encore en cache renvoie une erreur 400** : le
+25/09/2026, un ménage l'a effacé et 21 fiches ont perdu leurs photos. On le
+refabrique à partir de `public/filigrane.png`, sous le même identifiant.
+`menage-cloudinary.mjs` ne touche plus qu'aux dossiers `moto-import/MI-xxx/`.
+
 Une seule règle, `marquable()`, mais trois moteurs la posent — Cloudinary à la
 livraison, le canvas à l'envoi quand Cloudinary est absent, une surcouche CSS
 tant que les pixels servis ne la portent pas. **Changer la règle sans aligner les

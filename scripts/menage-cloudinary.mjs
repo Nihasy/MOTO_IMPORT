@@ -88,8 +88,20 @@ if (enBase.size === 0) {
   process.exit(1);
 }
 
+// Seules les photos rangées dans un dossier de moto (`moto-import/MI-058/…`)
+// peuvent être orphelines. Le reste de `moto-import/` sert au site sans figurer
+// en base : le 25/09/2026, la première version de ce script a pris le
+// filigrane (`moto-import/filigrane`, désigné par une variable
+// d'environnement) pour un fichier de test et l'a effacé. Toute photo non
+// encore en cache chez Cloudinary a alors renvoyé une erreur 400 sur le site.
+const PROTEGES = new Set([process.env.NEXT_PUBLIC_CLOUDINARY_FILIGRANE_ID].filter(Boolean));
+const dansUnDossierDeMoto = (id) => /^moto-import\/MI-\d+\/[^/]+$/i.test(id);
+
 const maintenant = Date.now();
-const orphelins = surCloud.filter((r) => !enBase.has(r.public_id));
+const horsPerimetre = surCloud.filter((r) => !enBase.has(r.public_id) && (PROTEGES.has(r.public_id) || !dansUnDossierDeMoto(r.public_id)));
+const orphelins = surCloud.filter(
+  (r) => !enBase.has(r.public_id) && !PROTEGES.has(r.public_id) && dansUnDossierDeMoto(r.public_id)
+);
 const recents = orphelins.filter((r) => maintenant - Date.parse(r.created_at) < AGE_MIN_MS);
 const aSupprimer = orphelins.filter((r) => !recents.includes(r));
 
@@ -100,8 +112,11 @@ for (const r of aSupprimer) {
 }
 const octets = aSupprimer.reduce((s, r) => s + (r.bytes ?? 0), 0);
 
-console.log(`Sur Cloudinary : ${surCloud.length}  ·  référencés en base : ${surCloud.length - orphelins.length}`);
+console.log(`Sur Cloudinary : ${surCloud.length}  ·  référencés en base : ${surCloud.filter((r) => enBase.has(r.public_id)).length}`);
 console.log(`Orphelins      : ${orphelins.length}  (dont ${recents.length} de moins de 2 h, épargnés)`);
+if (horsPerimetre.length) {
+  console.log(`Jamais touchés : ${horsPerimetre.map((r) => r.public_id).join(", ")}`);
+}
 for (const [d, n] of Object.entries(parDossier).sort()) console.log(`  ${d} : ${n}`);
 console.log(`À supprimer    : ${aSupprimer.length}  ·  ${(octets / 1024 / 1024).toFixed(1)} Mo\n`);
 
