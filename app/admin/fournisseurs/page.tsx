@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { sessionCourante } from "@/lib/auth";
 import { enregistrerFournisseur, supprimerFournisseur } from "@/app/admin/actions";
@@ -28,6 +29,26 @@ export default async function PageFournisseurs() {
         compte={fournisseurs.length}
         sousTitre="Table strictement interne, réservée à l'administrateur. Aucune route publique ne lit ces données, ni directement ni par jointure : la vue publique exclut explicitement fournisseur_id."
       />
+
+      {fournisseurs.length ? (
+        <form method="get" action="/admin/fournisseurs/stock" className="carte mt-4 max-w-xl p-4">
+          <h2 className="text-[17px] font-semibold">Vérifier le stock d&apos;un fournisseur</h2>
+          <p className="mt-1 text-meta text-dim">
+            Fiche PDF de ses motos sur commande, avec une case Disponible / Vendu à cocher par moto.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <select name="f" required defaultValue="" className="champ min-w-[200px] flex-1" aria-label="Fournisseur">
+              <option value="" disabled>Choisir un fournisseur…</option>
+              {fournisseurs.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.nom} · {f.nb_motos} moto{f.nb_motos > 1 ? "s" : ""}
+                </option>
+              ))}
+            </select>
+            <button type="submit" className="btn-or px-5">Fiche de stock</button>
+          </div>
+        </form>
+      ) : null}
 
       <form action={enregistrerFournisseur} className="carte mt-4 max-w-xl space-y-3 p-4">
         <h2 className="text-[17px] font-semibold">Ajouter un fournisseur</h2>
@@ -66,11 +87,17 @@ export default async function PageFournisseurs() {
               </p>
               {f.notes ? <p className="mt-1 text-meta text-chrome">{f.notes}</p> : null}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 max-sm:w-full">
               <span className="rounded-card bg-surface-hi px-2.5 py-1 text-badge font-semibold text-chrome">
                 {f.nb_motos} moto{f.nb_motos > 1 ? "s" : ""}
               </span>
-              <div className="w-[210px] max-w-full">
+              <Link
+                href={`/admin/fournisseurs/stock?f=${f.id}`}
+                className="btn-fantome px-4 text-[14px] max-sm:flex-1"
+              >
+                Fiche de stock
+              </Link>
+              <div className="w-[210px] max-w-full max-sm:w-full">
                 <BoutonDanger
                   action={supprimerFournisseur}
                   champsCaches={{ id: f.id }}

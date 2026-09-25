@@ -35,11 +35,13 @@ export function CarteMoto({ moto }: { moto: MotoAvecMedias }) {
       </Link>
 
       <div className="relative px-4 pt-3">
-        {/* Une moto reservee est desaturee : le badge seul se lit apres coup,
-            alors qu'une vignette grise se repere en balayant la grille. Le
+        {/* Une moto reservee ou vendue est desaturee : le badge seul se lit
+            apres coup, alors qu'une vignette grise se repere en balayant la
+            grille, et dit d'emblee que l'annonce n'est plus ouverte. Le
             traitement porte sur le cadre photo et non sur la carte entiere,
-            pour que le badge de statut garde sa couleur au-dessus. */}
-        <div className={clsx("cadre-photo", reserve && "grayscale opacity-75")}>
+            pour que le badge de statut garde sa couleur au-dessus. La fiche
+            detaillee, elle, garde ses photos en couleur. */}
+        <div className={clsx("cadre-photo", (reserve || vendu) && "grayscale opacity-75")}>
           <Link href={fiche} className="block" aria-label={`${moto.marque} ${moto.modele}`}>
             <GalerieCarte
               medias={moto.medias}

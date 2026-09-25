@@ -22,6 +22,28 @@
     outline: 2px solid #e7c983;
     outline-offset: 2px;
   }
+
+  /* Fiches à imprimer (stock fournisseur) : le fond sombre du site coûterait
+     une cartouche par page et rendrait les cases à cocher illisibles. */
+  @media print {
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+    :root {
+      color-scheme: light;
+    }
+    html,
+    body {
+      background: #fff;
+    }
+    /* Sans cela, le navigateur efface les fonds : les pastilles « Vendue »
+       noires sortiraient en texte blanc sur blanc. */
+    .feuille-stock * {
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+  }
 }
 
 @layer components {

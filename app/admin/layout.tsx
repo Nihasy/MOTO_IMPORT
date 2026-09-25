@@ -53,8 +53,8 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
   ];
 
   return (
-    <div className="min-h-screen bg-bg">
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur">
+    <div className="min-h-screen bg-bg print:bg-white">
+      <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur print:hidden">
         <div className="conteneur-large flex h-14 items-center justify-between gap-3">
           {/* Sous 480 px, le mot-marque entier poussait « Voir le site » sur
               quatre lignes et coupait « Déconnexion » : le logo seul suffit
@@ -87,7 +87,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
         </div>
         <NavAdmin onglets={onglets} />
       </header>
-      <main className="conteneur-large py-5">{children}</main>
+      <main className="conteneur-large py-5 print:max-w-none print:p-0">{children}</main>
     </div>
   );
 }
