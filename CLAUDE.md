@@ -19,6 +19,9 @@ node scripts/menage-cloudinary.mjs   # photos Cloudinary que plus rien n'utilise
 Supprimer une photo ou annuler un lot n'efface que la ligne en base : le
 fichier reste sur Cloudinary. `menage-cloudinary.mjs` les retrouve, `--supprimer`
 les efface. Le lancer après chaque import de lot.
+Le filigrane (`moto-import/filigrane`) n'est cité par aucune ligne : le script
+l'épargne par nom. S'il manque, toute photo filigranée répond 400 —
+`node scripts/remettre-filigrane.mjs` le redépose.
 
 `npm run recette` joue contre le magasin JSON local, **jamais** contre Supabase :
 elle écrit pour de bon (crée des demandes, vend MI-001). `scripts/env-local.mjs`

@@ -41,10 +41,21 @@ if (!cloud || !cle || !secret) {
   process.exit(1);
 }
 if (!PREFIXE.startsWith("moto-import/")) {
-  // Le filigrane et les visuels du site vivent ailleurs : ne jamais y toucher.
   console.error(`Préfixe refusé : ${PREFIXE} (seul moto-import/ est concerné).`);
   process.exit(1);
 }
+
+// Le filigrane vit sous `moto-import/` sans qu'aucune ligne `medias` ne le
+// cite : il a tout d'un orphelin. Le 25/09/2026, un --supprimer l'a effacé et
+// chaque photo filigranée non encore en cache chez Cloudinary a répondu 400 —
+// galeries des fiches vides, cartes intactes. Il est donc épargné par nom, et
+// sans son identifiant le script refuse de deviner.
+const FILIGRANE_ID = process.env.NEXT_PUBLIC_CLOUDINARY_FILIGRANE_ID;
+if (!FILIGRANE_ID) {
+  console.error("NEXT_PUBLIC_CLOUDINARY_FILIGRANE_ID absent : le filigrane passerait pour un orphelin.");
+  process.exit(1);
+}
+const EPARGNES = new Set([FILIGRANE_ID]);
 
 console.log(`Base      : Supabase ${new URL(supaUrl).host}`);
 console.log(`Cloud     : ${cloud}`);
@@ -89,7 +100,11 @@ if (enBase.size === 0) {
 }
 
 const maintenant = Date.now();
-const orphelins = surCloud.filter((r) => !enBase.has(r.public_id));
+const orphelins = surCloud.filter((r) => !enBase.has(r.public_id) && !EPARGNES.has(r.public_id));
+if (!surCloud.some((r) => r.public_id === FILIGRANE_ID) && FILIGRANE_ID.startsWith(PREFIXE)) {
+  console.warn(`ATTENTION : ${FILIGRANE_ID} absent de Cloudinary — les photos filigranées répondent 400.`);
+  console.warn("Le remettre : node scripts/remettre-filigrane.mjs\n");
+}
 const recents = orphelins.filter((r) => maintenant - Date.parse(r.created_at) < AGE_MIN_MS);
 const aSupprimer = orphelins.filter((r) => !recents.includes(r));
 
