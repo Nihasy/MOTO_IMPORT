@@ -186,6 +186,21 @@ export type ImportLot = {
   created_at: string;
 };
 
+/**
+ * Un lot de photos dont le compte ne boucle pas n'a pas fini : la fonction a
+ * été coupée avant d'écrire son bilan. Le 25/09/2026, un tel lot avait écrit
+ * 71 photos sur 131 et s'affichait « OK » avec 0 réussi. Les photos ignorées
+ * parce que déjà en ligne comptent comme traitées.
+ */
+export function etatLot(
+  l: Pick<ImportLot, "type" | "total" | "reussis" | "echoues" | "rapport">
+): "ok" | "echecs" | "interrompu" {
+  const deja = (l.rapport as { deja_presents?: unknown } | null)?.deja_presents;
+  const ignores = Array.isArray(deja) ? deja.length : 0;
+  if (l.type === "medias_masse" && l.reussis + l.echoues + ignores < l.total) return "interrompu";
+  return l.echoues ? "echecs" : "ok";
+}
+
 export const LIBELLE_STATUT: Record<Statut, string> = {
   brouillon: "Brouillon",
   dispo_immediate: "Disponible de suite",

@@ -101,6 +101,7 @@ export function creerPiloteSupabase(): Pilote {
         return {
           ...m,
           nb_photos: siennes.length,
+          ordres_photos: siennes.map((x) => x.ordre),
           vues_manquantes: vuesManquantes(siennes, m.etat),
           couverture: siennes[0] ?? null,
         };
@@ -185,8 +186,18 @@ export function creerPiloteSupabase(): Pilote {
       return (data ?? []) as Media[];
     },
 
-    async ajouterMedias(medias, lotId) {
+    async ajouterMedias(medias, lotId, options) {
       const lignes = medias.map((m) => ({ ...m, lot_id: lotId ?? null }));
+      if (options?.siOrdrePris === "ignorer") {
+        // La contrainte unique tranche, pas une lecture préalable : deux envois
+        // simultanés liraient tous deux la place libre avant d'écrire.
+        const { data, error } = await sb
+          .from("medias")
+          .upsert(lignes, { onConflict: "moto_id,ordre", ignoreDuplicates: true })
+          .select();
+        err(error);
+        return (data ?? []) as Media[];
+      }
       const { data, error } = await sb.from("medias").insert(lignes).select();
       if (!error) return (data ?? []) as Media[];
       if (error.code !== "23505") err(error);

@@ -37,7 +37,7 @@ export interface Pilote {
    * il ne conditionne plus rien.
    */
   listerMotosAdmin(): Promise<
-    (Moto & { nb_photos: number; vues_manquantes: Vue[]; couverture: Media | null })[]
+    (Moto & { nb_photos: number; ordres_photos: number[]; vues_manquantes: Vue[]; couverture: Media | null })[]
   >;
   motoParId(id: string): Promise<Moto | null>;
   motoParReference(ref: string): Promise<Moto | null>;
@@ -53,7 +53,19 @@ export interface Pilote {
   supprimerMoto(id: string): Promise<void>;
 
   mediasDeMoto(motoId: string): Promise<Media[]>;
-  ajouterMedias(medias: Omit<Media, "id" | "created_at">[], lotId?: string): Promise<Media[]>;
+  /**
+   * `siOrdrePris` dit quoi faire quand la place (moto_id, ordre) est prise.
+   * `decaler`, par défaut, range la photo après la dernière : c'est un ajout
+   * depuis la fiche. `ignorer` la laisse tomber : un fichier nommé
+   * `MI-058_03_34ad` désigne une place, et le renvoyer ne doit rien créer — le
+   * décalage avait doublé les photos de huit fiches publiées le 25/09/2026.
+   * Seules les photos réellement insérées sont renvoyées.
+   */
+  ajouterMedias(
+    medias: Omit<Media, "id" | "created_at">[],
+    lotId?: string,
+    options?: { siOrdrePris?: "decaler" | "ignorer" }
+  ): Promise<Media[]>;
   majMedia(id: string, patch: Partial<Media>): Promise<Media>;
   supprimerMedia(id: string): Promise<void>;
   reordonnerMedias(motoId: string, ordre: string[]): Promise<void>;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { dateFr } from "@/lib/format";
+import { etatLot } from "@/lib/types";
 import { ImportCsv } from "@/components/admin/import-csv";
 import { ImportPhotos } from "@/components/admin/import-photos";
 import { BarreFiltres, EntetePage, PuceFiltre } from "@/components/admin/ui";
@@ -46,6 +47,7 @@ export default async function PageImport({
             annee: m.annee,
             etat: m.etat,
             date_photos: m.date_photos,
+            ordres_photos: m.ordres_photos,
           }))}
         />
       ) : (
@@ -68,13 +70,18 @@ export default async function PageImport({
                     {l.echoues ? ` · ${l.echoues} échec(s)` : ""} sur {l.total}
                   </span>
                 </span>
-                <span
-                  className={`shrink-0 rounded-card px-2.5 py-1 text-badge font-semibold ${
-                    l.echoues ? "bg-vendu/20 text-vendu" : "bg-dispo/20 text-dispo"
-                  }`}
-                >
-                  {l.echoues ? "avec échecs" : "OK"}
-                </span>
+                {(() => {
+                  const etat = etatLot(l);
+                  return (
+                    <span
+                      className={`shrink-0 rounded-card px-2.5 py-1 text-badge font-semibold ${
+                        etat === "ok" ? "bg-dispo/20 text-dispo" : "bg-vendu/20 text-vendu"
+                      }`}
+                    >
+                      {etat === "ok" ? "OK" : etat === "interrompu" ? "interrompu" : "avec échecs"}
+                    </span>
+                  );
+                })()}
               </li>
             ))}
           </ul>

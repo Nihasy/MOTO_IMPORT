@@ -13,7 +13,12 @@ npx tsc --noEmit       # typecheck
 npm run build          # build de production (prégénère les fiches publiées)
 npm run filigrane      # refabrique public/filigrane.png
 node scripts/lire-refs.mjs   # dernière référence MI-xxx réellement en base
+node scripts/menage-cloudinary.mjs   # photos Cloudinary que plus rien n'utilise (simulation)
 ```
+
+Supprimer une photo ou annuler un lot n'efface que la ligne en base : le
+fichier reste sur Cloudinary. `menage-cloudinary.mjs` les retrouve, `--supprimer`
+les efface. Le lancer après chaque import de lot.
 
 `npm run recette` joue contre le magasin JSON local, **jamais** contre Supabase :
 elle écrit pour de bon (crée des demandes, vend MI-001). `scripts/env-local.mjs`

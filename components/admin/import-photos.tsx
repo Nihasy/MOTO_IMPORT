@@ -17,10 +17,16 @@ type Rapport = {
   total: number;
   reussis: number;
   echoues: number;
+  deja_presents: number;
+};
+
+type MotoImport = Pick<Moto, "id" | "reference" | "marque" | "modele" | "annee" | "etat" | "date_photos"> & {
+  /** Places déjà occupées sur la fiche : une photo nommée qui y tombe est déjà en ligne. */
+  ordres_photos: number[];
 };
 
 /** Écran d'import en masse des photos (7.3). */
-export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" | "marque" | "modele" | "annee" | "etat" | "date_photos">[] }) {
+export function ImportPhotos({ motos }: { motos: MotoImport[] }) {
   const router = useRouter();
   const [fichiers, setFichiers] = useState<File[]>([]);
   const [etat, setEtat] = useState<Etat>("depot");
@@ -36,6 +42,18 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
   }, [motos]);
 
   const analyse = useMemo(() => grouperParReference(fichiers.map((f) => f.name)), [fichiers]);
+
+  // Un second glisser-déposer du même dossier renvoyait tout : filtrer avant
+  // l'envoi évite de payer Cloudinary pour des fichiers que le serveur
+  // ignorera de toute façon.
+  const dejaEnLigne = useMemo(() => {
+    const noms = new Set<string>();
+    for (const f of fichiers) {
+      const a = analyserNomFichier(f.name);
+      if (a.valide && parReference.get(a.reference)?.ordres_photos.includes(a.ordre)) noms.add(f.name);
+    }
+    return noms;
+  }, [fichiers, parReference]);
 
   const deposer = (liste: FileList | null) => {
     if (!liste?.length) return;
@@ -53,6 +71,7 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
     // Fichier -> moto : par référence lue dans le nom, ou par assignation manuelle.
     const aTraiter: { fichier: File; motoId: string; ordre: number; vue: string; origine: "reelle" | "constructeur" }[] = [];
     for (const f of fichiers) {
+      if (dejaEnLigne.has(f.name)) continue;
       const a = analyserNomFichier(f.name);
       if (a.valide) {
         const moto = parReference.get(a.reference);
@@ -72,7 +91,11 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
     }
 
     if (!aTraiter.length) {
-      setErreur("Aucun fichier ne correspond à une moto existante. Assignez-les à la main ou créez les fiches d'abord.");
+      setErreur(
+        dejaEnLigne.size
+          ? "Toutes ces photos sont déjà en ligne : rien à envoyer."
+          : "Aucun fichier ne correspond à une moto existante. Assignez-les à la main ou créez les fiches d'abord."
+      );
       setEtat("reconciliation");
       return;
     }
@@ -123,11 +146,13 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
       return;
     }
 
+    const dejaCoteServeur = json.deja_presents ?? 0;
     setRapport({
       lot_id: json.lot_id,
       total: aTraiter.length,
       reussis: json.reussis,
-      echoues: aTraiter.length - json.reussis,
+      echoues: aTraiter.length - json.reussis - dejaCoteServeur,
+      deja_presents: dejaEnLigne.size + dejaCoteServeur,
     });
     setEtat("rapport");
     router.refresh();
@@ -175,6 +200,9 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
         <ul className="mt-3 space-y-1 text-corps">
           <li className="text-dispo">{rapport.reussis} photo(s) enregistrée(s)</li>
           {rapport.echoues ? <li className="text-vendu">{rapport.echoues} échec(s)</li> : null}
+          {rapport.deja_presents ? (
+            <li className="text-chrome">{rapport.deja_presents} déjà en ligne, ignorée(s)</li>
+          ) : null}
           <li className="text-dim">Lot {rapport.lot_id.slice(0, 8)}…</li>
         </ul>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -238,6 +266,10 @@ export function ImportPhotos({ motos }: { motos: Pick<Moto, "id" | "reference" |
                         : ` · plan complet (${moto.etat})`
                       : " · aucune moto à cette référence"}
                     {g.doublonsOrdre.length ? ` · ordres en doublon : ${g.doublonsOrdre.join(", ")}` : ""}
+                    {(() => {
+                      const n = g.fichiers.filter((f) => dejaEnLigne.has(f.fichier)).length;
+                      return n ? ` · ${n === g.fichiers.length ? "toutes" : n} déjà en ligne, ignorée${n > 1 ? "s" : ""}` : "";
+                    })()}
                   </span>
                 </span>
                 <span

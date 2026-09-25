@@ -185,6 +185,7 @@ export function creerPiloteLocal(): Pilote {
           return {
             ...m,
             nb_photos: siennes.length,
+            ordres_photos: siennes.map((x) => x.ordre),
             vues_manquantes: vuesManquantes(siennes, m.etat),
             couverture: siennes[0] ?? null,
           };
@@ -272,11 +273,12 @@ export function creerPiloteLocal(): Pilote {
       return base.medias.filter((m) => m.moto_id === motoId).sort((a, b) => a.ordre - b.ordre);
     },
 
-    async ajouterMedias(medias, lotId) {
+    async ajouterMedias(medias, lotId, options) {
       const base = await lire();
       const crees: Media[] = [];
       for (const m of medias) {
         const dejaPris = base.medias.some((x) => x.moto_id === m.moto_id && x.ordre === m.ordre);
+        if (dejaPris && options?.siOrdrePris === "ignorer") continue;
         const ordre = dejaPris
           ? Math.max(0, ...base.medias.filter((x) => x.moto_id === m.moto_id).map((x) => x.ordre)) + 1
           : m.ordre;

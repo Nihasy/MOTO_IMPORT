@@ -51,42 +51,62 @@ export async function POST(req: NextRequest) {
 
   const reussis: string[] = [];
   const echoues: { cloudinary_id: string; motif: string }[] = [];
+  // Photos dont la place était déjà occupée : ni réussite ni échec. Leur
+  // fichier Cloudinary n'est plus référencé, `scripts/menage-cloudinary.mjs`
+  // le reprendra.
+  const deja_presents: string[] = [];
   const slugs = new Set<string>();
 
-  for (const m of medias) {
+  // Une requête par moto et non par photo : photo par photo, 131 photos
+  // frôlaient les 60 s de `maxDuration`, et une fonction coupée en route
+  // laissait un lot à moitié écrit, affiché « 0 réussi ».
+  const parMoto = new Map<string, typeof medias>();
+  for (const m of medias) parMoto.set(m.moto_id, [...(parMoto.get(m.moto_id) ?? []), m]);
+
+  for (const [motoId, siens] of parMoto) {
+    const moto = await pilote.motoParId(motoId).catch(() => null);
+    if (!moto) {
+      for (const m of siens) echoues.push({ cloudinary_id: m.cloudinary_id, motif: "Moto introuvable pour ce média" });
+      continue;
+    }
+    const lignes = siens.map(
+      (m) =>
+        ({
+          moto_id: m.moto_id,
+          type: m.type,
+          origine: m.origine,
+          vue: m.vue,
+          cloudinary_id: m.cloudinary_id,
+          largeur: m.largeur,
+          hauteur: m.hauteur,
+          blurhash: m.blurhash ?? null,
+          ordre: m.ordre,
+          legende: m.legende ?? null,
+          alt: m.alt,
+          date_prise: m.date_prise ?? null,
+        }) as Omit<Media, "id" | "created_at">
+    );
+    // Au-delà de 900 : fichiers assignés à la main, sans place à eux, qui
+    // doivent s'ajouter à la suite. En deçà : la place vient du nom du fichier.
+    const nommees = lignes.filter((l) => l.ordre < 900);
+    const manuelles = lignes.filter((l) => l.ordre >= 900);
     try {
-      const moto = await pilote.motoParId(m.moto_id);
-      if (!moto) throw new Error("Moto introuvable pour ce média");
-      await pilote.ajouterMedias(
-        [
-          {
-            moto_id: m.moto_id,
-            type: m.type,
-            origine: m.origine,
-            vue: m.vue,
-            cloudinary_id: m.cloudinary_id,
-            largeur: m.largeur,
-            hauteur: m.hauteur,
-            blurhash: m.blurhash ?? null,
-            ordre: m.ordre,
-            legende: m.legende ?? null,
-            alt: m.alt,
-            date_prise: m.date_prise ?? null,
-          } as Omit<Media, "id" | "created_at">,
-        ],
-        lot.id
-      );
-      reussis.push(m.cloudinary_id);
-      slugs.add(moto.slug);
+      const inserees = [
+        ...(nommees.length ? await pilote.ajouterMedias(nommees, lot.id, { siOrdrePris: "ignorer" }) : []),
+        ...(manuelles.length ? await pilote.ajouterMedias(manuelles, lot.id) : []),
+      ];
+      const ids = new Set(inserees.map((x) => x.cloudinary_id));
+      for (const l of lignes) (ids.has(l.cloudinary_id) ? reussis : deja_presents).push(l.cloudinary_id);
+      if (ids.size) slugs.add(moto.slug);
     } catch (e) {
-      echoues.push({ cloudinary_id: m.cloudinary_id, motif: (e as Error).message });
+      for (const l of lignes) echoues.push({ cloudinary_id: l.cloudinary_id, motif: (e as Error).message });
     }
   }
 
   const lotFinal = await pilote.majLot(lot.id, {
     reussis: reussis.length,
     echoues: echoues.length,
-    rapport: { reussis, echoues },
+    rapport: { reussis, echoues, deja_presents },
   });
   for (const slug of slugs) revalidatePath(`/motos/${slug}`);
   revalidatePath("/motos");
@@ -97,6 +117,7 @@ export async function POST(req: NextRequest) {
     total: medias.length,
     reussis: reussis.length,
     echoues: echoues.length,
+    deja_presents: deja_presents.length,
     details: echoues,
     lot: lotFinal,
   });
