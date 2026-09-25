@@ -114,7 +114,7 @@ export function urlMedia(
 export function filigraneIncruste(
   cloudinaryId: string,
   usage: Usage = "carte",
-  opts: { origine?: Origine } = {}
+  _opts: { origine?: Origine } = {}
 ): boolean {
   return transformable(cloudinaryId) && marquable(usage);
 }

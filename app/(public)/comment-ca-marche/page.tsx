@@ -48,17 +48,17 @@ export default async function Page() {
         </ol>
 
         <section className="carte mt-6 border-gold/40 p-4">
-          <h2 className="text-[17px] font-semibold">« Je paie d'avance quelque chose que je ne vois pas »</h2>
+          <h2 className="text-[17px] font-semibold">« Je paie d&apos;avance quelque chose que je ne vois pas »</h2>
           <p className="mt-2 text-corps text-chrome">
-            C'est la question que tout le monde se pose, et elle est légitime. Trois réponses
-            concrètes : l'acompte se verse au local, en personne, contre un bon de commande signé
-            qui engage les deux parties ; il représente {FOURCHETTE_ACOMPTE_TEXTE} du prix selon la moto, pas la totalité ; et le solde n'est dû
-            qu'au retrait, une fois la moto sur place, devant vous.
+            C&apos;est la question que tout le monde se pose, et elle est légitime. Trois réponses
+            concrètes : l&apos;acompte se verse au local, en personne, contre un bon de commande signé
+            qui engage les deux parties ; il représente {FOURCHETTE_ACOMPTE_TEXTE} du prix selon la moto, pas la totalité ; et le solde n&apos;est dû
+            qu&apos;au retrait, une fois la moto sur place, devant vous.
           </p>
           <p className="mt-2 text-corps text-chrome">
-            En cas de désistement de votre part après signature, l'acompte reste acquis : il a déjà
-            servi à l'achat du véhicule en Chine. C'est écrit dans les CGV, et nous préférons le
-            dire avant plutôt qu'après.
+            En cas de désistement de votre part après signature, l&apos;acompte reste acquis : il a déjà
+            servi à l&apos;achat du véhicule en Chine. C&apos;est écrit dans les CGV, et nous préférons le
+            dire avant plutôt qu&apos;après.
           </p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <Link href="/faq" className="btn-fantome flex-1">Lire la FAQ</Link>

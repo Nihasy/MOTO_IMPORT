@@ -10,6 +10,7 @@ sous `/admin`.
 npm run recette        # LE garde-fou : e2e + sécurité + charge. Zéro échec attendu.
 npm test               # vitest, ~204 tests
 npx tsc --noEmit       # typecheck
+npm run lint           # ESLint (règles Next) : zéro problème attendu, `next build` le relance
 npm run build          # build de production (prégénère les fiches publiées)
 npm run filigrane      # refabrique public/filigrane.png
 node scripts/lire-refs.mjs   # dernière référence MI-xxx réellement en base

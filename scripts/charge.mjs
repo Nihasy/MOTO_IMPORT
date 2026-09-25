@@ -186,7 +186,7 @@ verifier(
 );
 verifier(
   "chaque demande enregistree est distincte",
-  envois.filter((s) => s === 201).every((_, i) => true) && noms.size >= Math.min(crees, 1),
+  noms.size >= Math.min(crees, 1),
   `${noms.size} noms distincts`
 );
 
