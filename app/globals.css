@@ -23,6 +23,19 @@
     outline-offset: 2px;
   }
 
+  /* Tailwind 3.4 remet les boutons à zéro dans une règle qui contient
+     `:where()`. Un navigateur antérieur à Chrome 88 — le navigateur intégré
+     de Facebook Lite sur bien des téléphones de nos clients — rejette la règle
+     entière, et chaque bouton sans fond explicite reprend le gris clair
+     d'Android : « Neuf », « Occasion » et « Enregistrer » devenaient illisibles.
+     Même remise à zéro, sans `:where()`, et dans la couche de base pour que
+     les classes de couleur l'emportent toujours. */
+  button {
+    -webkit-appearance: button;
+    background-color: transparent;
+    background-image: none;
+  }
+
   /* Fiches à imprimer (stock fournisseur) : le fond sombre du site coûterait
      une cartouche par page et rendrait les cases à cocher illisibles. */
   @media print {
@@ -212,5 +225,49 @@
   .animate-soubresaut,
   .squelette {
     animation: none;
+  }
+}
+
+/* ── Navigateurs anciens ──────────────────────────────────────────────────
+   Le navigateur intégré de Facebook Lite tourne sur des moteurs Chrome
+   antérieurs à la version 88. C'est par lui qu'arrive une bonne part des
+   clients, qui cliquent sur une publication. Ces replis ne s'activent que là
+   où la propriété manque : un navigateur récent ne les lit jamais. */
+
+/* Sans `aspect-ratio`, un cadre 4:3 dont la photo est positionnée en absolu
+   (`next/image` en `fill`) retombe à 0 px de haut : la photo disparaît et le
+   badge de statut se pose sur la ligne suivante. Un pseudo-élément dont le
+   `padding-top` vaut 75 % de la largeur redonne la hauteur, que le cadre soit
+   un bloc ou une piste de défilement en flex. */
+@supports not (aspect-ratio: 4 / 3) {
+  .aspect-\[4\/3\]::before {
+    content: "";
+    float: left;
+    padding-top: 75%;
+  }
+  .aspect-\[4\/3\]::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+  /* Les vignettes de la fiche fixent leur hauteur (h-14) et tiennent leur
+     largeur du ratio : c'est la largeur qu'il faut donner. */
+  .aspect-\[4\/3\].h-14 {
+    width: 4.6667rem;
+  }
+  .aspect-\[4\/3\].h-14::before,
+  .aspect-\[4\/3\].h-14::after {
+    content: none;
+  }
+}
+
+/* `inset: 0` date de Chrome 87. Sans lui, le panneau des filtres, le plein
+   écran photo et le voile de chargement perdent leur position. */
+@supports not (inset: 0) {
+  .inset-0 {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
   }
 }
