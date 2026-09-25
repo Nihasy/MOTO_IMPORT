@@ -111,3 +111,14 @@ suite du maximum **réel en base** (`node scripts/lire-refs.mjs`), jamais d'apr�
 le CSV précédent — une référence existante déclenche une mise à jour silencieuse
 au lieu d'une création. Tout naît en `brouillon` ; la publication est un geste
 manuel.
+
+Les photos passent par le back-office (Import → Photos), jamais par un script :
+le navigateur compresse, calcule le blurhash et signe l'envoi. Un fichier nommé
+`MI-058_03_34ad` désigne une **place** sur la fiche. S'il est renvoyé, le
+serveur l'ignore au lieu de le ranger à la suite (`siOrdrePris: "ignorer"`) :
+c'est ce décalage qui avait doublé huit fiches publiées le 25/09/2026. Après
+chaque lot, `node scripts/menage-cloudinary.mjs` doit annoncer 0 orphelin.
+
+Le mode automatique de Claude Code refuse les suppressions en production
+(Supabase, Cloudinary), même demandées explicitement. Préparer la commande, la
+simuler, puis laisser l'utilisateur la lancer avec `! commande`.
