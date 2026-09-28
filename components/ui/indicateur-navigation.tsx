@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { VoileChargement } from "./chargement-moto";
@@ -26,6 +26,16 @@ import {
  * Elle ne se referme qu'une fois la page arrivée.
  */
 
+/**
+ * Chemin et paramètres sous une forme comparable : `location.search` garde
+ * les virgules telles quelles, `URLSearchParams` les encode.
+ */
+const adresse = (chemin: string, recherche: string) => {
+  const p = new URLSearchParams(recherche);
+  p.sort();
+  return `${chemin}?${p.toString()}`;
+};
+
 /** Attente à partir de laquelle la moto rejoint la barre. */
 const SEUIL_VOILE = 450;
 
@@ -42,9 +52,14 @@ export function IndicateurNavigation() {
   const [etat, setEtat] = useState<"repos" | "encours" | "fin">("repos");
   const [voile, setVoile] = useState(false);
 
+  /* Adresse de la page effectivement affichée, pour savoir au retour arrière
+     si le routeur l'a déjà servie. */
+  const affichee = useRef<string | null>(null);
+
   /* La page demandée est arrivée : chemin ou paramètres d'URL ont changé.
      C'est le seul signal fiable de fin — le routeur ne prévient pas. */
   useEffect(() => {
+    affichee.current = adresse(chemin, parametres.toString());
     terminerNavigation();
   }, [chemin, parametres]);
 
@@ -86,7 +101,14 @@ export function IndicateurNavigation() {
       demarrerNavigation();
     };
 
-    const surHistorique = () => demarrerNavigation();
+    // React 19 rend un retour arrière de façon synchrone : la page précédente
+    // peut être déjà peinte, et son signal d'arrivée déjà passé, quand cet
+    // écouteur s'exécute. Lever le voile à ce moment le laissait en place
+    // jusqu'à l'abandon, dix secondes plus tard, sur chaque retour arrière.
+    const surHistorique = () => {
+      if (affichee.current === adresse(window.location.pathname, window.location.search)) return;
+      demarrerNavigation();
+    };
 
     // En phase de capture : un `stopPropagation` posé par un composant ne doit
     // pas nous priver du signal.

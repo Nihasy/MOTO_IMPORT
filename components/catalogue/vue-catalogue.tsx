@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { demarrerNavigation } from "@/components/ui/navigation-en-cours";
 import clsx from "clsx";
@@ -19,6 +19,15 @@ import { FeuilleFiltres, type EtatFiltres } from "./feuille-filtres";
 import { type MotoFiltrable, type Ordre } from "@/lib/db/filtres";
 import { SelecteurTri } from "./selecteur-tri";
 import { CARTES_PAR_TRANCHE } from "@/lib/catalogue";
+
+/**
+ * Liste chargee et position, gardees le temps d'aller voir une fiche. Au
+ * retour, la page ne rapporte que la premiere tranche : sans ce memo,
+ * l'acheteur qui comparait la 40e moto se retrouvait vers la 20e.
+ */
+const CLE_RETOUR = "mi_catalogue_retour";
+/** Au-dela, prix et statuts ont pu changer : mieux vaut repartir du haut. */
+const RETOUR_VALIDE_MS = 30 * 60_000;
 
 /** Étape 1 : l'acheteur tranche d'abord entre neuf et occasion, ou refuse de trancher. */
 const ETATS_CHOIX = [
@@ -66,6 +75,46 @@ export function VueCatalogue({
   const [echec, setEchec] = useState(false);
   const enVol = useRef(false);
   const sentinelle = useRef<HTMLDivElement>(null);
+  const positionRetour = useRef<number | null>(null);
+
+  // Retour d'une fiche : les cartes deja chargees reviennent avant que l'ecran
+  // se peigne, puis la position suit une fois la liste a sa hauteur.
+  useLayoutEffect(() => {
+    let memo: { cle: string; motos: MotoAvecMedias[]; y: number; t: number } | null = null;
+    try {
+      memo = JSON.parse(sessionStorage.getItem(CLE_RETOUR) ?? "null");
+      sessionStorage.removeItem(CLE_RETOUR);
+    } catch {
+      return;
+    }
+    if (!memo || memo.cle !== cleListe || Date.now() - memo.t > RETOUR_VALIDE_MS) return;
+    positionRetour.current = memo.y;
+    setSuite({ cle: memo.cle, motos: memo.motos });
+    // Montage seulement : le memo ne vaut que pour l'arrivee sur la page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useLayoutEffect(() => {
+    if (positionRetour.current === null) return;
+    window.scrollTo(0, positionRetour.current);
+    positionRetour.current = null;
+  }, [suite]);
+
+  const memoriserPosition = (e: MouseEvent) => {
+    if (!(e.target as HTMLElement).closest('a[href^="/motos/"]')) return;
+    try {
+      sessionStorage.setItem(
+        CLE_RETOUR,
+        JSON.stringify({
+          cle: cleListe,
+          motos: suite.cle === cleListe ? suite.motos : [],
+          y: window.scrollY,
+          t: Date.now(),
+        })
+      );
+    } catch {
+      // Stockage plein ou refuse (navigation privee) : le retour repartira du haut.
+    }
+  };
 
   const affichees = useMemo(() => {
     const ajoutees = suite.cle === cleListe ? suite.motos : [];
@@ -386,7 +435,7 @@ export function VueCatalogue({
 
         {affichees.length ? (
           <>
-            <div className="grille-annonces">
+            <div className="grille-annonces" onClickCapture={memoriserPosition}>
               {affichees.map((m, i) => (
                 // Trois cartes couvrent le premier écran, trois colonnes comprises.
                 <CarteMoto key={m.id} moto={m} prioritaire={i < 3} />
