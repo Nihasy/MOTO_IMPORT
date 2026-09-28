@@ -14,7 +14,14 @@ import { GalerieCarte } from "./galerie-carte";
 import { useEnregistrees } from "./enregistrees";
 import { enregistrerDemande, pister } from "@/lib/analytics";
 
-export function CarteMoto({ moto }: { moto: MotoAvecMedias }) {
+export function CarteMoto({
+  moto,
+  prioritaire = false,
+}: {
+  moto: MotoAvecMedias;
+  /** Carte visible dès l'arrivée : sa première photo est préchargée. */
+  prioritaire?: boolean;
+}) {
   const whatsapp = useWhatsapp();
   const { contient, basculer, pret } = useEnregistrees();
   const enregistree = pret && contient(moto.id);
@@ -47,6 +54,7 @@ export function CarteMoto({ moto }: { moto: MotoAvecMedias }) {
               medias={moto.medias}
               total={moto.nb_medias ?? moto.medias.length}
               alt={`${moto.marque} ${moto.modele} ${moto.annee}`}
+              prioritaire={prioritaire}
             />
           </Link>
         </div>

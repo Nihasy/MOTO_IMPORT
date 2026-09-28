@@ -21,11 +21,13 @@ export function GalerieCarte({
   alt,
   vues = 5,
   total,
+  prioritaire = false,
 }: {
   medias: Media[];
   alt: string;
   vues?: number;
   total?: number;
+  prioritaire?: boolean;
 }) {
   const piste = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
@@ -80,9 +82,16 @@ export function GalerieCarte({
               fill
               sizes="(max-width: 672px) 100vw, 672px"
               className="object-cover"
-              priority={i === 0}
-              placeholder={m.blurhash ? "blur" : "empty"}
-              blurDataURL={m.blurhash ?? undefined}
+              // Seules les premières cartes de l'écran passent en priorité. La
+              // donner à toutes les cartes posait 94 préchargements dans l'en-tête
+              // et forçait le téléphone à télécharger et décoder autant de photos
+              // d'un coup : Safari sur iPhone abandonnait la page du catalogue.
+              priority={prioritaire && i === 0}
+              // Le flou d'attente ne sert qu'à la vue affichée. Chaque aperçu pèse
+              // près d'un kilo-octet et part deux fois (HTML et charge React) : sur
+              // les cinq vues de chaque carte, il faisait la moitié de la page.
+              placeholder={i === 0 && m.blurhash ? "blur" : "empty"}
+              blurDataURL={i === 0 ? (m.blurhash ?? undefined) : undefined}
             />
             {!filigraneIncruste(m.cloudinary_id, "carte", { origine: m.origine }) ? (
               <Filigrane />

@@ -321,8 +321,9 @@ export function VueCatalogue({
 
         {motos.length ? (
           <div className="grille-annonces">
-            {motos.map((m) => (
-              <CarteMoto key={m.id} moto={m} />
+            {motos.map((m, i) => (
+              // Trois cartes couvrent le premier écran, trois colonnes comprises.
+              <CarteMoto key={m.id} moto={m} prioritaire={i < 3} />
             ))}
           </div>
         ) : (
