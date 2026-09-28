@@ -113,6 +113,21 @@ verifier("le résultat vide explique le sourcing sur commande", vide.texte.inclu
 const recherche = await get("/motos?q=yamaha");
 verifier("la recherche textuelle fonctionne", recherche.statut === 200 && recherche.texte.includes("Yamaha"));
 
+// Tranches au défilement : la route doit suivre les filtres et l'ordre de la
+// page, sinon le défilement répète ou saute des motos.
+const tranche = JSON.parse((await get("/api/catalogue?depuis=0")).texte);
+verifier("la route des tranches annonce le même total que la page", tranche.total === nbTotal, `${tranche.total} vs ${nbTotal}`);
+verifier("une tranche ne dépasse pas dix-huit cartes", tranche.motos.length === Math.min(18, nbTotal), `${tranche.motos.length}`);
+const trancheBudget = JSON.parse((await get("/api/catalogue?depuis=0&max=12000000")).texte);
+verifier("la route des tranches applique les filtres de l'URL", trancheBudget.total === nbBudget, `${trancheBudget.total} vs ${nbBudget}`);
+const trancheDecalee = JSON.parse((await get("/api/catalogue?depuis=1")).texte);
+verifier(
+  "la tranche suivante reprend là où la précédente s'arrête",
+  trancheDecalee.motos[0]?.id === tranche.motos[1]?.id
+);
+verifier("un index de départ bricolé est refusé", (await get("/api/catalogue?depuis=-3")).statut === 400);
+verifier("la route des tranches ne sert que des fiches publiques", tranche.motos.every((m) => m.statut !== "brouillon"));
+
 // ── 3. Fiche produit ──────────────────────────────────────────────────────
 titre("3. Fiche produit (16.1)");
 const slug = catalogue.texte.match(/href="\/motos\/([a-z0-9-]+)"/)?.[1];

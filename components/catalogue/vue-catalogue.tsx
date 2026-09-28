@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { demarrerNavigation } from "@/components/ui/navigation-en-cours";
 import clsx from "clsx";
@@ -18,6 +18,7 @@ import { ICONE_CATEGORIE, IconeToutes } from "./icones-types";
 import { FeuilleFiltres, type EtatFiltres } from "./feuille-filtres";
 import { type MotoFiltrable, type Ordre } from "@/lib/db/filtres";
 import { SelecteurTri } from "./selecteur-tri";
+import { CARTES_PAR_TRANCHE } from "@/lib/catalogue";
 
 /** Étape 1 : l'acheteur tranche d'abord entre neuf et occasion, ou refuse de trancher. */
 const ETATS_CHOIX = [
@@ -34,11 +35,15 @@ const TYPES = [
 
 export function VueCatalogue({
   motos,
+  total,
   marques,
   annees,
   catalogue,
 }: {
+  /** Premiere tranche du catalogue filtre ; la suite arrive au defilement. */
   motos: MotoAvecMedias[];
+  /** Nombre de motos correspondant aux filtres, toutes tranches confondues. */
+  total: number;
   marques: { nom: string; effectif: number }[];
   /** Annees presentes au catalogue, de la plus recente a la plus ancienne. */
   annees: number[];
@@ -51,6 +56,66 @@ export function VueCatalogue({
   const [feuilleOuverte, setFeuilleOuverte] = useState(false);
   const chromeVisible = useChromeVisible();
   const [rechercheOuverte, setRechercheOuverte] = useState(false);
+
+  // Tranches ajoutees au defilement, rattachees aux filtres qui les ont
+  // demandees : changer de filtre repart de la premiere tranche que la page
+  // apporte, sans laisser trainer les cartes de la recherche precedente.
+  const cleListe = params.toString();
+  const [suite, setSuite] = useState<{ cle: string; motos: MotoAvecMedias[] }>({ cle: cleListe, motos: [] });
+  const [chargement, setChargement] = useState(false);
+  const [echec, setEchec] = useState(false);
+  const enVol = useRef(false);
+  const sentinelle = useRef<HTMLDivElement>(null);
+
+  const affichees = useMemo(() => {
+    const ajoutees = suite.cle === cleListe ? suite.motos : [];
+    const vues = new Set(motos.map((m) => m.id));
+    // Une moto publiee entre deux tranches decale la liste d'un cran : sans
+    // ce tri, la derniere carte d'une tranche reapparaitrait dans la suivante.
+    return [...motos, ...ajoutees.filter((m) => !vues.has(m.id))];
+  }, [motos, suite, cleListe]);
+  const reste = total - affichees.length;
+
+  const chargerSuite = useCallback(async () => {
+    if (enVol.current || reste <= 0) return;
+    enVol.current = true;
+    setChargement(true);
+    setEchec(false);
+    const q = new URLSearchParams(cleListe);
+    q.set("depuis", String(affichees.length));
+    try {
+      const r = await fetch(`/api/catalogue?${q}`);
+      if (!r.ok) throw new Error(String(r.status));
+      const { motos: tranche } = (await r.json()) as { motos: MotoAvecMedias[] };
+      setSuite((s) => {
+        const deja = s.cle === cleListe ? s.motos : [];
+        const connues = new Set([...motos, ...deja].map((m) => m.id));
+        return { cle: cleListe, motos: [...deja, ...tranche.filter((m) => !connues.has(m.id))] };
+      });
+    } catch {
+      // Reseau mobile coupe : le bouton reste, un toucher relance la demande.
+      setEchec(true);
+    } finally {
+      enVol.current = false;
+      setChargement(false);
+    }
+  }, [reste, cleListe, affichees.length, motos]);
+
+  // La tranche suivante est demandee bien avant le bas de la liste : l'acheteur
+  // qui fait defiler ne doit pas buter sur une attente. L'observateur est
+  // recree a chaque tranche, pour relancer si la sentinelle est encore visible.
+  useEffect(() => {
+    const el = sentinelle.current;
+    if (!el || reste <= 0 || echec || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      (entrees) => {
+        if (entrees.some((e) => e.isIntersecting)) void chargerSuite();
+      },
+      { rootMargin: "0px 0px 1200px 0px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [chargerSuite, reste, echec]);
 
   const filtres: EtatFiltres = useMemo(
     () => ({
@@ -274,7 +339,7 @@ export function VueCatalogue({
               correspond bien au vehicule qu'il annonce. */}
           <p className="text-meta text-chrome">
             <strong className="font-semibold text-text">
-              {motos.length} moto{motos.length > 1 ? "s" : ""}
+              {total} moto{total > 1 ? "s" : ""}
             </strong>
           </p>
 
@@ -319,13 +384,30 @@ export function VueCatalogue({
           </div>
         ) : null}
 
-        {motos.length ? (
-          <div className="grille-annonces">
-            {motos.map((m, i) => (
-              // Trois cartes couvrent le premier écran, trois colonnes comprises.
-              <CarteMoto key={m.id} moto={m} prioritaire={i < 3} />
-            ))}
-          </div>
+        {affichees.length ? (
+          <>
+            <div className="grille-annonces">
+              {affichees.map((m, i) => (
+                // Trois cartes couvrent le premier écran, trois colonnes comprises.
+                <CarteMoto key={m.id} moto={m} prioritaire={i < 3} />
+              ))}
+            </div>
+            {reste > 0 ? (
+              <div ref={sentinelle} className="mt-6 flex flex-col items-center gap-2">
+                {/* Le bouton double le chargement automatique : il reste la voie
+                    quand l'observateur manque ou que le reseau a lache. */}
+                <button
+                  type="button"
+                  onClick={() => void chargerSuite()}
+                  disabled={chargement}
+                  className="btn-fantome"
+                >
+                  {chargement ? "Chargement…" : `Voir les ${Math.min(reste, CARTES_PAR_TRANCHE)} suivantes`}
+                </button>
+                {echec ? <p className="text-meta text-dim">Connexion interrompue. Touchez pour réessayer.</p> : null}
+              </div>
+            ) : null}
+          </>
         ) : (
           <EtatVide
             titre="Aucune moto ne correspond"

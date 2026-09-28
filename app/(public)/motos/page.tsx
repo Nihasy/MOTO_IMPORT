@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { db } from "@/lib/db";
-import { appliquerFiltres, trierCatalogue, TRIS, type Ordre } from "@/lib/db/filtres";
+import { selectionCatalogue, trancheCatalogue } from "@/lib/catalogue";
 import { VueCatalogue } from "@/components/catalogue/vue-catalogue";
 import { Squelette, VoileChargement } from "@/components/ui";
 import { FOURCHETTE_DELAI_TEXTE } from "@/lib/conditions";
 
 export const dynamic = "force-dynamic";
-
-/** Nombre de vues transportees par carte, aligne sur la galerie au balayage. */
-const VUES_PAR_CARTE = 5;
 
 export const metadata: Metadata = {
   title: "Catalogue — motos importées disponibles",
@@ -21,8 +18,6 @@ export const metadata: Metadata = {
 type Params = Promise<Record<string, string | string[] | undefined>>;
 
 const premier = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
-const liste = (v: string | string[] | undefined) =>
-  (premier(v) ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
 export default async function PageCatalogue({ searchParams }: { searchParams: Params }) {
   const sp = await searchParams;
@@ -31,30 +26,11 @@ export default async function PageCatalogue({ searchParams }: { searchParams: Pa
   // le catalogue, le filtrage se fait ensuite en memoire sur le meme jeu.
   const toutes = await db().listerMotosPubliques();
 
-  // Tri demande dans l'URL, ramene aux valeurs connues : un parametre bricole
-  // ne doit pas changer l'ordre de la liste.
-  const triDemande = premier(sp.tri) ?? "date";
-  const tri = triDemande in TRIS ? triDemande : "date";
-  const ordre: Ordre = premier(sp.ordre) === "asc" ? "asc" : "desc";
-
-  const motos = trierCatalogue(
-    appliquerFiltres(toutes, {
-      categorie: liste(sp.cat).length ? liste(sp.cat) : undefined,
-      etat: premier(sp.etat),
-      prixMax: premier(sp.max) ? Number(premier(sp.max)) : undefined,
-      prixMin: premier(sp.min) ? Number(premier(sp.min)) : undefined,
-      marques: liste(sp.marque).length ? liste(sp.marque) : undefined,
-      cylindrees: liste(sp.cc).length ? liste(sp.cc) : undefined,
-      anneeMin: premier(sp.annee_min) ? Number(premier(sp.annee_min)) : undefined,
-      anneeMax: premier(sp.annee_max) ? Number(premier(sp.annee_max)) : undefined,
-      masquerVendues: premier(sp.masquer_vendues) === "1",
-      recherche: premier(sp.q),
-    }),
-    tri,
-    ordre
-    // La galerie de carte n'affiche que cinq vues : transporter les douze
-    // alourdit la page sans rien montrer de plus.
-  ).map((m) => ({ ...m, medias: m.medias.slice(0, VUES_PAR_CARTE), nb_medias: m.medias.length }));
+  const lire = (cle: string) => premier(sp[cle]);
+  const selection = selectionCatalogue(toutes, lire);
+  // Seule la premiere tranche part avec la page : la suite est demandee au
+  // defilement, a la route des tranches.
+  const motos = trancheCatalogue(selection, 0);
 
   const compteur = new Map<string, number>();
   for (const m of toutes) compteur.set(m.marque, (compteur.get(m.marque) ?? 0) + 1);
@@ -83,7 +59,7 @@ export default async function PageCatalogue({ searchParams }: { searchParams: Pa
       {/* Titre principal pour les moteurs de recherche et les lecteurs
           d'écran : la page n'en affiche pas, ses filtres tiennent lieu d'en-tête. */}
       <h1 className="sr-only">Catalogue MOTO IMPORT : motos importées, prix rendu Antananarivo</h1>
-      <VueCatalogue motos={motos} marques={marques} annees={annees} catalogue={catalogue} />
+      <VueCatalogue motos={motos} total={selection.length} marques={marques} annees={annees} catalogue={catalogue} />
     </Suspense>
   );
 }
