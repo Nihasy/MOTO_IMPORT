@@ -49,4 +49,7 @@ if (!r.ok) {
 }
 const [apres] = await r.json();
 console.log(`apres : ${apres.nom}  contact=${apres.contact}  ville=${apres.ville_chine}`);
-console.log(`id inchange : ${apres.id} — les 15 fiches restent rattachees.`);
+// Le nombre se recompte : il était écrit en dur, figé sur le premier lot.
+const fiches = await fetch(`${url}/rest/v1/motos?fournisseur_id=eq.${apres.id}&select=id`, { headers: entetes });
+const nb = fiches.ok ? (await fiches.json()).length : "?";
+console.log(`id inchange : ${apres.id} — les ${nb} fiches restent rattachees.`);
