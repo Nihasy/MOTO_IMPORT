@@ -35,6 +35,13 @@ export const MARQUES_CONNUES = [
   "Dayun",
   "Kayo",
   "Segway Powersports",
+  // Chine — tout-terrain (catalogue CROSS_TAO)
+  "Hengjian",
+  "BSE",
+  "XGZ",
+  "Zuumav",
+  "Kews",
+  "AJ1",
   // Taïwan
   "Kymco",
   "SYM",
