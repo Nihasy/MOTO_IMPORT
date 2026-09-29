@@ -45,6 +45,18 @@ describe("filigrane servi par Cloudinary (7.5)", () => {
     expect(filigraneIncruste("motos/mi-047-01", "vignette", { origine: "reelle" })).toBe(false);
   });
 
+  /**
+   * La bande de photos sous la galerie d'une fiche publique servait la
+   * vignette du back-office, nue : 200 px sans marque, sur le site public.
+   */
+  it("marque la miniature de la fiche publique, à la taille de la vignette", async () => {
+    const { urlMedia, LARGEURS } = await charger(env);
+    const url = urlMedia("motos/mi-047-01", "miniature", { origine: "reelle" });
+    expect(url).toContain("w_200");
+    expect(url).toContain("l_moto-import:filigrane");
+    expect(LARGEURS.miniature).toBe(LARGEURS.vignette);
+  });
+
   it("se rabat sur un texte tant que le filigrane n'est pas téléversé", async () => {
     const { urlMedia } = await charger({ ...env, NEXT_PUBLIC_CLOUDINARY_FILIGRANE_ID: "" });
     const url = urlMedia("motos/mi-047-01", "plein", { origine: "reelle" });

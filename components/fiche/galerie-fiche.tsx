@@ -164,7 +164,7 @@ export function GalerieFiche({ medias, alt }: { medias: Media[]; alt: string }) 
             )}
           >
             <Image
-              src={urlMedia(m.cloudinary_id, "vignette", { origine: m.origine })}
+              src={urlMedia(m.cloudinary_id, "miniature", { origine: m.origine })}
               unoptimized={servieParCloudinary(m.cloudinary_id)}
               alt=""
               fill

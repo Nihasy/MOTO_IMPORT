@@ -22,10 +22,16 @@ export const FILIGRANE_LARGEUR = 0.3; // part de la largeur de la photo
 export const FILIGRANE_MARGE = 0.02;
 export const FILIGRANE_OPACITE = 0.82;
 
-export type Usage = "vignette" | "carte" | "galerie" | "plein";
+/**
+ * `vignette` et `miniature` ont la même taille, pas le même public : la
+ * vignette ne sort pas du back-office et reste nue, la miniature est la
+ * bande de photos sous la galerie d'une fiche publique, et porte la marque.
+ */
+export type Usage = "vignette" | "miniature" | "carte" | "galerie" | "plein";
 
 const PRESETS: Record<Usage, string> = {
   vignette: "c_fill,ar_4:3,w_200,f_auto,q_auto",
+  miniature: "c_fill,ar_4:3,w_200,f_auto,q_auto",
   carte: "c_fill,ar_4:3,w_800,f_auto,q_auto:good",
   galerie: "c_fill,ar_4:3,w_1400,f_auto,q_auto:good",
   plein: "c_limit,w_2400,f_auto,q_auto:best",
@@ -129,6 +135,7 @@ export const filigraneALEnvoi = (): boolean => !CLOUD_NAME;
 
 export const LARGEURS: Record<Usage, number> = {
   vignette: 200,
+  miniature: 200,
   carte: 800,
   galerie: 1400,
   plein: 2400,
