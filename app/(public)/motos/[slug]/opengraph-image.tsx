@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { db } from "@/lib/db";
 import { ar } from "@/lib/format";
+import { mentionCarteGrise } from "@/lib/immatriculation";
 import { urlMedia } from "@/lib/cloudinary";
 
 export const alt = "Fiche moto MOTO IMPORT";
@@ -83,7 +84,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
               {vendu ? <span style={{ fontSize: 30, color: "#B8433C", fontWeight: 700 }}>VENDU</span> : null}
             </div>
             <div style={{ display: "flex", fontSize: 27, color: "#B9C2CB", marginTop: 10 }}>
-              Prix final rendu à Antananarivo · Carte grise à votre nom incluse
+              {`Prix final rendu à Antananarivo · ${mentionCarteGrise(moto)}`}
             </div>
           </div>
         </div>

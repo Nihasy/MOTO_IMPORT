@@ -50,7 +50,7 @@ const QUESTIONS = [
   },
   {
     q: "Qui fait la carte grise ?",
-    r: "Nous. La carte grise malgache est établie à votre nom et son coût est déjà compris dans le prix affiché. Vous n'avez aucune démarche administrative à effectuer. La demande est déposée le jour où vous retirez la moto, pas avant : jusque-là le véhicule n'est immatriculé à aucun nom. Vous repartez donc avec les clés et le récépissé de dépôt, qui vous autorise à circuler, et nous vous remettons la carte grise définitive dès que l'administration la délivre.",
+    r: "Nous. La carte grise malgache est établie à votre nom et son coût est déjà compris dans le prix affiché. Vous n'avez aucune démarche administrative à effectuer. La demande est déposée le jour où vous retirez la moto, pas avant : jusque-là le véhicule n'est immatriculé à aucun nom. Vous repartez donc avec les clés et le récépissé de dépôt, qui vous autorise à circuler, et nous vous remettons la carte grise définitive dès que l'administration la délivre. Seule exception : les motos de cross, non homologuées pour la route, sont vendues sans carte grise, et leur fiche l'indique sous le prix.",
     cgv: "Article 7 — Immatriculation",
   },
   {

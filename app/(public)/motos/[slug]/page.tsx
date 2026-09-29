@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { ar } from "@/lib/format";
+import { mentionCarteGrise } from "@/lib/immatriculation";
 import { urlMedia } from "@/lib/cloudinary";
 import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const titre = `${moto.marque} ${moto.modele} ${moto.annee} — ${ar(moto.prix_ttc)} rendu Tana`;
   const description = `${moto.marque} ${moto.modele} ${moto.annee}, ${moto.cylindree} cm³, ${
     moto.etat === "neuf" ? "neuve" : "occasion"
-  }. ${ar(moto.prix_ttc)} rendu à Antananarivo, carte grise à votre nom incluse. Livraison ${moto.delai_min_jours} à ${moto.delai_max_jours} jours. Réf. ${moto.reference}.`;
+  }. ${ar(moto.prix_ttc)} rendu à Antananarivo, ${mentionCarteGrise(moto).toLowerCase()}. Livraison ${moto.delai_min_jours} à ${moto.delai_max_jours} jours. Réf. ${moto.reference}.`;
 
   return {
     title: titre,

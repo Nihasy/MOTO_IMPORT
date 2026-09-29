@@ -4,6 +4,7 @@ import type { MotoAvecMedias, Statut } from "@/lib/types";
 import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { dateFr } from "@/lib/format";
 import { garantieCourte, garantieFiche } from "@/lib/garantie";
+import { immatriculable } from "@/lib/immatriculation";
 import { FOURCHETTE_ACOMPTE_TEXTE, FOURCHETTE_DELAI_TEXTE, RETRAIT_JOURS } from "@/lib/conditions";
 
 export function Reassurance({ moto }: { moto: MotoAvecMedias }) {
@@ -18,7 +19,9 @@ export function Reassurance({ moto }: { moto: MotoAvecMedias }) {
           ? "Véhicule déjà au local d'Antananarivo, remise des clés dès le solde réglé"
           : `${moto.delai_min_jours} à ${moto.delai_max_jours} jours après signature du bon de commande`,
     },
-    { titre: "Carte grise", texte: "Établie à votre nom, incluse dans le prix affiché" },
+    immatriculable(moto)
+      ? { titre: "Carte grise", texte: "Établie à votre nom, incluse dans le prix affiché" }
+      : { titre: "Usage hors route", texte: "Moto de cross non homologuée pour la route, vendue sans carte grise" },
     ...(garantie ? [garantie] : []),
   ];
 

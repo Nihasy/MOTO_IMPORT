@@ -1,6 +1,7 @@
 import { ar, dateFr } from "@/lib/format";
 import type { MotoPublique } from "@/lib/types";
 import { montantAcompte, pourcent } from "@/lib/conditions";
+import { immatriculable, phraseCarteGrise } from "@/lib/immatriculation";
 
 /**
  * Élément signature du design system (8.4) : le prix traité comme un numéro
@@ -32,8 +33,9 @@ export function BlocPrix({ moto }: { moto: MotoPublique }) {
       {surPlace ? (
         <>
           <p className="mt-2 text-corps text-chrome">
-            Prix final, carte grise établie à votre nom, incluse. Véhicule déjà au local
-            d&apos;Antananarivo.
+            Prix final{immatriculable(moto) ? ", carte grise établie à votre nom, incluse" : ""}.
+            Véhicule déjà au local d&apos;Antananarivo.
+            {immatriculable(moto) ? null : ` ${phraseCarteGrise(moto)}`}
           </p>
           <p className="mt-1 text-meta text-dim">
             Aucun délai d&apos;importation · bon de commande signé au local, remise des clés dès le
@@ -43,7 +45,7 @@ export function BlocPrix({ moto }: { moto: MotoPublique }) {
       ) : (
         <>
           <p className="mt-2 text-corps text-chrome">
-            Prix final, rendu à Antananarivo. Carte grise établie à votre nom, incluse.
+            Prix final, rendu à Antananarivo. {phraseCarteGrise(moto)}
           </p>
           <p className="mt-1 text-meta text-dim">
             Prix valable jusqu&apos;au {dateFr(moto.prix_valable_jusqu_au)} · bon de commande signé au

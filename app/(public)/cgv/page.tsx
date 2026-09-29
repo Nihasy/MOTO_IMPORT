@@ -55,7 +55,7 @@ const ARTICLES: [string, string[]][] = [
     "4.4 — Aucune commande n'est engagée par un échange écrit, téléphonique ou électronique préalable.",
   ]],
   ["Article 5 — Prix", [
-    "Les prix affichés s'entendent toutes taxes comprises, rendus à Antananarivo, carte grise établie au nom de l'acheteur incluse.",
+    "Les prix affichés s'entendent toutes taxes comprises, rendus à Antananarivo, carte grise établie au nom de l'acheteur incluse, sous la réserve de l'article 7.4 pour les motos de cross.",
     "Chaque prix est valable jusqu'à la date indiquée sur la fiche du véhicule.",
     "5.3 — Les prix affichés au catalogue peuvent être modifiés à tout moment avant la signature du bon de commande. Seul le prix inscrit au bon de commande engage les parties.",
     "5.4 — Après signature, le prix est ferme. Une révision ne peut intervenir qu'en cas de variation des droits et taxes d'importation excédant huit pour cent (8 %), auquel cas l'acheteur peut renoncer à la commande et obtenir le remboursement intégral de son acompte.",
@@ -69,6 +69,7 @@ const ARTICLES: [string, string[]][] = [
     "7.1 — MOTO IMPORT prend en charge l'ensemble des démarches d'immatriculation. La carte grise est établie au nom de l'acheteur et son coût est compris dans le prix affiché.",
     "7.2 — La demande d'immatriculation n'est déposée qu'au retrait du véhicule, après règlement intégral du solde. Jusqu'à ce jour, le véhicule n'est immatriculé à aucun nom et demeure la propriété de MOTO IMPORT.",
     "7.3 — L'acheteur reçoit au retrait le récépissé de dépôt de la demande, qui l'autorise à circuler. La carte grise définitive lui est remise dès sa délivrance par l'administration, sans frais supplémentaires.",
+    "7.4 — Les motos de cross, signalées comme telles sur leur fiche, ne sont pas homologuées pour la circulation sur la voie publique. Elles sont vendues sans immatriculation ni carte grise, pour un usage sur terrain privé ou sur circuit. Les articles 7.1 à 7.3 ne leur sont pas applicables, et le solde est réglé contre la seule remise des clés.",
   ]],
   ["Article 8 — Garantie", [
     "8.1 — Les véhicules neufs bénéficient de la garantie accordée par la marque et par le concessionnaire d'origine. Sa durée et les organes couverts varient selon le modèle ; ils sont précisés sur la fiche du véhicule et repris au bon de commande.",

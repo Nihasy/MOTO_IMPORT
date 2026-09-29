@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { ar, dateFr } from "@/lib/format";
+import { phraseCarteGrise } from "@/lib/immatriculation";
 import { messageDevis } from "@/lib/whatsapp";
 import { FormulaireMoto } from "@/components/admin/formulaire-moto";
 import { GrillePhotos } from "@/components/admin/grille-photos";
@@ -141,7 +142,7 @@ export default async function EditionMoto({ params, searchParams }: Props) {
               {moto.prix_ttc > 0 ? ar(moto.prix_ttc) : "Prix à fixer"}
             </p>
             <p className="mt-1.5 text-corps text-chrome">
-              Prix final, rendu à Antananarivo. Carte grise établie à votre nom, incluse.
+              Prix final, rendu à Antananarivo. {phraseCarteGrise(moto)}
             </p>
             <p className="mt-1 text-meta text-dim">
               Valable jusqu&apos;au {dateFr(moto.prix_valable_jusqu_au)} · livraison{" "}

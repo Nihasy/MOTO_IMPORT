@@ -5,6 +5,7 @@ import clsx from "clsx";
 import type { MotoAvecMedias } from "@/lib/types";
 import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { ar } from "@/lib/format";
+import { immatriculable } from "@/lib/immatriculation";
 import { lienDevis } from "@/lib/whatsapp";
 import { useWhatsapp } from "@/components/ui/contexte-contact";
 import { BadgeStatut } from "@/components/ui";
@@ -117,7 +118,7 @@ export function CarteMoto({
       </Link>
 
       <p className="border-b border-line px-4 py-2 text-center text-meta text-dim">
-        Prix final rendu Antananarivo · Carte grise à votre nom
+        Prix final rendu Antananarivo · {immatriculable(moto) ? "Carte grise à votre nom" : "Hors route, sans carte grise"}
       </p>
 
       <div className="grid grid-cols-2">
