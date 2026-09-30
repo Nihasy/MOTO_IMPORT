@@ -1,6 +1,7 @@
 import { ligneCsvSchema, motoSchema, type MotoInput } from "./schemas";
 import { parserCsv } from "./csv";
 import { calculerPrix, type Reglages } from "./tarification";
+import type { Categorie } from "./types";
 
 export type ErreurLigne = { ligne: number; colonne: string; message: string; valeur?: string };
 
@@ -49,9 +50,9 @@ function miseEnVente(v: string | undefined): "commande" | "local" | null | undef
 }
 
 /** Champs de prix calculés depuis le prix d'achat ; tout à vide sans lui. */
-function prixDepuisYuan(yuan: number | null, r: Reglages) {
+function prixDepuisYuan(yuan: number | null, r: Reglages, categorie: Categorie) {
   if (!yuan || yuan <= 0) return { prix_ttc: 0, prix_yuan: null, taux_yuan: null, acompte_pct: null };
-  const c = calculerPrix(yuan, r);
+  const c = calculerPrix(yuan, r, categorie);
   return { prix_ttc: c.prix_ar, prix_yuan: yuan, taux_yuan: r.taux_yuan, acompte_pct: c.acompte_pct };
 }
 
@@ -142,7 +143,7 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
       refroidissement: (texteOuNull(v.refroidissement) as "air" | "liquide" | null) ?? null,
       transmission: texteOuNull(v.transmission),
       abs: bool(v.abs),
-      ...prixDepuisYuan(nombreOuNull(v.prix_yuan), reglages),
+      ...prixDepuisYuan(nombreOuNull(v.prix_yuan), reglages, v.categorie as Categorie),
       prix_valable_jusqu_au: v.prix_valable_jusqu_au,
       garantie_mois: nombreOuNull(v.garantie_mois) ?? 0,
       garantie_texte: texteOuNull(v.garantie_texte),

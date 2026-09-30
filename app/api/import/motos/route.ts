@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
       if (prixExistant && (!prixDynamique(existante.statut) || (!prix.prix_yuan && !existante.prix_yuan))) {
         prix = prixExistant;
       } else if (!prix.prix_yuan && existante?.prix_yuan) {
-        prix = champsPrix(existante.prix_yuan, reglages);
+        prix = champsPrix(existante.prix_yuan, reglages, moto.categorie);
       }
 
       // Statut : une fiche créée par import naît en brouillon — la mise en

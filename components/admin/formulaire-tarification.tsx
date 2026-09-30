@@ -4,7 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import clsx from "clsx";
-import type { Statut } from "@/lib/types";
+import type { Categorie, Statut } from "@/lib/types";
 import { LIBELLE_STATUT } from "@/lib/types";
 import { ar } from "@/lib/format";
 import { calculerPrix, erreurReglages, type Reglages } from "@/lib/tarification";
@@ -17,6 +17,7 @@ export type MotoTarifee = {
   reference: string;
   nom: string;
   statut: Statut;
+  categorie: Categorie;
   prix_yuan: number;
   prix_ttc: number;
 };
@@ -49,6 +50,7 @@ export function FormulaireTarification({
   const [etat, action] = useActionState<EtatTarification, FormData>(enregistrerTarification, null);
   const [r, setR] = useState<Reglages>(reglages);
   const [simulation, setSimulation] = useState<number | null>(15_000);
+  const [simCross, setSimCross] = useState(false);
 
   const maj = (cle: keyof Reglages) => (v: number | null) => setR((x) => ({ ...x, [cle]: v ?? NaN }));
   const invalide = erreurReglages(r);
@@ -58,7 +60,7 @@ export function FormulaireTarification({
       invalide
         ? []
         : motos.map((m) => {
-            const nouveau = calculerPrix(m.prix_yuan, r).prix_ar;
+            const nouveau = calculerPrix(m.prix_yuan, r, m.categorie).prix_ar;
             return { ...m, nouveau, ecart: nouveau - m.prix_ttc };
           }),
     [motos, r, invalide]
@@ -66,7 +68,7 @@ export function FormulaireTarification({
   const changees = apercu.filter((m) => m.ecart !== 0);
   const ecartTaux = Math.abs(r.taux_yuan - reglages.taux_yuan) / reglages.taux_yuan;
   const aConfirmer = Number.isFinite(ecartTaux) && ecartTaux > ECART_A_CONFIRMER;
-  const sim = simulation && !invalide ? calculerPrix(simulation, r) : null;
+  const sim = simulation && !invalide ? calculerPrix(simulation, r, simCross ? "motocross" : undefined) : null;
 
   return (
     <form action={action} className="grid max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -92,6 +94,13 @@ export function FormulaireTarification({
           </Champ>
           <Champ pour="fret_ar" label="Fret, dédouanement et papiers" aide="Fixe par moto, payé à l'arrivée à Tana">
             <ChampMontant id="fret_ar" name="fret_ar" suffixe="Ar" defaultValue={reglages.fret_ar} onValeur={maj("fret_ar")} required />
+          </Champ>
+          <Champ
+            pour="fret_cross_ar"
+            label="Fret des motos de cross"
+            aide="Remplace le fret ci-dessus pour la catégorie « motocross », moins chère à expédier. Saisissez le vrai prix fournisseur en yuan : c'est ce fret qui s'ajuste."
+          >
+            <ChampMontant id="fret_cross_ar" name="fret_cross_ar" suffixe="Ar" defaultValue={reglages.fret_cross_ar} onValeur={maj("fret_cross_ar")} required />
           </Champ>
         </fieldset>
 
@@ -151,11 +160,15 @@ export function FormulaireTarification({
           <div className="mt-3">
             <ChampMontant id="simulation" name="_simulation" suffixe="¥" defaultValue={simulation} onValeur={setSimulation} placeholder="15 000" />
           </div>
+          <label className="mt-2 flex items-center gap-2 text-meta text-chrome">
+            <input type="checkbox" checked={simCross} onChange={(e) => setSimCross(e.target.checked)} className="h-4 w-4 accent-gold" />
+            Moto de cross (fret cross)
+          </label>
           {sim ? (
             <dl className="mt-3 divide-y divide-line overflow-hidden rounded-card border border-line text-meta tabular-nums">
               {[
                 ["Achat", ar(sim.achat_ar)],
-                ["Fret et papiers", ar(r.fret_ar)],
+                [simCross ? "Fret et papiers (cross)" : "Fret et papiers", ar(sim.fret_ar)],
                 ["Coût de revient", ar(sim.cout_ar)],
                 ["Bénéfice", ar(sim.benefice_ar)],
                 ["Prix de vente", ar(sim.prix_ar)],

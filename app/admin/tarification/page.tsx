@@ -43,6 +43,7 @@ export default async function PageTarification() {
       reference: m.reference,
       nom: `${m.marque} ${m.modele} ${m.annee}`,
       statut: m.statut,
+      categorie: m.categorie,
       prix_yuan: m.prix_yuan!,
       prix_ttc: m.prix_ttc,
     }));

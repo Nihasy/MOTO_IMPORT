@@ -1,5 +1,5 @@
 import { ACOMPTE_MAX, ACOMPTE_MIN } from "@/lib/conditions";
-import type { Statut } from "@/lib/types";
+import type { Categorie, Statut } from "@/lib/types";
 
 /**
  * Tarification dynamique — INFORMATION INTERNE.
@@ -9,7 +9,7 @@ import type { Statut } from "@/lib/types";
  * page publique hormis le prix de vente et le pourcentage d'acompte.
  *
  *   achat (Ar)      = prix en ¥ × taux
- *   coût de revient = achat + fret et papiers
+ *   coût de revient = achat + fret et papiers (fret cross pour un motocross)
  *   bénéfice        = fixe + part × achat
  *   prix de vente   = coût + bénéfice, arrondi au palier supérieur
  *   acompte         = achat × (1 + sécurité change) ÷ prix, arrondi au 5 %
@@ -29,6 +29,16 @@ export type Reglages = {
   taux_yuan: number;
   /** Fret, dédouanement et papiers, fixe par moto (Ar). */
   fret_ar: number;
+  /**
+   * Fret d'une moto de cross (Ar). Moins volumineuse, elle coûte bien moins
+   * cher à expédier : lui appliquer le fret général la surfacturait, et
+   * l'exploitant compensait en minorant le prix d'achat saisi — ce qui
+   * faussait l'acompte, calculé sur l'achat, au point de ne plus couvrir le
+   * paiement au fournisseur. Le prix d'achat reste donc le vrai prix
+   * fournisseur, et c'est le fret qui s'ajuste. Absent des réglages
+   * enregistrés avant son ajout : la valeur par défaut s'applique.
+   */
+  fret_cross_ar: number;
   /** Bénéfice minimum par moto (Ar). */
   benefice_fixe_ar: number;
   /** Part du prix d'achat ajoutée au bénéfice (%). */
@@ -42,6 +52,8 @@ export type Reglages = {
 export type Calcul = {
   achat_ar: number;
   cout_ar: number;
+  /** Fret retenu pour cette moto (général ou cross). */
+  fret_ar: number;
   prix_ar: number;
   benefice_ar: number;
   acompte_pct: number;
@@ -55,9 +67,14 @@ export type Calcul = {
 
 const arrondiSup = (n: number, pas: number) => Math.ceil(n / pas) * pas;
 
-export function calculerPrix(prixYuan: number, r: Reglages): Calcul {
+/** Fret applicable à une moto : celui des motos de cross, ou le fret général. */
+export const fretPour = (r: Reglages, categorie?: Categorie) =>
+  categorie === "motocross" ? r.fret_cross_ar : r.fret_ar;
+
+export function calculerPrix(prixYuan: number, r: Reglages, categorie?: Categorie): Calcul {
+  const fret_ar = fretPour(r, categorie);
   const achat_ar = Math.round(prixYuan * r.taux_yuan);
-  const cout_ar = achat_ar + r.fret_ar;
+  const cout_ar = achat_ar + fret_ar;
   const brut = cout_ar + r.benefice_fixe_ar + (achat_ar * r.part_achat_pct) / 100;
   const prix_ar = arrondiSup(Math.round(brut), Math.max(1, r.arrondi_ar));
 
@@ -78,7 +95,8 @@ export function calculerPrix(prixYuan: number, r: Reglages): Calcul {
     acompte_ar,
     solde_ar,
     capital_avance_ar: Math.max(0, achat_ar - acompte_ar),
-    solde_couvre_fret: solde_ar >= r.fret_ar,
+    fret_ar,
+    solde_couvre_fret: solde_ar >= fret_ar,
   };
 }
 
@@ -106,6 +124,7 @@ export function erreurReglages(r: Reglages): string | null {
   const dans = (v: number, min: number, max: number) => Number.isFinite(v) && v >= min && v <= max;
   if (!dans(r.taux_yuan, 50, 5_000)) return "Taux du yuan invalide : entre 50 et 5 000 Ar.";
   if (!dans(r.fret_ar, 0, 100_000_000)) return "Fret et papiers invalides.";
+  if (!dans(r.fret_cross_ar, 0, 100_000_000)) return "Fret des motos de cross invalide.";
   if (!dans(r.benefice_fixe_ar, 0, 100_000_000)) return "Bénéfice fixe invalide.";
   if (!dans(r.part_achat_pct, 0, 100)) return "Part du prix d'achat invalide : entre 0 et 100 %.";
   if (!dans(r.securite_change_pct, 0, 50)) return "Sécurité sur le change invalide : entre 0 et 50 %.";

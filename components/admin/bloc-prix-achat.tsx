@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Moto } from "@/lib/types";
+import type { Categorie, Moto } from "@/lib/types";
 import { LIBELLE_STATUT } from "@/lib/types";
 import { ar } from "@/lib/format";
 import { calculerPrix, prixDynamique, type Reglages } from "@/lib/tarification";
@@ -23,8 +23,11 @@ export function BlocPrixAchat({
   reglages,
   valeurReprise,
   enErreur,
+  categorie,
 }: {
   moto?: Moto;
+  /** Catégorie choisie dans le formulaire : elle décide du fret (cross ou général). */
+  categorie?: Categorie;
   /** Réglages en vigueur : fournis au seul compte administrateur. */
   reglages: Reglages | null;
   valeurReprise?: string;
@@ -73,7 +76,7 @@ export function BlocPrixAchat({
     );
   }
 
-  const c = yuan ? calculerPrix(yuan, reglages) : null;
+  const c = yuan ? calculerPrix(yuan, reglages, categorie ?? moto?.categorie) : null;
 
   return (
     <div className="space-y-3">
@@ -109,7 +112,7 @@ export function BlocPrixAchat({
           <dl className="divide-y divide-line text-meta tabular-nums">
             {[
               ["Achat", `${ar(c.achat_ar)}`],
-              ["Fret et papiers", ar(reglages.fret_ar)],
+              [c.fret_ar === reglages.fret_ar ? "Fret et papiers" : "Fret et papiers (cross)", ar(c.fret_ar)],
               ["Coût de revient", ar(c.cout_ar)],
               ["Bénéfice", ar(c.benefice_ar)],
             ].map(([k, v]) => (

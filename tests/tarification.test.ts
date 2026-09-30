@@ -89,3 +89,32 @@ describe("réglages", () => {
     expect(erreurReglages({ ...R, taux_yuan: 6_700 })).not.toBeNull();
   });
 });
+
+describe("fret des motos de cross (30/09/2026)", () => {
+  it("applique le fret cross à la seule catégorie motocross", () => {
+    expect(calculerPrix(10_000, R, "motocross").fret_ar).toBe(R.fret_cross_ar);
+    expect(calculerPrix(10_000, R, "trail").fret_ar).toBe(R.fret_ar);
+    expect(calculerPrix(10_000, R).fret_ar).toBe(R.fret_ar);
+  });
+
+  /**
+   * Avant, l'exploitant retranchait 2 500 ¥ du prix d'achat d'un cross pour
+   * compenser un fret surévalué. Au vrai prix fournisseur et au fret cross,
+   * le prix de vente doit rester celui d'avant — et l'acompte, lui, couvrir
+   * enfin l'achat réel.
+   */
+  it("garde le prix de vente d'avant, avec un acompte qui couvre le vrai achat", () => {
+    for (const magasin of [4_950, 7_900, 12_580, 20_800, 27_800]) {
+      const avant = calculerPrix(magasin - 2_500, R);
+      const apres = calculerPrix(magasin, R, "motocross");
+      expect(apres.prix_ar).toBe(avant.prix_ar);
+      expect(apres.acompte_ar + apres.capital_avance_ar).toBeGreaterThanOrEqual(apres.achat_ar);
+      expect(apres.acompte_pct).toBeGreaterThanOrEqual(avant.acompte_pct);
+    }
+  });
+
+  it("refuse un fret cross invalide", () => {
+    expect(erreurReglages({ ...R, fret_cross_ar: -1 })).not.toBeNull();
+    expect(erreurReglages({ ...R, fret_cross_ar: NaN })).not.toBeNull();
+  });
+});

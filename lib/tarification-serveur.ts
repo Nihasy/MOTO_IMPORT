@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "@/lib/db";
-import type { Moto, Statut } from "@/lib/types";
+import type { Categorie, Moto, Statut } from "@/lib/types";
 import { calculerPrix, erreurReglages, type Reglages } from "@/lib/tarification";
 import { REGLAGES_DEFAUT } from "@/lib/tarification-defaut";
 
@@ -26,16 +26,16 @@ export const reglagesEnVigueur = cache(async (): Promise<Reglages> => {
 /** Champs de prix à écrire sur une moto, calculés depuis son prix en yuan. */
 export type ChampsPrix = Pick<Moto, "prix_ttc" | "prix_yuan" | "taux_yuan" | "acompte_pct">;
 
-export function champsPrix(prixYuan: number | null, r: Reglages): ChampsPrix {
+export function champsPrix(prixYuan: number | null, r: Reglages, categorie: Categorie): ChampsPrix {
   if (!prixYuan) return { prix_ttc: 0, prix_yuan: null, taux_yuan: null, acompte_pct: null };
-  const c = calculerPrix(prixYuan, r);
+  const c = calculerPrix(prixYuan, r, categorie);
   return { prix_ttc: c.prix_ar, prix_yuan: prixYuan, taux_yuan: r.taux_yuan, acompte_pct: c.acompte_pct };
 }
 
 /** La moto a-t-elle un prix à jour avec ces réglages ? */
-export function prixAJour(m: Pick<Moto, "prix_ttc" | "prix_yuan" | "acompte_pct">, r: Reglages): boolean {
+export function prixAJour(m: Pick<Moto, "prix_ttc" | "prix_yuan" | "acompte_pct" | "categorie">, r: Reglages): boolean {
   if (!m.prix_yuan) return true;
-  const attendu = champsPrix(m.prix_yuan, r);
+  const attendu = champsPrix(m.prix_yuan, r, m.categorie);
   return attendu.prix_ttc === m.prix_ttc && attendu.acompte_pct === m.acompte_pct;
 }
 

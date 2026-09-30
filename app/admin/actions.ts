@@ -15,11 +15,11 @@ import { db } from "@/lib/db";
 import { demandePatchSchema, mediaPatchSchema, motoSchema } from "@/lib/schemas";
 import { messageVerrou, verrouPublication } from "@/lib/publication";
 import { DELAI_MAX, DELAI_MIN } from "@/lib/conditions";
-import { estEnVente, miseEnVenteDe, statutDeMiseEnVente } from "@/lib/types";
+import { CATEGORIES, estEnVente, miseEnVenteDe, statutDeMiseEnVente } from "@/lib/types";
 import { normaliserWhatsapp, parametresSchema } from "@/lib/schemas";
 import { champsPrix, prixAJour, reglagesEnVigueur } from "@/lib/tarification-serveur";
 import { erreurReglages, prixDynamique, recalculerAuPassage, type Reglages } from "@/lib/tarification";
-import type { DemandeStatut, Moto, Statut } from "@/lib/types";
+import type { Categorie, DemandeStatut, Moto, Statut } from "@/lib/types";
 
 /**
  * État renvoyé par les formulaires du back-office.
@@ -135,7 +135,16 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
           taux_yuan: existante.taux_yuan,
           acompte_pct: existante.acompte_pct,
         }
-      : champsPrix(prixYuan, await reglagesEnVigueur());
+      : champsPrix(
+          prixYuan,
+          await reglagesEnVigueur(),
+          // La catégorie saisie décide du fret (cross ou général) ; une valeur
+          // hors liste est refusée plus bas par le schéma, le calcul se rabat
+          // en attendant sur la catégorie enregistrée.
+          (CATEGORIES as readonly string[]).includes(texte("categorie"))
+            ? (texte("categorie") as Categorie)
+            : (existante?.categorie ?? "trail")
+        );
 
   const brut = {
     reference: texte("reference"),
@@ -246,7 +255,7 @@ export async function changerStatut(id: string, statut: Statut): Promise<Resulta
   // revient après un désistement) et une dernière fois à l'arrivée au local ;
   // la réservation et la vente figent le prix tel qu'il a été signé.
   if (recalculerAuPassage(statut) && avant.prix_yuan) {
-    const prix = champsPrix(avant.prix_yuan, await reglagesEnVigueur());
+    const prix = champsPrix(avant.prix_yuan, await reglagesEnVigueur(), avant.categorie);
     if (prix.prix_ttc !== avant.prix_ttc || prix.acompte_pct !== avant.acompte_pct) {
       await db().majMoto(id, prix);
     }
@@ -427,6 +436,7 @@ function reglagesSaisis(form: FormData): Reglages {
   return {
     taux_yuan: nombre("taux_yuan"),
     fret_ar: entier(form.get("fret_ar")) ?? NaN,
+    fret_cross_ar: entier(form.get("fret_cross_ar")) ?? NaN,
     benefice_fixe_ar: entier(form.get("benefice_fixe_ar")) ?? NaN,
     part_achat_pct: nombre("part_achat_pct"),
     securite_change_pct: nombre("securite_change_pct"),
@@ -473,7 +483,7 @@ export async function enregistrerTarification(
   let recalculees = 0;
   for (const m of await db().listerMotosAdmin()) {
     if (!m.prix_yuan || !prixDynamique(m.statut) || prixAJour(m, reglages)) continue;
-    await db().majMoto(m.id, champsPrix(m.prix_yuan, reglages));
+    await db().majMoto(m.id, champsPrix(m.prix_yuan, reglages, m.categorie));
     recalculees++;
   }
 
@@ -512,7 +522,7 @@ export async function publierBrouillonsPrets(
       continue;
     }
     if (m.prix_yuan) {
-      const prix = champsPrix(m.prix_yuan, reglages);
+      const prix = champsPrix(m.prix_yuan, reglages, m.categorie);
       if (prix.prix_ttc !== m.prix_ttc || prix.acompte_pct !== m.acompte_pct) await pilote.majMoto(m.id, prix);
     }
     const moto = await pilote.majStatut(m.id, cible);

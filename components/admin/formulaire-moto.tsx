@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import type { Fournisseur, Moto } from "@/lib/types";
+import type { Categorie, Fournisseur, Moto } from "@/lib/types";
 import { CATEGORIES, ETATS, LIBELLE_CATEGORIE, LIBELLE_MISE_EN_VENTE, MISES_EN_VENTE, miseEnVenteDe } from "@/lib/types";
 import { compterMots } from "@/lib/format";
 import { enregistrerMoto, type EtatFormulaire } from "@/app/admin/actions";
@@ -45,6 +45,7 @@ export function FormulaireMoto({
 }) {
   const [etat, action] = useActionState<EtatFormulaire, FormData>(enregistrerMoto, null);
   const [estOccasion, setEstOccasion] = useState(moto?.etat === "occasion");
+  const [categorie, setCategorie] = useState<Categorie>(moto?.categorie ?? "trail");
   const [description, setDescription] = useState(moto?.description ?? "");
 
   const mots = compterMots(description);
@@ -112,7 +113,7 @@ export function FormulaireMoto({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="etiquette" htmlFor="categorie">Catégorie *</label>
-            <select id="categorie" name="categorie" defaultValue={val("categorie", moto?.categorie ?? "trail")} className="champ">
+            <select id="categorie" name="categorie" defaultValue={val("categorie", moto?.categorie ?? "trail")} className="champ" onChange={(e) => setCategorie(e.target.value as Categorie)}>
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>{LIBELLE_CATEGORIE[c]}</option>
               ))}
@@ -184,6 +185,7 @@ export function FormulaireMoto({
           moto={moto}
           reglages={reglages}
           valeurReprise={repris?.prix_yuan}
+          categorie={categorie}
           enErreur={etat?.champ === "prix_yuan"}
         />
 
