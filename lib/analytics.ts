@@ -1,6 +1,5 @@
 "use client";
 
-import { track } from "@vercel/analytics";
 import type { DemandeSource } from "./types";
 
 type Evenement =
@@ -16,14 +15,20 @@ type Fenetre = Window & {
   ttq?: { track: (n: string, p?: unknown) => void };
 };
 
-/** Vercel n'accepte que des valeurs simples dans les données d'un événement. */
 type Donnees = Record<string, string | number | boolean | null>;
 
+/**
+ * Événements envoyés aux pixels Facebook et TikTok, quand ils sont posés.
+ *
+ * Rien ne part vers la mesure d'audience de Vercel : sur le forfait gratuit,
+ * chaque page vue et chaque événement entame un quota mensuel, et son
+ * dépassement a mis en pause l'ancien compte, site compris (30/09/2026). Ne
+ * pas la rebrancher sans forfait payant.
+ */
 export function pister(evenement: Evenement, donnees: Donnees = {}) {
   if (typeof window === "undefined") return;
   const w = window as Fenetre;
   try {
-    track(evenement, donnees);
     w.fbq?.("trackCustom", evenement, donnees);
     w.ttq?.track(evenement, donnees);
   } catch {

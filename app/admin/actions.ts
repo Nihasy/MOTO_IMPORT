@@ -444,6 +444,9 @@ export async function enregistrerParametres(form: FormData) {
   redirect("/admin/parametres?ok=1");
 }
 
+/** Fiches réécrites de front lors d'un recalcul des prix. */
+const LOT_RECALCUL = 10;
+
 export type EtatTarification = { erreur?: string; recalculees?: number } | null;
 
 /** Lit les réglages du formulaire Tarification (montants avec séparateurs). */
@@ -501,12 +504,20 @@ export async function enregistrerTarification(
     };
   }
 
-  let recalculees = 0;
-  for (const m of await db().listerMotosAdmin()) {
-    if (!m.prix_yuan || !prixDynamique(m.statut) || prixAJour(m, reglages)) continue;
-    await db().majMoto(m.id, champsPrix(m.prix_yuan, reglages, m));
-    recalculees++;
+  // Par lots menés de front : écrites une à une, 139 fiches dépassaient la
+  // durée accordée à la fonction. Elle était coupée à la 83e le 01/10/2026,
+  // laissant 56 prix à l'ancien tarif et, faute d'arriver au bout, des pages
+  // publiques jamais rafraîchies. Relancer l'enregistrement reprend là où il
+  // s'est arrêté : seules les fiches au prix périmé sont réécrites.
+  const aRecalculer = (await db().listerMotosAdmin()).filter(
+    (m) => m.prix_yuan && prixDynamique(m.statut) && !prixAJour(m, reglages)
+  );
+  for (let i = 0; i < aRecalculer.length; i += LOT_RECALCUL) {
+    await Promise.all(
+      aRecalculer.slice(i, i + LOT_RECALCUL).map((m) => db().majMoto(m.id, champsPrix(m.prix_yuan, reglages, m)))
+    );
   }
+  const recalculees = aRecalculer.length;
 
   revalidatePath("/", "layout");
   return { recalculees };

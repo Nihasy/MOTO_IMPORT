@@ -7,6 +7,9 @@ import { EntetePage } from "@/components/admin/ui";
 import { FormulaireTarification, type MotoTarifee } from "@/components/admin/formulaire-tarification";
 
 export const dynamic = "force-dynamic";
+// L'enregistrement réécrit tous les prix dynamiques : il lui faut plus que la
+// durée par défaut d'une fonction.
+export const maxDuration = 60;
 
 /**
  * Tarification — INFORMATION INTERNE, réservée à l'administrateur.
