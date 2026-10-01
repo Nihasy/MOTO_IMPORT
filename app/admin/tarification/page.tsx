@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { motosAdmin } from "@/lib/motos-admin";
 import { sessionCourante } from "@/lib/auth";
 import { reglagesEnVigueur } from "@/lib/tarification-serveur";
 import { prixDynamique } from "@/lib/tarification";
@@ -36,7 +37,7 @@ export default async function PageTarification() {
     tableAbsente = true;
   }
 
-  const motos: MotoTarifee[] = (await db().listerMotosAdmin())
+  const motos: MotoTarifee[] = (await motosAdmin())
     .filter((m) => m.prix_yuan && prixDynamique(m.statut))
     .map((m) => ({
       id: m.id,

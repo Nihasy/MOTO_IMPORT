@@ -20,6 +20,9 @@ const COLONNES_PUBLIQUES = [
   "date_vente", "vues", "created_at", "updated_at",
 ].join(", ");
 
+/** Lignes par page de photos : le plafond de Supabase par requête. */
+const PAGE_MEDIAS = 1000;
+
 function service(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const cle = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -33,30 +36,54 @@ const err = (e: { message: string } | null) => {
 export function creerPiloteSupabase(): Pilote {
   const sb = service();
 
+  /**
+   * Photos d'un ensemble de motos, lues par pages. Supabase ne renvoie jamais
+   * plus de mille lignes par requête, et le fait sans erreur : passé ce cap,
+   * les photos de rang élevé disparaissaient des listes — compte de photos
+   * faux au catalogue, fiches signalées incomplètes à tort au back-office. Le
+   * tri sur l'identifiant départage les rangs égaux, sans quoi deux pages
+   * peuvent se chevaucher.
+   */
   const mediasDe = async (ids: string[]): Promise<Record<string, Media[]>> => {
     if (!ids.length) return {};
-    const { data, error } = await sb.from("medias").select("*").in("moto_id", ids).order("ordre");
-    err(error);
     const parMoto: Record<string, Media[]> = {};
-    for (const m of (data ?? []) as Media[]) (parMoto[m.moto_id] ??= []).push(m);
+    for (let debut = 0; ; debut += PAGE_MEDIAS) {
+      const { data, error } = await sb
+        .from("medias")
+        .select("*")
+        .in("moto_id", ids)
+        .order("ordre")
+        .order("id")
+        .range(debut, debut + PAGE_MEDIAS - 1);
+      err(error);
+      const page = (data ?? []) as Media[];
+      for (const m of page) (parMoto[m.moto_id] ??= []).push(m);
+      if (page.length < PAGE_MEDIAS) break;
+    }
     return parMoto;
   };
 
-  const publiquesAvecMedias = async (f: FiltresCatalogue = {}): Promise<MotoAvecMedias[]> => {
+  const fichesPubliques = async (f: FiltresCatalogue = {}) => {
     const { data, error } = await sb
       .from("motos_publiques")
       .select(COLONNES_PUBLIQUES)
       .in("statut", [...STATUTS_PUBLICS]);
     err(error);
-    const motos = trierCatalogue(appliquerFiltres((data ?? []) as unknown as Moto[], f));
+    return trierCatalogue(appliquerFiltres((data ?? []) as unknown as Moto[], f)).map((m) => publier(m));
+  };
+
+  const publiquesAvecMedias = async (f: FiltresCatalogue = {}): Promise<MotoAvecMedias[]> => {
+    const motos = await fichesPubliques(f);
     const medias = await mediasDe(motos.map((m) => m.id));
-    return motos.map((m) => ({ ...publier(m), medias: medias[m.id] ?? [] }));
+    return motos.map((m) => ({ ...m, medias: medias[m.id] ?? [] }));
   };
 
   return {
     nom: "supabase",
 
     listerMotosPubliques: publiquesAvecMedias,
+    listerFichesPubliques: () => fichesPubliques(),
+    mediasDeMotos: mediasDe,
 
     async motoParSlug(slug) {
       const { data, error } = await sb

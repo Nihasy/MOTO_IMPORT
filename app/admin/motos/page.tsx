@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { motosAdmin } from "@/lib/motos-admin";
 import { ar, dateFr, estNouvelle } from "@/lib/format";
 import { servieParCloudinary, urlMedia } from "@/lib/cloudinary";
 import { LIBELLE_VUE } from "@/lib/types";
@@ -22,7 +23,7 @@ export default async function ListeMotos({ searchParams }: Props) {
 
   // La couverture arrive avec la ligne : la réclamer moto par moto produisait
   // une requête par fiche.
-  const toutes = await db().listerMotosAdmin();
+  const toutes = await motosAdmin();
 
   // Brouillons prêts à publier : même verrou que la publication une à une.
   const brouillons = toutes.filter((m) => m.statut === "brouillon");

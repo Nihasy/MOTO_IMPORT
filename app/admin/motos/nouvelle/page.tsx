@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { motosAdmin } from "@/lib/motos-admin";
 import { FormulaireMoto } from "@/components/admin/formulaire-moto";
 import { EntetePage } from "@/components/admin/ui";
 import { sessionCourante } from "@/lib/auth";
@@ -17,7 +18,7 @@ function referenceSuivante(references: string[]): string {
 export default async function NouvelleMoto() {
   const pilote = db();
   const [motos, fournisseurs, session] = await Promise.all([
-    pilote.listerMotosAdmin(),
+    motosAdmin(),
     pilote.listerFournisseurs(),
     sessionCourante(),
   ]);

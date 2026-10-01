@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { db } from "@/lib/db";
+import { cataloguePublic } from "@/lib/catalogue-public";
 import { VueEnregistrees } from "@/components/catalogue/vue-enregistrees";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const motos = await db().listerMotosPubliques();
+  const motos = await cataloguePublic();
   return <VueEnregistrees motos={motos} />;
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { db } from "@/lib/db";
+import { cataloguePublic } from "@/lib/catalogue-public";
 import { selectionCatalogue, trancheCatalogue } from "@/lib/catalogue";
 import { VueCatalogue } from "@/components/catalogue/vue-catalogue";
 import { Squelette, VoileChargement } from "@/components/ui";
@@ -22,9 +22,9 @@ const premier = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] :
 export default async function PageCatalogue({ searchParams }: { searchParams: Params }) {
   const sp = await searchParams;
 
-  // Une seule lecture du magasin : les effectifs par marque portent sur tout
-  // le catalogue, le filtrage se fait ensuite en memoire sur le meme jeu.
-  const toutes = await db().listerMotosPubliques();
+  // Une seule lecture du catalogue en cache : les effectifs par marque portent
+  // sur tout le catalogue, le filtrage se fait ensuite en memoire sur le meme jeu.
+  const toutes = await cataloguePublic();
 
   const lire = (cle: string) => premier(sp[cle]);
   const selection = selectionCatalogue(toutes, lire);

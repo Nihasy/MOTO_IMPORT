@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
+import { cataloguePublic } from "@/lib/catalogue-public";
 import { CARTES_PAR_TRANCHE, selectionCatalogue, trancheCatalogue } from "@/lib/catalogue";
 import { ipDepuisEntetes, limiterDebitDouble, tropDeRequetes } from "@/lib/securite";
 
@@ -29,6 +29,6 @@ export async function GET(req: NextRequest) {
     return Response.json({ erreur: "Paramètre « depuis » invalide." }, { status: 400 });
   }
 
-  const selection = selectionCatalogue(await db().listerMotosPubliques(), (cle) => p.get(cle) ?? undefined);
+  const selection = selectionCatalogue(await cataloguePublic(), (cle) => p.get(cle) ?? undefined);
   return Response.json({ motos: trancheCatalogue(selection, depuis), total: selection.length });
 }

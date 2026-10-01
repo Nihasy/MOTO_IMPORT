@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { db } from "@/lib/db";
+import { motoPublique } from "@/lib/catalogue-public";
 import { ar } from "@/lib/format";
 import { mentionCarteGrise } from "@/lib/immatriculation";
 import { urlMedia } from "@/lib/cloudinary";
@@ -11,7 +11,7 @@ export const contentType = "image/png";
 /** Partage Facebook : photo de couverture, modèle, prix (13.1). */
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const moto = await db().motoParSlug(slug);
+  const moto = await motoPublique(slug);
 
   if (!moto) {
     return new ImageResponse(

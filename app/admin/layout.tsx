@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { sessionCourante } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { motosAdmin } from "@/lib/motos-admin";
 import { estPublic } from "@/lib/types";
 import { NavAdmin, type Onglet } from "@/components/admin/nav";
 import { Logo, Marque } from "@/components/ui/logo";
@@ -23,7 +24,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
   // action, sans qu'il faille ouvrir chaque section pour le découvrir.
   const pilote = db();
   const [motos, demandes] = await Promise.all([
-    pilote.listerMotosAdmin().catch(() => []),
+    motosAdmin().catch(() => []),
     pilote.listerDemandes().catch(() => []),
   ]);
 

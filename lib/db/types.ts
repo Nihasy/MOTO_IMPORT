@@ -21,6 +21,12 @@ export type FiltresCatalogue = {
 export interface Pilote {
   nom: "supabase" | "local";
   listerMotosPubliques(f?: FiltresCatalogue): Promise<MotoAvecMedias[]>;
+  /**
+   * Les deux moitiés de `listerMotosPubliques`, lues séparément : le cache du
+   * catalogue public les range par morceaux (`lib/catalogue-public.ts`).
+   */
+  listerFichesPubliques(): Promise<MotoPublique[]>;
+  mediasDeMotos(ids: string[]): Promise<Record<string, Media[]>>;
   motoParSlug(slug: string): Promise<MotoAvecMedias | null>;
   motosSimilaires(slug: string, n: number): Promise<MotoAvecMedias[]>;
   slugsPublies(): Promise<{ slug: string; updated_at: string }[]>;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { motosAdmin } from "@/lib/motos-admin";
 import { sessionCourante } from "@/lib/auth";
 import { dateFr } from "@/lib/format";
 import { filigraneIncruste, urlMedia } from "@/lib/cloudinary";
@@ -37,7 +38,7 @@ export default async function PageStockFournisseur({
 
   const { f } = await searchParams;
   const pilote = db();
-  const [fournisseurs, motos] = await Promise.all([pilote.listerFournisseurs(), pilote.listerMotosAdmin()]);
+  const [fournisseurs, motos] = await Promise.all([pilote.listerFournisseurs(), motosAdmin()]);
   const fournisseur = fournisseurs.find((x) => x.id === f) ?? null;
   const stock = fournisseur ? motosDuStock(motos, fournisseur.id) : [];
   const enVente = stock.filter((m) => m.statut !== "vendu").length;

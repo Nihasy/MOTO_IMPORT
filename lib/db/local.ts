@@ -148,6 +148,21 @@ export function creerPiloteLocal(): Pilote {
       }));
     },
 
+    async listerFichesPubliques() {
+      const base = await lire();
+      return trierCatalogue(appliquerFiltres(base.motos.map((m) => publier(m)), {}));
+    },
+
+    async mediasDeMotos(ids) {
+      const base = await lire();
+      const parMoto: Record<string, Media[]> = {};
+      for (const id of ids) {
+        const siennes = base.medias.filter((x) => x.moto_id === id).sort((a, b) => a.ordre - b.ordre);
+        if (siennes.length) parMoto[id] = siennes;
+      }
+      return parMoto;
+    },
+
     async motoParSlug(slug) {
       const base = await lire();
       const m = base.motos.find((x) => x.slug === slug && estPublic(x.statut));

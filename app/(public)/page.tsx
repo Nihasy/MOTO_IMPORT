@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { db } from "@/lib/db";
+import { cataloguePublic } from "@/lib/catalogue-public";
 import { arCourt } from "@/lib/format";
 import { lienRecherche } from "@/lib/whatsapp";
 import { parametres } from "@/lib/parametres";
@@ -30,7 +30,7 @@ const PALIERS = [
 
 export default async function Accueil() {
   const [toutes, { whatsapp }] = await Promise.all([
-    db().listerMotosPubliques({ masquerVendues: true }),
+    cataloguePublic({ masquerVendues: true }),
     parametres(),
   ]);
   const enAvant = toutes

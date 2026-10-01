@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { motosAdmin } from "@/lib/motos-admin";
 import { ar, dateFr, joursAvant } from "@/lib/format";
 import { LIBELLE_VUE, estPublic } from "@/lib/types";
 import { verrouPublication } from "@/lib/publication";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TableauDeBord() {
   const pilote = db();
-  const [motos, demandes] = await Promise.all([pilote.listerMotosAdmin(), pilote.listerDemandes()]);
+  const [motos, demandes] = await Promise.all([motosAdmin(), pilote.listerDemandes()]);
 
   // Le verrou de publication est rejoué ici pour trier les brouillons : celui
   // qui ne demande plus qu'un clic ne doit pas être noyé parmi ceux auxquels

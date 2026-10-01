@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { db } from "@/lib/db";
+import { slugsEnLigne } from "@/lib/catalogue-public";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let fiches: MetadataRoute.Sitemap = [];
   try {
-    const slugs = await db().slugsPublies();
+    const slugs = await slugsEnLigne();
     fiches = slugs.map(({ slug, updated_at }) => ({
       url: `${SITE}/motos/${slug}`,
       lastModified: new Date(updated_at),

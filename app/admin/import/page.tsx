@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { motosAdmin } from "@/lib/motos-admin";
 import { dateFr } from "@/lib/format";
 import { etatLot } from "@/lib/types";
 import { ImportCsv } from "@/components/admin/import-csv";
@@ -19,7 +20,7 @@ export default async function PageImport({
 }) {
   const { onglet = "csv" } = await searchParams;
   const pilote = db();
-  const [motos, lots] = await Promise.all([pilote.listerMotosAdmin(), pilote.listerLots()]);
+  const [motos, lots] = await Promise.all([motosAdmin(), pilote.listerLots()]);
 
   return (
     <div>

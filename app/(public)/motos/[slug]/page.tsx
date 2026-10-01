@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { db } from "@/lib/db";
+import { motoPublique, motosProches, slugsEnLigne } from "@/lib/catalogue-public";
 import { ar } from "@/lib/format";
 import { mentionCarteGrise } from "@/lib/immatriculation";
 import { urlMedia } from "@/lib/cloudinary";
@@ -34,7 +34,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
   try {
-    const slugs = await db().slugsPublies();
+    const slugs = await slugsEnLigne();
     return slugs.map(({ slug }) => ({ slug }));
   } catch {
     return [];
@@ -43,7 +43,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const moto = await db().motoParSlug(slug);
+  const moto = await motoPublique(slug);
   if (!moto) return { title: "Moto introuvable" };
 
   const titre = `${moto.marque} ${moto.modele} ${moto.annee} — ${ar(moto.prix_ttc)} rendu Tana`;
@@ -69,10 +69,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function FicheMoto({ params }: Props) {
   const { slug } = await params;
-  const moto = await db().motoParSlug(slug);
+  const moto = await motoPublique(slug);
   if (!moto) notFound();
 
-  const similaires = await db().motosSimilaires(slug, 3);
+  const similaires = await motosProches(slug, 3);
 
   const jsonLd = {
     "@context": "https://schema.org",
