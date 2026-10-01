@@ -9,7 +9,6 @@ const scriptSrc = [
   "'self'",
   "'unsafe-inline'",
   ...(enProduction ? [] : ["'unsafe-eval'"]),
-  "https://va.vercel-scripts.com",
 ].join(" ");
 
 const csp = [
