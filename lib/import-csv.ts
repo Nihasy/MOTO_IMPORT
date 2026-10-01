@@ -1,6 +1,6 @@
 import { ligneCsvSchema, motoSchema, type MotoInput } from "./schemas";
 import { parserCsv } from "./csv";
-import { calculerPrix, type Reglages } from "./tarification";
+import { calculerPrix, type Gabarit, type Reglages } from "./tarification";
 import type { Categorie } from "./types";
 
 export type ErreurLigne = { ligne: number; colonne: string; message: string; valeur?: string };
@@ -16,6 +16,14 @@ const nombreOuNull = (v: string | undefined): number | null => {
   const s = (v ?? "").trim();
   if (!s) return null;
   const n = Number(s.replace(/[^\d-]/g, ""));
+  return Number.isFinite(n) ? n : null;
+};
+
+/** Nombre décimal, à la virgule comme au point : « 1,15 » ou « 1.15 ». */
+const decimalOuNull = (v: string | undefined): number | null => {
+  const s = (v ?? "").trim().replace(",", ".");
+  if (!s) return null;
+  const n = Number(s);
   return Number.isFinite(n) ? n : null;
 };
 
@@ -50,9 +58,9 @@ function miseEnVente(v: string | undefined): "commande" | "local" | null | undef
 }
 
 /** Champs de prix calculés depuis le prix d'achat ; tout à vide sans lui. */
-function prixDepuisYuan(yuan: number | null, r: Reglages, categorie: Categorie) {
+function prixDepuisYuan(yuan: number | null, r: Reglages, g: Gabarit) {
   if (!yuan || yuan <= 0) return { prix_ttc: 0, prix_yuan: null, taux_yuan: null, acompte_pct: null };
-  const c = calculerPrix(yuan, r, categorie);
+  const c = calculerPrix(yuan, r, g);
   return { prix_ttc: c.prix_ar, prix_yuan: yuan, taux_yuan: r.taux_yuan, acompte_pct: c.acompte_pct };
 }
 
@@ -122,6 +130,8 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
       return;
     }
 
+    const volume_m3 = decimalOuNull(v.volume_m3);
+    const marge_ar = nombreOuNull(v.marge_ar);
     const candidat = {
       reference: v.reference,
       marque: v.marque,
@@ -143,7 +153,14 @@ export function analyserCsvMotos(texte: string, reglages: Reglages): AnalyseCsv 
       refroidissement: (texteOuNull(v.refroidissement) as "air" | "liquide" | null) ?? null,
       transmission: texteOuNull(v.transmission),
       abs: bool(v.abs),
-      ...prixDepuisYuan(nombreOuNull(v.prix_yuan), reglages, v.categorie as Categorie),
+      ...prixDepuisYuan(nombreOuNull(v.prix_yuan), reglages, {
+        categorie: v.categorie as Categorie,
+        cylindree: Number(v.cylindree),
+        volume_m3,
+        marge_ar,
+      }),
+      volume_m3,
+      marge_ar,
       prix_valable_jusqu_au: v.prix_valable_jusqu_au,
       garantie_mois: nombreOuNull(v.garantie_mois) ?? 0,
       garantie_texte: texteOuNull(v.garantie_texte),

@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import clsx from "clsx";
 import type { Categorie, Statut } from "@/lib/types";
-import { LIBELLE_STATUT } from "@/lib/types";
+import { CATEGORIES, LIBELLE_CATEGORIE, LIBELLE_STATUT } from "@/lib/types";
 import { ar } from "@/lib/format";
 import { calculerPrix, erreurReglages, type Reglages } from "@/lib/tarification";
 import { ACOMPTE_MAX, ACOMPTE_MIN, montantAcompte, pourcent } from "@/lib/conditions";
@@ -18,6 +18,9 @@ export type MotoTarifee = {
   nom: string;
   statut: Statut;
   categorie: Categorie;
+  cylindree: number;
+  volume_m3: number | null;
+  marge_ar: number | null;
   prix_yuan: number;
   prix_ttc: number;
 };
@@ -50,9 +53,13 @@ export function FormulaireTarification({
   const [etat, action] = useActionState<EtatTarification, FormData>(enregistrerTarification, null);
   const [r, setR] = useState<Reglages>(reglages);
   const [simulation, setSimulation] = useState<number | null>(15_000);
-  const [simCross, setSimCross] = useState(false);
+  const [simCategorie, setSimCategorie] = useState<Categorie>("roadster");
+  const [simCylindree, setSimCylindree] = useState<number | null>(650);
 
-  const maj = (cle: keyof Reglages) => (v: number | null) => setR((x) => ({ ...x, [cle]: v ?? NaN }));
+  const maj = (cle: Exclude<keyof Reglages, "volumes_m3">) => (v: number | null) =>
+    setR((x) => ({ ...x, [cle]: v ?? NaN }));
+  const majVolume = (c: Categorie) => (v: number | null) =>
+    setR((x) => ({ ...x, volumes_m3: { ...x.volumes_m3, [c]: v ?? NaN } }));
   const invalide = erreurReglages(r);
 
   const apercu = useMemo(
@@ -60,7 +67,7 @@ export function FormulaireTarification({
       invalide
         ? []
         : motos.map((m) => {
-            const nouveau = calculerPrix(m.prix_yuan, r, m.categorie).prix_ar;
+            const nouveau = calculerPrix(m.prix_yuan, r, m).prix_ar;
             return { ...m, nouveau, ecart: nouveau - m.prix_ttc };
           }),
     [motos, r, invalide]
@@ -68,7 +75,10 @@ export function FormulaireTarification({
   const changees = apercu.filter((m) => m.ecart !== 0);
   const ecartTaux = Math.abs(r.taux_yuan - reglages.taux_yuan) / reglages.taux_yuan;
   const aConfirmer = Number.isFinite(ecartTaux) && ecartTaux > ECART_A_CONFIRMER;
-  const sim = simulation && !invalide ? calculerPrix(simulation, r, simCross ? "motocross" : undefined) : null;
+  const sim =
+    simulation && !invalide
+      ? calculerPrix(simulation, r, { categorie: simCategorie, cylindree: simCylindree ?? 0 })
+      : null;
 
   return (
     <form action={action} className="grid max-w-5xl gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -88,24 +98,55 @@ export function FormulaireTarification({
         ) : null}
 
         <fieldset className="carte space-y-3 p-4" disabled={verrouille}>
-          <legend className="px-1 text-[12.5px] font-semibold text-gold-light">Change et coûts</legend>
-          <Champ pour="taux_yuan" label="Taux du yuan" aide="1 ¥ = … Ar">
+          <legend className="px-1 text-[12.5px] font-semibold text-gold-light">Change</legend>
+          <Champ pour="taux_yuan" label="Taux du yuan" aide="1 ¥ = … Ar. Achat de la moto et caisse en bois">
             <ChampMontant id="taux_yuan" name="taux_yuan" decimales suffixe="Ar" defaultValue={reglages.taux_yuan} onValeur={maj("taux_yuan")} required />
           </Champ>
-          <Champ pour="fret_ar" label="Fret, dédouanement et papiers" aide="Fixe par moto, payé à l'arrivée à Tana">
-            <ChampMontant id="fret_ar" name="fret_ar" suffixe="Ar" defaultValue={reglages.fret_ar} onValeur={maj("fret_ar")} required />
-          </Champ>
-          <Champ
-            pour="fret_cross_ar"
-            label="Fret des motos de cross"
-            aide="Remplace le fret ci-dessus pour la catégorie « motocross », moins chère à expédier. Saisissez le vrai prix fournisseur en yuan : c'est ce fret qui s'ajuste."
-          >
-            <ChampMontant id="fret_cross_ar" name="fret_cross_ar" suffixe="Ar" defaultValue={reglages.fret_cross_ar} onValeur={maj("fret_cross_ar")} required />
+          <Champ pour="taux_usd" label="Taux du dollar" aide="1 $ = … Ar. Le fret maritime se paie en dollars">
+            <ChampMontant id="taux_usd" name="taux_usd" decimales suffixe="Ar" defaultValue={reglages.taux_usd} onValeur={maj("taux_usd")} required />
           </Champ>
         </fieldset>
 
         <fieldset className="carte space-y-3 p-4" disabled={verrouille}>
+          <legend className="px-1 text-[12.5px] font-semibold text-gold-light">Fret et frais de dossier</legend>
+          <Champ pour="fret_usd_m3" label="Fret au mètre cube" aide="Multiplié par le volume de la caisse de chaque moto, payé à l'arrivée à Tana">
+            <ChampMontant id="fret_usd_m3" name="fret_usd_m3" decimales suffixe="$/m³" defaultValue={reglages.fret_usd_m3} onValeur={maj("fret_usd_m3")} required />
+          </Champ>
+          <Champ pour="caisse_yuan" label="Caisse en bois" aide="Par moto, payée au fournisseur avec l'achat : l'acompte la couvre, sans marge dessus">
+            <ChampMontant id="caisse_yuan" name="caisse_yuan" suffixe="¥" defaultValue={reglages.caisse_yuan} onValeur={maj("caisse_yuan")} required />
+          </Champ>
+          <Champ pour="dossier_ar" label="Frais de dossier" aide="Par moto, sous le seuil de cylindrée ci-dessous">
+            <ChampMontant id="dossier_ar" name="dossier_ar" suffixe="Ar" defaultValue={reglages.dossier_ar} onValeur={maj("dossier_ar")} required />
+          </Champ>
+          <Champ pour="dossier_gros_ar" label="Frais de dossier, grosse cylindrée" aide="Par moto, à partir du seuil">
+            <ChampMontant id="dossier_gros_ar" name="dossier_gros_ar" suffixe="Ar" defaultValue={reglages.dossier_gros_ar} onValeur={maj("dossier_gros_ar")} required />
+          </Champ>
+          <Champ pour="seuil_gros_cc" label="Seuil de grosse cylindrée" aide="Sous 1 000 pour qu'une « 1000 » de 998 ou 999 cm³ compte comme telle">
+            <ChampMontant id="seuil_gros_cc" name="seuil_gros_cc" suffixe="cm³" defaultValue={reglages.seuil_gros_cc} onValeur={maj("seuil_gros_cc")} required />
+          </Champ>
+        </fieldset>
+
+        <fieldset className="carte space-y-3 p-4" disabled={verrouille}>
+          <legend className="px-1 text-[12.5px] font-semibold text-gold-light">Volume standard de la caisse</legend>
+          <p className="text-meta text-dim">
+            Appliqué à toute fiche qui ne porte pas son propre volume. Moto démontée, roues et
+            fourche dans la caisse.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {CATEGORIES.map((c) => (
+              <div key={c}>
+                <label className="etiquette" htmlFor={`volume_${c}`}>{LIBELLE_CATEGORIE[c]}</label>
+                <ChampMontant id={`volume_${c}`} name={`volume_${c}`} decimales suffixe="m³" defaultValue={reglages.volumes_m3[c]} onValeur={majVolume(c)} required />
+              </div>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="carte space-y-3 p-4" disabled={verrouille}>
           <legend className="px-1 text-[12.5px] font-semibold text-gold-light">Bénéfice</legend>
+          <p className="text-meta text-dim">
+            Une fiche qui porte une marge saisie à la main ignore ces deux réglages.
+          </p>
           <Champ pour="benefice_fixe_ar" label="Bénéfice fixe par moto" aide="Gagné sur chaque moto, même la moins chère">
             <ChampMontant id="benefice_fixe_ar" name="benefice_fixe_ar" suffixe="Ar" defaultValue={reglages.benefice_fixe_ar} onValeur={maj("benefice_fixe_ar")} required />
           </Champ>
@@ -160,15 +201,26 @@ export function FormulaireTarification({
           <div className="mt-3">
             <ChampMontant id="simulation" name="_simulation" suffixe="¥" defaultValue={simulation} onValeur={setSimulation} placeholder="15 000" />
           </div>
-          <label className="mt-2 flex items-center gap-2 text-meta text-chrome">
-            <input type="checkbox" checked={simCross} onChange={(e) => setSimCross(e.target.checked)} className="h-4 w-4 accent-gold" />
-            Moto de cross (fret cross)
-          </label>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <select
+              aria-label="Catégorie simulée"
+              value={simCategorie}
+              onChange={(e) => setSimCategorie(e.target.value as Categorie)}
+              className="champ"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{LIBELLE_CATEGORIE[c]}</option>
+              ))}
+            </select>
+            <ChampMontant id="simulation_cc" name="_simulation_cc" suffixe="cm³" defaultValue={simCylindree} onValeur={setSimCylindree} placeholder="650" />
+          </div>
           {sim ? (
             <dl className="mt-3 divide-y divide-line overflow-hidden rounded-card border border-line text-meta tabular-nums">
               {[
                 ["Achat", ar(sim.achat_ar)],
-                [simCross ? "Fret et papiers (cross)" : "Fret et papiers", ar(sim.fret_ar)],
+                ["Caisse en bois", ar(sim.caisse_ar)],
+                [`Fret (${sim.volume_m3.toLocaleString("fr-FR")} m³)`, ar(sim.transport_ar)],
+                ["Frais de dossier", ar(sim.dossier_ar)],
                 ["Coût de revient", ar(sim.cout_ar)],
                 ["Bénéfice", ar(sim.benefice_ar)],
                 ["Prix de vente", ar(sim.prix_ar)],
@@ -192,7 +244,7 @@ export function FormulaireTarification({
           ) : null}
           {sim && sim.capital_avance_ar > 0 ? (
             <p className="mt-2 text-meta text-gold-light">
-              Acompte plafonné : {ar(sim.capital_avance_ar)} d&apos;achat avancés de votre poche.
+              Acompte plafonné : {ar(sim.capital_avance_ar)} d&apos;achat et de caisse avancés de votre poche.
             </p>
           ) : null}
         </section>

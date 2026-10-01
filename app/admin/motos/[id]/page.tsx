@@ -39,13 +39,13 @@ export default async function EditionMoto({ params, searchParams }: Props) {
   const complete = await pilote.motoParId(id);
   if (!complete) notFound();
 
-  // Le prix d'achat et le taux sont réservés à l'administrateur. Pour tout
+  // Le prix d'achat, le taux, le volume de la caisse et la marge sont réservés à l'administrateur. Pour tout
   // autre compte, ils sont retirés ici, avant que la fiche ne parte vers les
   // composants du navigateur : ne pas les afficher ne suffirait pas, ils
   // voyageraient quand même dans la page.
   const session = await sessionCourante();
   const admin = session?.role === "admin";
-  const moto = admin ? complete : { ...complete, prix_yuan: null, taux_yuan: null };
+  const moto = admin ? complete : { ...complete, prix_yuan: null, taux_yuan: null, volume_m3: null, marge_ar: null };
   const reglages = admin ? await reglagesEnVigueur() : null;
 
   const [medias, fournisseurs] = await Promise.all([

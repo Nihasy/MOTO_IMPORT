@@ -127,6 +127,16 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
   const statut = existante?.statut ?? "brouillon";
   const prixYuan =
     session.role === "admin" && form.has("prix_yuan") ? entier(form.get("prix_yuan")) : (existante?.prix_yuan ?? null);
+  // Volume de la caisse : interne lui aussi, il décide du fret. Vide, le
+  // volume standard de la catégorie s'applique.
+  const volume =
+    session.role === "admin" && form.has("volume_m3")
+      ? Number(texte("volume_m3").replace(",", ".")) || null
+      : (existante?.volume_m3 ?? null);
+  // Marge fixée à la main : elle remplace le bénéfice calculé. Vide, le calcul
+  // automatique reprend ; zéro est une vraie marge (prix coûtant).
+  const marge =
+    session.role === "admin" && form.has("marge_ar") ? entier(form.get("marge_ar")) : (existante?.marge_ar ?? null);
   const prix =
     existante && !prixDynamique(statut)
       ? {
@@ -135,16 +145,17 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
           taux_yuan: existante.taux_yuan,
           acompte_pct: existante.acompte_pct,
         }
-      : champsPrix(
-          prixYuan,
-          await reglagesEnVigueur(),
-          // La catégorie saisie décide du fret (cross ou général) ; une valeur
+      : champsPrix(prixYuan, await reglagesEnVigueur(), {
+          // La catégorie et la cylindrée saisies décident du fret ; une valeur
           // hors liste est refusée plus bas par le schéma, le calcul se rabat
-          // en attendant sur la catégorie enregistrée.
-          (CATEGORIES as readonly string[]).includes(texte("categorie"))
+          // en attendant sur ce qui est enregistré.
+          categorie: (CATEGORIES as readonly string[]).includes(texte("categorie"))
             ? (texte("categorie") as Categorie)
-            : (existante?.categorie ?? "trail")
-        );
+            : (existante?.categorie ?? "trail"),
+          cylindree: Number(form.get("cylindree")) || (existante?.cylindree ?? 0),
+          volume_m3: volume,
+          marge_ar: marge,
+        });
 
   const brut = {
     reference: texte("reference"),
@@ -176,6 +187,11 @@ export async function enregistrerMoto(_etat: EtatFormulaire, form: FormData): Pr
     transmission: texte("transmission") || null,
     abs: form.get("abs") === "on",
     ...prix,
+    // Écrits seulement s'ils existent ou ont existé : tant que la migration
+    // 0012 n'est pas appliquée, les colonnes manquent, et toute fiche serait
+    // refusée.
+    ...(volume || existante?.volume_m3 ? { volume_m3: volume } : {}),
+    ...(marge !== null || (existante?.marge_ar ?? null) !== null ? { marge_ar: marge } : {}),
     prix_valable_jusqu_au: texte("prix_valable_jusqu_au"),
     delai_min_jours: form.get("delai_min_jours") || DELAI_MIN,
     delai_max_jours: form.get("delai_max_jours") || DELAI_MAX,
@@ -255,7 +271,7 @@ export async function changerStatut(id: string, statut: Statut): Promise<Resulta
   // revient après un désistement) et une dernière fois à l'arrivée au local ;
   // la réservation et la vente figent le prix tel qu'il a été signé.
   if (recalculerAuPassage(statut) && avant.prix_yuan) {
-    const prix = champsPrix(avant.prix_yuan, await reglagesEnVigueur(), avant.categorie);
+    const prix = champsPrix(avant.prix_yuan, await reglagesEnVigueur(), avant);
     if (prix.prix_ttc !== avant.prix_ttc || prix.acompte_pct !== avant.acompte_pct) {
       await db().majMoto(id, prix);
     }
@@ -435,8 +451,13 @@ function reglagesSaisis(form: FormData): Reglages {
   const nombre = (cle: string) => Number(String(form.get(cle) ?? "").replace(/\s/g, "").replace(",", "."));
   return {
     taux_yuan: nombre("taux_yuan"),
-    fret_ar: entier(form.get("fret_ar")) ?? NaN,
-    fret_cross_ar: entier(form.get("fret_cross_ar")) ?? NaN,
+    taux_usd: nombre("taux_usd"),
+    fret_usd_m3: nombre("fret_usd_m3"),
+    volumes_m3: Object.fromEntries(CATEGORIES.map((c) => [c, nombre(`volume_${c}`)])) as Reglages["volumes_m3"],
+    dossier_ar: entier(form.get("dossier_ar")) ?? NaN,
+    dossier_gros_ar: entier(form.get("dossier_gros_ar")) ?? NaN,
+    seuil_gros_cc: entier(form.get("seuil_gros_cc")) ?? NaN,
+    caisse_yuan: entier(form.get("caisse_yuan")) ?? NaN,
     benefice_fixe_ar: entier(form.get("benefice_fixe_ar")) ?? NaN,
     part_achat_pct: nombre("part_achat_pct"),
     securite_change_pct: nombre("securite_change_pct"),
@@ -483,7 +504,7 @@ export async function enregistrerTarification(
   let recalculees = 0;
   for (const m of await db().listerMotosAdmin()) {
     if (!m.prix_yuan || !prixDynamique(m.statut) || prixAJour(m, reglages)) continue;
-    await db().majMoto(m.id, champsPrix(m.prix_yuan, reglages, m.categorie));
+    await db().majMoto(m.id, champsPrix(m.prix_yuan, reglages, m));
     recalculees++;
   }
 
@@ -522,7 +543,7 @@ export async function publierBrouillonsPrets(
       continue;
     }
     if (m.prix_yuan) {
-      const prix = champsPrix(m.prix_yuan, reglages, m.categorie);
+      const prix = champsPrix(m.prix_yuan, reglages, m);
       if (prix.prix_ttc !== m.prix_ttc || prix.acompte_pct !== m.acompte_pct) await pilote.majMoto(m.id, prix);
     }
     const moto = await pilote.majStatut(m.id, cible);

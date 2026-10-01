@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Categorie, Moto } from "@/lib/types";
-import { LIBELLE_STATUT } from "@/lib/types";
+import { LIBELLE_CATEGORIE, LIBELLE_STATUT } from "@/lib/types";
 import { ar } from "@/lib/format";
 import { calculerPrix, prixDynamique, type Reglages } from "@/lib/tarification";
 import { montantAcompte, pourcent } from "@/lib/conditions";
@@ -14,7 +14,8 @@ import { ChampMontant } from "@/components/admin/champ-montant";
  * ici en direct. Le serveur refait le calcul à l'enregistrement : ce qui est
  * montré n'est qu'un aperçu, jamais une valeur envoyée.
  *
- * - administrateur : saisit le prix en yuan, voit le détail (interne) ;
+ * - administrateur : saisit le prix en yuan et, au besoin, le volume de la
+ *   caisse et une marge fixée à la main ; voit le détail (interne) ;
  * - éditeur : ne voit ni le yuan ni la marge, seulement le prix public ;
  * - prix figé (réservé, vendu, au local) : rien ne se saisit.
  */
@@ -22,19 +23,35 @@ export function BlocPrixAchat({
   moto,
   reglages,
   valeurReprise,
+  volumeRepris,
+  margeReprise,
   enErreur,
+  enErreurMarge,
   categorie,
+  cylindree,
 }: {
   moto?: Moto;
-  /** Catégorie choisie dans le formulaire : elle décide du fret (cross ou général). */
-  categorie?: Categorie;
+  /** Catégorie et cylindrée choisies dans le formulaire : elles décident du fret. */
+  categorie: Categorie;
+  cylindree: number;
   /** Réglages en vigueur : fournis au seul compte administrateur. */
   reglages: Reglages | null;
   valeurReprise?: string;
+  /** Volume saisi avant un refus : repris tel quel, même vide. */
+  volumeRepris?: string;
+  /** Marge saisie avant un refus : reprise telle quelle, même vide. */
+  margeReprise?: string;
   enErreur?: boolean;
+  enErreurMarge?: boolean;
 }) {
   const [yuan, setYuan] = useState<number | null>(
     valeurReprise ? Number(valeurReprise) || null : (moto?.prix_yuan ?? null)
+  );
+  const [volume, setVolume] = useState<number | null>(
+    volumeRepris !== undefined ? Number(volumeRepris) || null : (moto?.volume_m3 ?? null)
+  );
+  const [marge, setMarge] = useState<number | null>(
+    margeReprise !== undefined ? (margeReprise === "" ? null : Number(margeReprise)) : (moto?.marge_ar ?? null)
   );
   const fige = moto ? !prixDynamique(moto.statut) : false;
 
@@ -76,7 +93,8 @@ export function BlocPrixAchat({
     );
   }
 
-  const c = yuan ? calculerPrix(yuan, reglages, categorie ?? moto?.categorie) : null;
+  const c = yuan ? calculerPrix(yuan, reglages, { categorie, cylindree, volume_m3: volume, marge_ar: marge }) : null;
+  const standard = reglages.volumes_m3[categorie];
 
   return (
     <div className="space-y-3">
@@ -99,6 +117,45 @@ export function BlocPrixAchat({
         </p>
       </div>
 
+      <div>
+        <label className="etiquette" htmlFor="volume_m3">
+          Volume de la caisse (m³) <span className="text-dim">— interne, pour le fret</span>
+        </label>
+        <ChampMontant
+          id="volume_m3"
+          name="volume_m3"
+          decimales
+          defaultValue={volume}
+          suffixe="m³"
+          placeholder={standard.toLocaleString("fr-FR")}
+          onValeur={setVolume}
+        />
+        <p className="mt-1 text-meta text-dim">
+          Vide : volume standard « {LIBELLE_CATEGORIE[categorie]} », {standard.toLocaleString("fr-FR")} m³.
+          Saisissez la caisse mesurée par l&apos;entrepôt, ou celle d&apos;un gabarit hors norme.
+        </p>
+      </div>
+
+      <div>
+        <label className="etiquette" htmlFor="marge_ar">
+          Marge fixée à la main (Ar) <span className="text-dim">— interne, facultative</span>
+        </label>
+        <ChampMontant
+          id="marge_ar"
+          name="marge_ar"
+          defaultValue={marge}
+          suffixe="Ar"
+          placeholder="Calcul automatique"
+          onValeur={setMarge}
+          className={enErreurMarge ? "border-vendu" : undefined}
+        />
+        <p className="mt-1 text-meta text-dim">
+          Vide : bénéfice calculé ({ar(reglages.benefice_fixe_ar)} + {pourcent(reglages.part_achat_pct)} de
+          l&apos;achat). Saisie, elle le remplace pour cette fiche ; le prix reste arrondi au palier
+          supérieur.
+        </p>
+      </div>
+
       {c ? (
         <div className="overflow-hidden rounded-card border border-line">
           <div className="bg-surface-hi px-3.5 py-3">
@@ -112,13 +169,15 @@ export function BlocPrixAchat({
           <dl className="divide-y divide-line text-meta tabular-nums">
             {[
               ["Achat", `${ar(c.achat_ar)}`],
-              [c.fret_ar === reglages.fret_ar ? "Fret et papiers" : "Fret et papiers (cross)", ar(c.fret_ar)],
+              ["Caisse en bois", ar(c.caisse_ar)],
+              [`Fret (${c.volume_m3.toLocaleString("fr-FR")} m³)`, ar(c.transport_ar)],
+              ["Frais de dossier", ar(c.dossier_ar)],
               ["Coût de revient", ar(c.cout_ar)],
-              ["Bénéfice", ar(c.benefice_ar)],
+              [c.marge_manuelle ? "Bénéfice (marge manuelle)" : "Bénéfice", ar(c.benefice_ar)],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3 bg-surface px-3.5 py-2">
                 <dt className="text-dim">{k}</dt>
-                <dd className={k === "Bénéfice" ? "font-semibold text-dispo" : "text-chrome"}>{v}</dd>
+                <dd className={k.startsWith("Bénéfice") ? "font-semibold text-dispo" : "text-chrome"}>{v}</dd>
               </div>
             ))}
           </dl>
@@ -130,7 +189,7 @@ export function BlocPrixAchat({
           ) : null}
           {!c.solde_couvre_fret ? (
             <p className="border-t border-gold/40 bg-gold/10 px-3.5 py-2 text-meta text-gold-light">
-              Le solde ne couvre pas le fret et les papiers payés à l&apos;arrivée.
+              Le solde ne couvre pas le fret et les frais de dossier payés à l&apos;arrivée.
             </p>
           ) : null}
         </div>

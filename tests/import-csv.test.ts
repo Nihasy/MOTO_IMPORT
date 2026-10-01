@@ -151,7 +151,7 @@ describe("prix calculés à l'import", () => {
 ${ligne({ prix_yuan: "15000" })}`);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.motos[0]).toMatchObject({ prix_yuan: 15_000, prix_ttc: 18_100_000, acompte_pct: 60, taux_yuan: 670 });
+    expect(r.motos[0]).toMatchObject({ prix_yuan: 15_000, prix_ttc: 16_850_000, acompte_pct: 65, taux_yuan: 670 });
   });
 
   it("accepte les séparateurs de milliers dans le prix en yuan", () => {
@@ -177,7 +177,30 @@ ${ligne({ prix_yuan: "" })}`);
     const r = analyser(csv);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.motos[0].prix_ttc).toBe(18_100_000);
+    expect(r.motos[0].prix_ttc).toBe(16_850_000);
+  });
+
+  it("compte le fret sur le volume de la colonne volume_m3, à la virgule comme au point", () => {
+    const entete = "reference;marque;modele;annee;cylindree;categorie;etat;prix_yuan;prix_valable_jusqu_au;volume_m3";
+    const r = analyser(`${entete}
+MI-101;BMW;R 1200 GS Adventure;2018;1170;trail;neuf;15000;2026-12-31;1,42
+MI-102;BMW;R 1200 GS Adventure;2018;1170;trail;neuf;15000;2026-12-31;1.42
+MI-103;BMW;R 1200 GS Adventure;2018;1170;trail;neuf;15000;2026-12-31;`);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.motos.map((m) => m.volume_m3)).toEqual([1.42, 1.42, null]);
+    expect(r.motos[0].prix_ttc).toBe(r.motos[1].prix_ttc);
+    // Sans volume, le standard de la catégorie, plus petit, donne un prix plus bas.
+    expect(r.motos[0].prix_ttc).toBeGreaterThan(r.motos[2].prix_ttc);
+  });
+
+  it("refuse un volume qui n'est pas un nombre", () => {
+    const entete = "reference;marque;modele;annee;cylindree;categorie;etat;prix_yuan;prix_valable_jusqu_au;volume_m3";
+    const r = analyser(`${entete}
+MI-101;Honda;CB500X;2023;471;trail;neuf;15000;2026-12-31;gros`);
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.erreurs[0].colonne).toBe("volume_m3");
   });
 });
 
@@ -222,5 +245,31 @@ describe("import en masse : modèles et tolérance", () => {
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.erreurs[0].colonne).toBe("prix_valable_jusqu_au");
+  });
+});
+
+describe("marge fixée à la main à l'import", () => {
+  const entete = "reference;marque;modele;annee;cylindree;categorie;etat;prix_yuan;prix_valable_jusqu_au;marge_ar";
+
+  it("applique la marge de la colonne marge_ar, séparateurs de milliers admis", () => {
+    const r = analyser(`${entete}
+MI-101;Honda;CB500X;2023;471;trail;neuf;15000;2026-12-31;5 000 000
+MI-102;Honda;CB500X;2023;471;trail;neuf;15000;2026-12-31;
+MI-103;Honda;CB500X;2023;471;trail;neuf;15000;2026-12-31;0`);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.motos.map((m) => m.marge_ar)).toEqual([5_000_000, null, 0]);
+    // 10 050 000 d'achat + 201 000 de caisse + 3 592 500 de fret = 13 843 500.
+    expect(r.motos[0].prix_ttc).toBe(18_850_000);
+    expect(r.motos[1].prix_ttc).toBe(16_850_000);
+    expect(r.motos[2].prix_ttc).toBe(13_850_000);
+  });
+
+  it("refuse une marge qui n'est pas un nombre entier", () => {
+    const r = analyser(`${entete}
+MI-101;Honda;CB500X;2023;471;trail;neuf;15000;2026-12-31;beaucoup`);
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(r.erreurs[0].colonne).toBe("marge_ar");
   });
 });

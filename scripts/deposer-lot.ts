@@ -14,7 +14,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { db, supabaseConfigure } from "../lib/db";
 import { analyserCsvMotos } from "../lib/import-csv";
-import { REGLAGES_DEFAUT } from "../lib/tarification-defaut";
+import { REGLAGES_DEFAUT, completerReglages } from "../lib/tarification-defaut";
 import { erreurReglages } from "../lib/tarification";
 import { miseEnVenteDe } from "../lib/types";
 import type { MotoInput } from "../lib/schemas";
@@ -65,7 +65,7 @@ async function main() {
 
   // Réglages en vigueur, comme `reglagesEnVigueur()` (module server-only).
   const stockes = await pilote.lireTarification().catch(() => null);
-  const fusion = stockes ? { ...REGLAGES_DEFAUT, ...stockes } : REGLAGES_DEFAUT;
+  const fusion = stockes ? completerReglages(stockes) : REGLAGES_DEFAUT;
   const reglages = erreurReglages(fusion) ? REGLAGES_DEFAUT : fusion;
   console.log(`Mode      : ${ECRIRE ? "ÉCRITURE" : "simulation (rien n'est écrit)"}`);
   console.log(`Fichier   : ${CHEMIN}`);
@@ -135,6 +135,9 @@ async function main() {
       prix_yuan: moto.prix_yuan ?? null,
       taux_yuan: moto.taux_yuan ?? null,
       acompte_pct: moto.acompte_pct ?? null,
+      // `undefined` : la clé n'est pas écrite quand le CSV ne dit rien.
+      volume_m3: moto.volume_m3 ?? undefined,
+      marge_ar: moto.marge_ar ?? undefined,
       statut: existante?.statut ?? "brouillon",
       mise_en_vente: miseEnVente,
       fournisseur_id,

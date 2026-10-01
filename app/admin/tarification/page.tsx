@@ -44,6 +44,9 @@ export default async function PageTarification() {
       nom: `${m.marque} ${m.modele} ${m.annee}`,
       statut: m.statut,
       categorie: m.categorie,
+      cylindree: m.cylindree,
+      volume_m3: m.volume_m3 ?? null,
+      marge_ar: m.marge_ar ?? null,
       prix_yuan: m.prix_yuan!,
       prix_ttc: m.prix_ttc,
     }));

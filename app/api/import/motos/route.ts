@@ -72,11 +72,11 @@ export async function POST(req: NextRequest) {
 
   // Le prix d'achat est une information réservée à l'administrateur : un
   // fichier qui en contient, importé par un autre compte, est refusé entier.
-  if (session.role !== "admin" && analyse.motos.some((m) => m.prix_yuan)) {
+  if (session.role !== "admin" && analyse.motos.some((m) => m.prix_yuan || (m.marge_ar ?? null) !== null)) {
     return Response.json(
       {
         erreur:
-          "Import refusé : la colonne prix_yuan est réservée au compte administrateur. Laissez-la vide, l'administrateur la complétera.",
+          "Import refusé : les colonnes prix_yuan et marge_ar sont réservées au compte administrateur. Laissez-les vides, l'administrateur les complétera.",
         champ: "prix_yuan",
       },
       { status: 403 }
@@ -116,11 +116,16 @@ export async function POST(req: NextRequest) {
         taux_yuan: existante.taux_yuan,
         acompte_pct: existante.acompte_pct,
       };
+      // Volume de la caisse : une colonne vide ne remet pas au standard de la
+      // catégorie une fiche dont la caisse a été mesurée.
+      const volume_m3 = moto.volume_m3 ?? existante?.volume_m3 ?? null;
+      // Marge fixée à la main : même règle, une colonne vide ne l'efface pas.
+      const marge_ar = moto.marge_ar ?? existante?.marge_ar ?? null;
       let prix = { prix_ttc: moto.prix_ttc, prix_yuan: moto.prix_yuan ?? null, taux_yuan: moto.taux_yuan ?? null, acompte_pct: moto.acompte_pct ?? null };
       if (prixExistant && (!prixDynamique(existante.statut) || (!prix.prix_yuan && !existante.prix_yuan))) {
         prix = prixExistant;
-      } else if (!prix.prix_yuan && existante?.prix_yuan) {
-        prix = champsPrix(existante.prix_yuan, reglages, moto.categorie);
+      } else if (existante && (prix.prix_yuan ?? existante.prix_yuan)) {
+        prix = champsPrix(prix.prix_yuan ?? existante.prix_yuan, reglages, { ...moto, volume_m3, marge_ar });
       }
 
       // Statut : une fiche créée par import naît en brouillon — la mise en
@@ -137,6 +142,10 @@ export async function POST(req: NextRequest) {
       const donnees = {
         ...moto,
         ...prix,
+        // `undefined` : la clé n'est pas écrite, et l'import passe même si les
+        // colonnes manquent encore (migration 0012).
+        volume_m3: volume_m3 ?? undefined,
+        marge_ar: marge_ar ?? undefined,
         statut: existante?.statut ?? "brouillon",
         mise_en_vente: miseEnVente,
         fournisseur_id,

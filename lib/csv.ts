@@ -79,6 +79,8 @@ export const COLONNES_CSV: ColonneCsv[] = [
   { nom: "etat", obligatoire: true, format: "neuf ou occasion", exemple: "neuf" },
   { nom: "prix_yuan", obligatoire: true, format: "Prix d'achat en ¥, nombre entier. Réservé à l'administrateur ; vide = fiche sans prix", exemple: "15000" },
   { nom: "prix_valable_jusqu_au", obligatoire: true, format: "Date : 31/12/2026 ou 2026-12-31", exemple: "31/12/2026" },
+  { nom: "volume_m3", obligatoire: false, format: "Volume de la caisse en m³, pour le fret. Vide = volume standard de la catégorie. Interne", exemple: "" },
+  { nom: "marge_ar", obligatoire: false, format: "Marge fixée à la main, en Ar, nombre entier. Vide = marge calculée. Réservé à l'administrateur", exemple: "" },
   { nom: "disponibilite", obligatoire: false, format: "commande (importée après signature) ou local (déjà à Tana, disponible de suite). Vide = commande", exemple: "commande" },
   { nom: "kilometrage", obligatoire: false, format: "Obligatoire pour une occasion, nombre entier", exemple: "" },
   { nom: "date_photos", obligatoire: false, format: "Obligatoire pour une occasion (CGV art. 3.4)", exemple: "" },

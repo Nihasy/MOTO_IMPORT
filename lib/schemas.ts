@@ -39,6 +39,8 @@ export const motoSchema = z
     prix_ttc: z.coerce.number().int().min(0),
     prix_yuan: z.coerce.number().int().positive("Prix d'achat en yuan invalide").max(10_000_000).nullable().optional(),
     taux_yuan: z.coerce.number().positive().nullable().optional(),
+    volume_m3: z.coerce.number().positive("Volume de la caisse invalide").max(10, "Volume de la caisse : 10 m³ au plus").nullable().optional(),
+    marge_ar: z.coerce.number().int().min(0, "Marge invalide").max(1_000_000_000, "Marge invalide").nullable().optional(),
     acompte_pct: z.coerce.number().int().min(0).max(100).nullable().optional(),
     mise_en_vente: z.enum(MISES_EN_VENTE).default("commande"),
     prix_valable_jusqu_au: dateSchema,
@@ -193,6 +195,14 @@ export const ligneCsvSchema = z.object({
     .string()
     .optional()
     .refine((v) => !v?.trim() || /^\d[\d\s]*$/.test(v.trim()), "Prix en yuan : un nombre entier, sans décimale"),
+  volume_m3: z
+    .string()
+    .optional()
+    .refine((v) => !v?.trim() || /^\d+([.,]\d+)?$/.test(v.trim()), "Volume en m³ : un nombre, par exemple 1,15"),
+  marge_ar: z
+    .string()
+    .optional()
+    .refine((v) => !v?.trim() || /^\d[\d\s]*$/.test(v.trim()), "Marge en ariary : un nombre entier"),
   prix_valable_jusqu_au: dateSchema,
   disponibilite: z.string().optional(),
   garantie_mois: z.string().optional(),

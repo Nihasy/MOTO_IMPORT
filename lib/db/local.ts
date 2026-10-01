@@ -114,6 +114,8 @@ function construireMoto(input: MotoInput): Moto {
     prix_ttc: input.prix_ttc,
     prix_yuan: input.prix_yuan ?? null,
     taux_yuan: input.taux_yuan ?? null,
+    volume_m3: input.volume_m3 ?? null,
+    marge_ar: input.marge_ar ?? null,
     acompte_pct: input.acompte_pct ?? null,
     mise_en_vente: input.mise_en_vente ?? "commande",
     prix_valable_jusqu_au: input.prix_valable_jusqu_au,

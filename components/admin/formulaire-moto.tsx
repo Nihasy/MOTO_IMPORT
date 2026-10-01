@@ -46,6 +46,7 @@ export function FormulaireMoto({
   const [etat, action] = useActionState<EtatFormulaire, FormData>(enregistrerMoto, null);
   const [estOccasion, setEstOccasion] = useState(moto?.etat === "occasion");
   const [categorie, setCategorie] = useState<Categorie>(moto?.categorie ?? "trail");
+  const [cylindree, setCylindree] = useState<number>(moto?.cylindree ?? 0);
   const [description, setDescription] = useState(moto?.description ?? "");
 
   const mots = compterMots(description);
@@ -106,7 +107,8 @@ export function FormulaireMoto({
           <div>
             <label className="etiquette" htmlFor="cylindree">Cylindrée (cm³) *</label>
             <input id="cylindree" name="cylindree" type="number" inputMode="numeric" required min={1}
-              defaultValue={val("cylindree", moto?.cylindree)} className={`champ ${champEnErreur("cylindree")}`} />
+              defaultValue={val("cylindree", moto?.cylindree)} className={`champ ${champEnErreur("cylindree")}`}
+              onChange={(e) => setCylindree(Number(e.target.value) || 0)} />
           </div>
         </div>
 
@@ -185,8 +187,12 @@ export function FormulaireMoto({
           moto={moto}
           reglages={reglages}
           valeurReprise={repris?.prix_yuan}
+          volumeRepris={repris?.volume_m3}
+          margeReprise={repris?.marge_ar}
           categorie={categorie}
+          cylindree={cylindree}
           enErreur={etat?.champ === "prix_yuan"}
+          enErreurMarge={etat?.champ === "marge_ar"}
         />
 
         <div>

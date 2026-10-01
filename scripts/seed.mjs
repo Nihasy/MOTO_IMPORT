@@ -15,7 +15,9 @@ import { randomUUID } from "node:crypto";
  * portait que le prix de vente : la moitie des bascules de statut de la
  * recette echouait pour cette seule raison.
  *
- * On inverse la formule par defaut — prix = yuan x 670 x 1,1 + 7 000 000 —
+ * On inverse la formule d'avant le fret au volume — prix = yuan x 670 x 1,1
+ * + 7 000 000 ; depuis, le prix affiche du jeu d'essai est un peu au-dessus du
+ * calcul, ce que la recette ne controle pas —
  * pour que les deux chiffres racontent la meme histoire. Le plancher couvre
  * les motos les moins cheres, dont le prix de vente est presque entierement
  * absorbe par le fret et le benefice fixe.

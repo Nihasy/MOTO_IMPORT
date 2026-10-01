@@ -95,6 +95,17 @@ export type Moto = MotoPublique & {
   /** Taux ¥ → Ar du dernier calcul. Interne. */
   taux_yuan: number | null;
   /**
+   * Volume de la caisse (m³), quand il s'écarte du standard de la catégorie
+   * ou que l'entrepôt l'a mesuré. Interne : il décide du fret. Absent des
+   * fiches d'avant le fret au volume.
+   */
+  volume_m3?: number | null;
+  /**
+   * Marge fixée à la main (Ar) : elle remplace le bénéfice calculé. Interne.
+   * Vide, le calcul automatique s'applique.
+   */
+  marge_ar?: number | null;
+  /**
    * Statut sous lequel la fiche partira en vente : sur commande, ou déjà au
    * local (« Disponible de suite »). Décidé dès la saisie, parce qu'une fiche
    * naît en brouillon et se publie souvent plus tard, en masse.
