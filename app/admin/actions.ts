@@ -504,11 +504,11 @@ export async function enregistrerTarification(
     };
   }
 
-  // Par lots menés de front : écrites une à une, 139 fiches dépassaient la
-  // durée accordée à la fonction. Elle était coupée à la 83e le 01/10/2026,
-  // laissant 56 prix à l'ancien tarif et, faute d'arriver au bout, des pages
-  // publiques jamais rafraîchies. Relancer l'enregistrement reprend là où il
-  // s'est arrêté : seules les fiches au prix périmé sont réécrites.
+  // Par lots menés de front : écrites une à une, 139 fiches demandaient plus
+  // d'une minute, pendant laquelle le site public affichait un mélange
+  // d'anciens et de nouveaux prix — les pages ne sont rafraîchies qu'à la fin.
+  // Si l'enregistrement est interrompu, le relancer reprend là où il s'est
+  // arrêté : seules les fiches au prix périmé sont réécrites.
   const aRecalculer = (await db().listerMotosAdmin()).filter(
     (m) => m.prix_yuan && prixDynamique(m.statut) && !prixAJour(m, reglages)
   );
