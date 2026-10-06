@@ -7,7 +7,6 @@ import {
   GARDIENNAGE_AR_JOUR,
   GARDIENNAGE_PLAFOND_JOURS,
   GRACE_LIVRAISON_JOURS,
-  INDEMNITE_RESOLUTION_PCT,
   RESOLUTION_JOURS,
   RETRAIT_JOURS,
 } from "@/lib/conditions";
@@ -93,7 +92,7 @@ const ARTICLES: [string, string[]][] = [
     `11.1 — L'acheteur dispose de ${enLettres(RETRAIT_JOURS)} (${RETRAIT_JOURS}) jours à compter de l'arrivée du véhicule à Antananarivo pour régler le solde et retirer le véhicule. Pendant ce délai, aucun frais de garde ne lui est dû.`,
     `11.2 — Passé ce délai, des frais de gardiennage et d'immobilisation de ${ariary(GARDIENNAGE_AR_JOUR)} par jour entamé sont dus, dans la limite de ${enLettres(GARDIENNAGE_PLAFOND_JOURS)} (${GARDIENNAGE_PLAFOND_JOURS}) jours, soit ${ariary(PLAFOND_GARDIENNAGE)} au maximum. Ils couvrent la place occupée, la surveillance et l'entretien de maintien en état du véhicule. Ils sont exigibles en même temps que le solde.`,
     `11.3 — À l'expiration de ce second délai, soit ${enLettres(RESOLUTION_JOURS)} (${RESOLUTION_JOURS}) jours après l'arrivée du véhicule à Antananarivo, la vente est résolue de plein droit, sans autre mise en demeure que l'information de l'article 10.2. Le véhicule, qui n'a été immatriculé à aucun nom en application de l'article 7.2, redevient librement disponible à la vente.`,
-    `11.4 — En ce cas, MOTO IMPORT conserve à titre d'indemnité forfaitaire les frais de gardiennage échus ainsi qu'une somme égale à ${enLettres(INDEMNITE_RESOLUTION_PCT)} pour cent (${INDEMNITE_RESOLUTION_PCT} %) du prix porté au bon de commande. Le surplus de l'acompte est restitué à l'acheteur dans les ${enLettres(30)} (30) jours de la revente effective du véhicule.`,
+    "11.4 — En ce cas, l'acompte versé reste intégralement acquis à MOTO IMPORT à titre d'indemnité forfaitaire, couvrant notamment les frais de gardiennage échus. Aucune somme n'est restituée à l'acheteur.",
     `11.5 — L'acheteur peut, avant l'expiration du délai de l'article 11.1, solliciter par écrit une prorogation. Elle n'est acquise qu'autant que MOTO IMPORT l'accepte par écrit ; elle suspend alors les frais de l'article 11.2 pour la durée convenue.`,
   ]],
   ["Article 12 — Transfert des risques", [
@@ -112,7 +111,7 @@ export default function Page() {
       <BarreSuperieure titre="CGV" />
       <main className="conteneur pb-24 pt-6">
         <h1 className="text-titre-fiche">Conditions générales de vente</h1>
-        <p className="mt-2 text-meta text-dim">Version en vigueur au 22 septembre 2026 — MOTO IMPORT, Antananarivo.</p>
+        <p className="mt-2 text-meta text-dim">Version en vigueur au 6 octobre 2026 — MOTO IMPORT, Antananarivo.</p>
         <div className="mt-5 space-y-5">
           {ARTICLES.map(([titre, paragraphes]) => (
             <section key={titre}>

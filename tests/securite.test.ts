@@ -6,11 +6,9 @@ import { garantieCourte, garantieFiche } from "@/lib/garantie";
 import { messageVerrou, verrouPublication } from "@/lib/publication";
 import { motoSchema } from "@/lib/schemas";
 import {
-  ACOMPTE_MIN,
   DELAI_MAX,
   GARDIENNAGE_AR_JOUR,
   GARDIENNAGE_PLAFOND_JOURS,
-  INDEMNITE_RESOLUTION_PCT,
   RESOLUTION_JOURS,
   RETRAIT_JOURS,
 } from "@/lib/conditions";
@@ -217,9 +215,6 @@ describe("garantie : seul le neuf est couvert (CGV art. 8)", () => {
     expect(RETRAIT_JOURS + GARDIENNAGE_PLAFOND_JOURS).toBe(RESOLUTION_JOURS);
     expect(RESOLUTION_JOURS).toBe(30);
     expect(GARDIENNAGE_AR_JOUR * GARDIENNAGE_PLAFOND_JOURS).toBe(1_000_000);
-    // L'indemnité doit rester très inférieure à l'acompte encaissé, faute de
-    // quoi la revente indemniserait deux fois le même préjudice.
-    expect(INDEMNITE_RESOLUTION_PCT).toBeLessThan(ACOMPTE_MIN);
   });
 
   it("ne mentionne rien non plus sur un neuf dont la garantie n'est pas saisie", () => {

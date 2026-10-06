@@ -8,7 +8,6 @@ import {
   GARDIENNAGE_AR_JOUR,
   GARDIENNAGE_PLAFOND_JOURS,
   GRACE_LIVRAISON_JOURS,
-  INDEMNITE_RESOLUTION_PCT,
   RESOLUTION_JOURS,
   RETRAIT_JOURS,
 } from "@/lib/conditions";
@@ -30,7 +29,7 @@ const QUESTIONS = [
   },
   {
     q: "Que se passe-t-il si je me désiste ?",
-    r: "Après signature du bon de commande et avant l'arrivée de la moto à Tana, l'acompte reste acquis à MOTO IMPORT. Le véhicule a déjà été acheté et expédié à votre demande. Nous le disons clairement avant la signature, jamais après. Avant signature, vous ne devez rien et vous pouvez changer d'avis librement. Une fois la moto arrivée, c'est un autre régime qui s'applique, plus favorable : voir la question sur le délai de retrait.",
+    r: "Après signature du bon de commande et avant l'arrivée de la moto à Tana, l'acompte reste acquis à MOTO IMPORT. Le véhicule a déjà été acheté et expédié à votre demande. Nous le disons clairement avant la signature, jamais après. Avant signature, vous ne devez rien et vous pouvez changer d'avis librement. Une fois la moto arrivée, voir la question sur le délai de retrait.",
     cgv: "Article 6 — Annulation et désistement",
   },
   {
@@ -40,7 +39,7 @@ const QUESTIONS = [
   },
   {
     q: `Combien de temps ai-je pour venir chercher la moto ?`,
-    r: `${RETRAIT_JOURS} jours à compter de son arrivée à Antananarivo, dont nous vous prévenons le jour même par WhatsApp et par téléphone. Pendant ces ${RETRAIT_JOURS} jours, vous ne devez rien de plus que le solde. Au-delà, des frais de gardiennage de ${ar(GARDIENNAGE_AR_JOUR)} par jour s'appliquent, plafonnés à ${GARDIENNAGE_PLAFOND_JOURS} jours : ils paient la place occupée et la surveillance, pas une punition. Si au bout de ${RESOLUTION_JOURS} jours la moto n'est toujours pas retirée, la vente est annulée et le véhicule remis en vente ; nous conservons alors les frais échus et ${INDEMNITE_RESOLUTION_PCT} % du prix, et nous vous remboursons le reste de l'acompte dans les 30 jours de la revente. Si vous avez un empêchement, écrivez-nous avant la fin des ${RETRAIT_JOURS} jours : une prorogation écrite est possible.`,
+    r: `${RETRAIT_JOURS} jours à compter de son arrivée à Antananarivo, dont nous vous prévenons le jour même par WhatsApp et par téléphone. Pendant ces ${RETRAIT_JOURS} jours, vous ne devez rien de plus que le solde. Au-delà, des frais de gardiennage de ${ar(GARDIENNAGE_AR_JOUR)} par jour s'appliquent, plafonnés à ${GARDIENNAGE_PLAFOND_JOURS} jours : ils paient la place occupée et la surveillance, pas une punition. Si au bout de ${RESOLUTION_JOURS} jours la moto n'est toujours pas retirée, la vente est annulée, le véhicule remis en vente et l'acompte reste acquis à MOTO IMPORT, sans remboursement. Si vous avez un empêchement, écrivez-nous avant la fin des ${RETRAIT_JOURS} jours : une prorogation écrite est possible.`,
     cgv: "Article 11 — Retrait du véhicule et frais de gardiennage",
   },
   {

@@ -51,8 +51,5 @@ export const GARDIENNAGE_PLAFOND_JOURS = 10;
 /** Jour de la résolution de plein droit, compté depuis l'arrivée à Antananarivo. */
 export const RESOLUTION_JOURS = RETRAIT_JOURS + GARDIENNAGE_PLAFOND_JOURS;
 
-/** Indemnité forfaitaire conservée à la résolution, en plus du gardiennage échu. */
-export const INDEMNITE_RESOLUTION_PCT = 15;
-
 /** Grâce laissée à MOTO IMPORT au-delà du délai maximum avant annulation par l'acheteur. */
 export const GRACE_LIVRAISON_JOURS = 15;
