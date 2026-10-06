@@ -8,7 +8,7 @@ sous `/admin`.
 
 ```bash
 npm run recette        # LE garde-fou : e2e + sécurité + charge. Zéro échec attendu.
-npm test               # vitest, ~204 tests
+npm test               # vitest, ~308 tests
 npx tsc --noEmit       # typecheck
 npm run lint           # ESLint (règles Next) : zéro problème attendu, `next build` le relance
 npm run build          # build de production (prégénère les fiches publiées)
@@ -80,6 +80,7 @@ Vercel détient les variables sensibles ; la construction se fait chez lui.
 | Vues exigées pour publier | `VUES_OBLIGATOIRES` — `lib/medias.ts` (`34ad`, `34ag`, `fa`) |
 | Règle et géométrie du filigrane | `marquable`, `couche()` — `lib/cloudinary.ts` |
 | Marques proposées au filtre | `MARQUES_CONNUES` — `lib/marques.ts` |
+| Noms courants des types pour la recherche (« naked », « adv »…) | `SYNONYMES_CATEGORIE` — `lib/recherche.ts` |
 
 Ne jamais dupliquer ces listes : elles servent à la fois au fichier
 téléchargeable, au guide affiché et à la validation.

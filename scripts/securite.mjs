@@ -392,6 +392,19 @@ verifier(
   `${acceptees} acceptees / ${bloquees} bloquees sur ${TENTATIVES} — aucune borne globale`
 );
 
+// Les suggestions de recherche partent a chaque frappe : la borne par adresse
+// doit tenir, sans quoi une boucle suffit a monopoliser la fonction.
+let suggestionsBloquees = 0;
+for (let i = 0; i < 130; i++) {
+  const r = await req(`/api/recherche?q=honda${i}`, { headers: { "x-forwarded-for": "198.51.100.77" } });
+  if (r.statut === 429) suggestionsBloquees++;
+}
+verifier(
+  "les suggestions de recherche sont bornees par adresse",
+  suggestionsBloquees > 0,
+  "130 demandes de la meme adresse sans un seul refus"
+);
+
 // ── E. Fuite d'information ────────────────────────────────────────────────
 titre("E. Fuite d'information");
 
@@ -401,6 +414,17 @@ for (const p of pagesPubliques) {
   verifier(`${p} ne fuit aucune donnee fournisseur`, !/fournisseur/i.test(r.texte));
   verifier(`${p} ne fuit aucun hachage d'IP`, !/ip_hash/i.test(r.texte));
 }
+
+const suggestions = await req("/api/recherche?q=honda", { headers: { "x-forwarded-for": "198.51.100.78" } });
+verifier("les suggestions ne fuient aucune donnee fournisseur", !/fournisseur|prix_yuan|marge_ar|volume_m3/i.test(suggestions.texte));
+const chargeHtml = await req(`/api/recherche?q=${encodeURIComponent("<img src=x onerror=alert(1)>")}`, {
+  headers: { "x-forwarded-for": "198.51.100.79" },
+});
+verifier(
+  "une charge HTML dans la recherche revient en JSON, jamais en page",
+  chargeHtml.statut === 200 && (chargeHtml.entetes.get("content-type") ?? "").includes("application/json"),
+  `statut ${chargeHtml.statut}, type ${chargeHtml.entetes.get("content-type")}`
+);
 
 const entetes = (await req("/motos")).entetes;
 verifier(

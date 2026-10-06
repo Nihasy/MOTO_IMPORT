@@ -1,5 +1,6 @@
 import type { Moto, Statut, Vue } from "./types";
 import { estPublic } from "./types";
+import { correspondTextes } from "./recherche";
 
 export type LigneAdmin = Pick<
   Moto,
@@ -57,13 +58,12 @@ export function appartientAuGroupe(
 /**
  * Recherche par référence, marque, modèle ou année. Chaque mot doit être
  * présent : taper « honda 2023 » restreint au lieu d'élargir, ce qui est le
- * comportement attendu quand on cherche une fiche précise.
+ * comportement attendu quand on cherche une fiche précise. Même moteur que le
+ * catalogue public : « gsxs750 », « GSX-S750 » et « kawazaki » trouvent leur
+ * fiche, mais aucun repli approximatif — ici, une fiche absente doit se voir.
  */
 export function correspondRecherche(ligne: LigneAdmin, q: string): boolean {
-  const termes = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  if (!termes.length) return true;
-  const botte = `${ligne.reference} ${ligne.marque} ${ligne.modele} ${ligne.annee}`.toLowerCase();
-  return termes.every((t) => botte.includes(t));
+  return correspondTextes([ligne.reference, ligne.marque, ligne.modele, String(ligne.annee)], q);
 }
 
 export function filtrerMotosAdmin<T extends LigneAdmin>(

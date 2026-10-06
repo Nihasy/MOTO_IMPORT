@@ -15,14 +15,20 @@ import { TRIS, type Ordre } from "@/lib/db/filtres";
 export function SelecteurTri({
   tri,
   ordre,
+  avecPertinence = false,
   onChanger,
 }: {
   tri: string;
   ordre: Ordre;
+  /** Une recherche est en cours : la pertinence devient proposable. */
+  avecPertinence?: boolean;
   onChanger: (maj: { tri?: string; ordre?: Ordre }) => void;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const boite = useRef<HTMLDivElement>(null);
+  const criteres = Object.entries(TRIS).filter(([cle]) => cle !== "pertinence" || avecPertinence);
+  // La pertinence n'a qu'un sens : la meilleure correspondance d'abord.
+  const pertinence = tri === "pertinence";
 
   useEffect(() => {
     if (!ouvert) return;
@@ -54,9 +60,11 @@ export function SelecteurTri({
       >
         <span className="text-dim">Trier par</span>
         <span className="text-gold-light">{TRIS[tri] ?? TRIS.date}</span>
-        <span aria-hidden className="text-gold-light">
-          {ordre === "asc" ? "↑" : "↓"}
-        </span>
+        {pertinence ? null : (
+          <span aria-hidden className="text-gold-light">
+            {ordre === "asc" ? "↑" : "↓"}
+          </span>
+        )}
         <Chevron ouvert={ouvert} />
       </button>
 
@@ -69,7 +77,7 @@ export function SelecteurTri({
           )}
         >
           <ul role="listbox" aria-label="Critère de tri">
-            {Object.entries(TRIS).map(([cle, libelle]) => {
+            {criteres.map(([cle, libelle]) => {
               const actif = cle === tri;
               return (
                 <li key={cle}>
@@ -96,32 +104,34 @@ export function SelecteurTri({
             })}
           </ul>
 
-          <div className="border-t border-line p-2">
-            <div role="group" aria-label="Sens du tri" className="grid grid-cols-2 gap-1">
-              {(
-                [
-                  ["desc", "Décroissant", "↓"],
-                  ["asc", "Croissant", "↑"],
-                ] as const
-              ).map(([cle, libelle, fleche]) => (
-                <button
-                  type="button"
-                  key={cle}
-                  onClick={() => onChanger({ ordre: cle })}
-                  aria-pressed={ordre === cle}
-                  className={clsx(
-                    "flex min-h-[36px] items-center justify-center gap-1.5 border text-[13px] font-semibold transition-colors",
-                    ordre === cle
-                      ? "border-gold bg-gold text-on-gold"
-                      : "border-line bg-surface-hi text-chrome hover:text-text"
-                  )}
-                >
-                  <span aria-hidden>{fleche}</span>
-                  {libelle}
-                </button>
-              ))}
+          {pertinence ? null : (
+            <div className="border-t border-line p-2">
+              <div role="group" aria-label="Sens du tri" className="grid grid-cols-2 gap-1">
+                {(
+                  [
+                    ["desc", "Décroissant", "↓"],
+                    ["asc", "Croissant", "↑"],
+                  ] as const
+                ).map(([cle, libelle, fleche]) => (
+                  <button
+                    type="button"
+                    key={cle}
+                    onClick={() => onChanger({ ordre: cle })}
+                    aria-pressed={ordre === cle}
+                    className={clsx(
+                      "flex min-h-[36px] items-center justify-center gap-1.5 border text-[13px] font-semibold transition-colors",
+                      ordre === cle
+                        ? "border-gold bg-gold text-on-gold"
+                        : "border-line bg-surface-hi text-chrome hover:text-text"
+                    )}
+                  >
+                    <span aria-hidden>{fleche}</span>
+                    {libelle}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ) : null}
     </div>

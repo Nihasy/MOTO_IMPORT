@@ -1,6 +1,7 @@
 import type { MotoAvecMedias, MotoPublique } from "@/lib/types";
 import { POIDS_STATUT, estPublic } from "@/lib/types";
 import type { FiltresCatalogue } from "./types";
+import { correspond } from "@/lib/recherche";
 
 export const TRANCHES_CC: Record<string, [number, number]> = {
   "250-400": [250, 400],
@@ -37,17 +38,19 @@ export function appliquerFiltres<T extends MotoFiltrable>(motos: T[], f: Filtres
     if (f.anneeMin !== undefined && m.annee < f.anneeMin) return false;
     if (f.anneeMax !== undefined && m.annee > f.anneeMax) return false;
     if (f.masquerVendues && m.statut === "vendu") return false;
-    if (f.recherche) {
-      const q = f.recherche.toLowerCase().trim();
-      const hay = `${m.marque} ${m.modele} ${m.reference}`.toLowerCase();
-      if (!q.split(/\s+/).every((mot) => hay.includes(mot))) return false;
-    }
+    // Recherche stricte : tous les mots doivent trouver un écho, fautes de
+    // frappe et formes d'écriture comprises (`lib/recherche.ts`). Le repli
+    // approximatif et le tri par pertinence se décident plus haut, dans
+    // `rechercheCatalogue`, qui voit tout le catalogue.
+    if (f.recherche && !correspond(m, f.recherche)) return false;
     return true;
   });
 }
 
 /** Criteres de tri proposes au catalogue, dans l'ordre du selecteur. */
 export const TRIS: Record<string, string> = {
+  /** Proposé seulement quand une recherche est en cours : sans texte, il n'y a rien à noter. */
+  pertinence: "Pertinence",
   date: "Nouveautés",
   prix: "Prix",
   cylindree: "Cylindrée",

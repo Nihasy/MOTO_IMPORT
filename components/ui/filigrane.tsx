@@ -20,7 +20,18 @@ import {
  * `aria-hidden` : la marque est décorative, elle n'ajoute rien à l'`alt` de la
  * photo qu'elle recouvre.
  */
-export function Filigrane({ className }: { className?: string }) {
+export function Filigrane({
+  className,
+  largeurMin = 96,
+}: {
+  className?: string;
+  /**
+   * Plancher de largeur, en px, pour que la marque reste lisible sur une
+   * carte étroite. Les miniatures de 56 px de la recherche le passent à 0 :
+   * plus large que la photo, la marque débordait et se lisait tronquée.
+   */
+  largeurMin?: number;
+}) {
   return (
     <span
       aria-hidden="true"
@@ -40,7 +51,7 @@ export function Filigrane({ className }: { className?: string }) {
         style={{
           width: `${(FILIGRANE_LARGEUR / (1 - 2 * FILIGRANE_MARGE)) * 100}%`,
           maxWidth: 320,
-          minWidth: 96,
+          minWidth: largeurMin,
           aspectRatio: FILIGRANE_RATIO,
           opacity: FILIGRANE_OPACITE,
         }}

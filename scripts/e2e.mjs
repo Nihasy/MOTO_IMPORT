@@ -113,6 +113,29 @@ verifier("le résultat vide explique le sourcing sur commande", vide.texte.inclu
 const recherche = await get("/motos?q=yamaha");
 verifier("la recherche textuelle fonctionne", recherche.statut === 200 && recherche.texte.includes("Yamaha"));
 
+// Recherche tolérante : fautes de frappe, repli approximatif, suggestions.
+const faute = await get("/motos?q=yamha");
+verifier("la recherche tolère une faute de frappe", faute.statut === 200 && faute.texte.includes("Yamaha"));
+const proche = await get(`/motos?q=${encodeURIComponent("yamaha zzzintrouvable")}`);
+verifier("une recherche sans résultat exact propose les plus proches", proche.texte.includes("Voici les plus proches"));
+const suggestionsYamaha = JSON.parse((await get("/api/recherche?q=yamaha")).texte);
+verifier(
+  "les suggestions proposent la moto cherchée",
+  suggestionsYamaha.motos?.some((m) => m.marque === "Yamaha"),
+  JSON.stringify(suggestionsYamaha).slice(0, 200)
+);
+verifier("les suggestions mènent à une fiche", suggestionsYamaha.motos?.every((m) => typeof m.slug === "string" && m.slug));
+const sansTexte = JSON.parse((await get("/api/recherche?q=")).texte);
+verifier("sans texte, aucune suggestion", sansTexte.total === 0 && sansTexte.motos.length === 0);
+const pageRecherche = await get("/motos?q=yamaha");
+const nbRecherche = Number(pageRecherche.texte.match(/>(\d+)<!-- --> moto/)?.[1] ?? -1);
+const trancheRecherche = JSON.parse((await get("/api/catalogue?depuis=0&q=yamaha")).texte);
+verifier(
+  "la route des tranches applique la même recherche que la page",
+  trancheRecherche.total === nbRecherche && nbRecherche > 0,
+  `${trancheRecherche.total} vs ${nbRecherche}`
+);
+
 // Tranches au défilement : la route doit suivre les filtres et l'ordre de la
 // page, sinon le défilement répète ou saute des motos.
 const tranche = JSON.parse((await get("/api/catalogue?depuis=0")).texte);

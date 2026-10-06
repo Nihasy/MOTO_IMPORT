@@ -18,6 +18,7 @@ import { ICONE_CATEGORIE, IconeToutes } from "./icones-types";
 import { FeuilleFiltres, type EtatFiltres } from "./feuille-filtres";
 import { type MotoFiltrable, type Ordre } from "@/lib/db/filtres";
 import { SelecteurTri } from "./selecteur-tri";
+import { BoiteRecherche } from "./boite-recherche";
 import { CARTES_PAR_TRANCHE } from "@/lib/catalogue";
 
 /**
@@ -48,6 +49,8 @@ export function VueCatalogue({
   marques,
   annees,
   catalogue,
+  approximatif = false,
+  triEffectif = "date",
 }: {
   /** Premiere tranche du catalogue filtre ; la suite arrive au defilement. */
   motos: MotoAvecMedias[];
@@ -56,15 +59,20 @@ export function VueCatalogue({
   marques: { nom: string; effectif: number }[];
   /** Annees presentes au catalogue, de la plus recente a la plus ancienne. */
   annees: number[];
-  /** Catalogue complet allege : sert au comptage en direct dans la feuille. */
+  /** Motos qui repondent au texte cherche, allegees : comptage en direct dans la feuille. */
   catalogue: MotoFiltrable[];
+  /** La recherche stricte ne rendait rien : la liste montre les plus proches. */
+  approximatif?: boolean;
+  /** Tri applique par le serveur : « pertinence » des qu'il y a du texte, sauf demande contraire. */
+  triEffectif?: string;
 }) {
   const whatsapp = useWhatsapp();
   const router = useRouter();
   const params = useSearchParams();
   const [feuilleOuverte, setFeuilleOuverte] = useState(false);
   const chromeVisible = useChromeVisible();
-  const [rechercheOuverte, setRechercheOuverte] = useState(false);
+  // Ouverte d'emblée quand on arrive par la loupe d'une autre page (`?chercher=1`).
+  const [rechercheOuverte, setRechercheOuverte] = useState(() => params.get("chercher") === "1");
 
   // Tranches ajoutees au defilement, rattachees aux filtres qui les ont
   // demandees : changer de filtre repart de la premiere tranche que la page
@@ -182,7 +190,22 @@ export function VueCatalogue({
   const etatActif = params.get("etat") ?? "tous";
   const typeActif = params.get("cat") ?? "toutes";
   const recherche = params.get("q") ?? "";
-  const tri = params.get("tri") ?? "date";
+  const tri = triEffectif;
+  /** Tri qu'on n'ecrit pas dans l'URL : la pertinence quand on cherche, les nouveautes sinon. */
+  const triParDefaut = recherche ? "pertinence" : "date";
+
+  // « / » ouvre la recherche de n'importe ou dans la page, comme sur la
+  // plupart des sites marchands.
+  useEffect(() => {
+    const surTouche = (e: KeyboardEvent) => {
+      const cible = e.target as HTMLElement;
+      if (e.key !== "/" || ["INPUT", "TEXTAREA", "SELECT"].includes(cible.tagName) || cible.isContentEditable) return;
+      e.preventDefault();
+      setRechercheOuverte(true);
+    };
+    document.addEventListener("keydown", surTouche);
+    return () => document.removeEventListener("keydown", surTouche);
+  }, []);
   const ordre: Ordre = params.get("ordre") === "asc" ? "asc" : "desc";
 
   const nbFiltresActifs =
@@ -196,6 +219,9 @@ export function VueCatalogue({
   const naviguer = useCallback(
     (maj: Record<string, string | undefined>) => {
       const p = new URLSearchParams(params.toString());
+      // Le signal d'ouverture ne sert qu'à l'arrivée : il ne doit pas survivre
+      // aux filtres, ni rouvrir la recherche au rechargement.
+      p.delete("chercher");
       for (const [k, v] of Object.entries(maj)) {
         if (v === undefined || v === "") p.delete(k);
         else p.set(k, v);
@@ -296,26 +322,16 @@ export function VueCatalogue({
 
       {rechercheOuverte ? (
         <div className="border-b border-line bg-surface px-4 py-3">
-          <form
-            className="conteneur-large flex gap-2 px-0"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const v = new FormData(e.currentTarget).get("q");
-              naviguer({ q: typeof v === "string" && v.trim() ? v.trim() : undefined });
-            }}
-          >
-            <input
-              name="q"
-              defaultValue={recherche}
-              placeholder="Marque ou modèle : Honda, CB500X…"
-              className="champ"
-              autoFocus
-              aria-label="Recherche par marque ou modèle"
+          <div className="conteneur-large px-0">
+            <BoiteRecherche
+              valeur={recherche}
+              marquesPopulaires={marques.slice(0, 6)}
+              onRechercher={(t) => {
+                setRechercheOuverte(false);
+                naviguer({ q: t });
+              }}
             />
-            <button type="submit" className="btn-or px-5">
-              OK
-            </button>
-          </form>
+          </div>
         </div>
       ) : null}
 
@@ -395,9 +411,10 @@ export function VueCatalogue({
           <SelecteurTri
             tri={tri}
             ordre={ordre}
+            avecPertinence={Boolean(recherche)}
             onChanger={({ tri: t, ordre: o }) =>
               naviguer({
-                ...(t !== undefined ? { tri: t === "date" ? undefined : t } : {}),
+                ...(t !== undefined ? { tri: t === triParDefaut ? undefined : t } : {}),
                 ...(o !== undefined ? { ordre: o === "desc" ? undefined : o } : {}),
               })
             }
@@ -433,6 +450,12 @@ export function VueCatalogue({
           </div>
         ) : null}
 
+        {approximatif && affichees.length ? (
+          <p role="status" className="mb-4 border border-gold/40 bg-gold/10 px-4 py-3 text-meta text-text">
+            Aucune moto ne correspond exactement à « {recherche} ». Voici les plus proches.
+          </p>
+        ) : null}
+
         {affichees.length ? (
           <>
             <div className="grille-annonces" onClickCapture={memoriserPosition}>
@@ -461,7 +484,7 @@ export function VueCatalogue({
           <EtatVide
             titre="Aucune moto ne correspond"
             texte="Dites-nous ce que vous cherchez : nous sourçons sur commande auprès de nos ateliers partenaires en Chine."
-            action={{ libelle: "Dites-nous ce que vous cherchez", href: lienRecherche(filtres.max, whatsapp) }}
+            action={{ libelle: "Dites-nous ce que vous cherchez", href: lienRecherche(filtres.max, whatsapp, recherche) }}
           />
         )}
       </main>
@@ -473,6 +496,7 @@ export function VueCatalogue({
         marquesDisponibles={marques}
         annees={annees}
         catalogue={catalogue}
+        contexte={{ etat: etatActif, categorie: typeActif }}
         onValider={appliquer}
         onReinitialiser={() => {
           demarrerNavigation();

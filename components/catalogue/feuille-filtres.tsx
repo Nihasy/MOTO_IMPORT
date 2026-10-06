@@ -322,6 +322,7 @@ export function FeuilleFiltres({
   marquesDisponibles,
   annees,
   catalogue,
+  contexte = {},
   onValider,
   onReinitialiser,
 }: {
@@ -331,8 +332,14 @@ export function FeuilleFiltres({
   marquesDisponibles: { nom: string; effectif: number }[];
   /** Annees ayant du stock : elles sont mises en avant dans le rouleau. */
   annees: number[];
-  /** Catalogue complet allege, pour compter les resultats avant de valider. */
+  /** Motos qui repondent au texte cherche, allegees, pour compter avant de valider. */
   catalogue: MotoFiltrable[];
+  /**
+   * Choix faits hors de la feuille — neuf ou occasion, type — qui restreignent
+   * aussi la liste. Sans eux, le bouton annoncait « Voir 40 motos » quand
+   * « Occasion » et « Trail » n'en laissaient que six.
+   */
+  contexte?: { etat?: string; categorie?: string };
   onValider: (v: EtatFiltres) => void;
   onReinitialiser: () => void;
 }) {
@@ -363,6 +370,12 @@ export function FeuilleFiltres({
   const nbResultats = useMemo(
     () =>
       appliquerFiltres(catalogue, {
+        etat: contexte.etat,
+        // Même lecture que le serveur (`rechercheCatalogue`) : liste séparée par des virgules.
+        categorie: (() => {
+          const l = (contexte.categorie ?? "").split(",").filter((c) => c && c !== "toutes");
+          return l.length ? l : undefined;
+        })(),
         prixMin: local.min,
         prixMax: local.max,
         marques: local.marques.length ? local.marques : undefined,
@@ -371,7 +384,7 @@ export function FeuilleFiltres({
         anneeMax: local.anneeMax,
         masquerVendues: local.masquerVendues,
       }).length,
-    [catalogue, local]
+    [catalogue, local, contexte.etat, contexte.categorie]
   );
 
   if (!ouverte) return null;

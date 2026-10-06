@@ -8,7 +8,8 @@ type Evenement =
   | "enregistrement"
   | "filtre_applique"
   | "galerie_balayee"
-  | "plein_ecran_ouvert";
+  | "plein_ecran_ouvert"
+  | "recherche";
 
 type Fenetre = Window & {
   fbq?: (...a: unknown[]) => void;

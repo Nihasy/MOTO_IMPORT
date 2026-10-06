@@ -57,7 +57,17 @@ export function BarreSuperieure({
             >
               <IconeLoupe />
             </button>
-          ) : null}
+          ) : (
+            // Hors du catalogue, la loupe y mène, recherche déjà ouverte : on
+            // cherche une moto depuis n'importe quelle page, comme sur 261° WEAR.
+            <Link
+              href="/motos?chercher=1"
+              aria-label="Rechercher une moto"
+              className="flex h-touch w-touch items-center justify-center rounded-full text-chrome hover:text-text"
+            >
+              <IconeLoupe />
+            </Link>
+          )}
           {onOuvrirFiltres ? (
             <button
               type="button"

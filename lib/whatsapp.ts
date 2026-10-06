@@ -35,8 +35,14 @@ export function lienDevis(m: MotoPublique, numero?: string): string {
   return lien(m.statut === "vendu" ? messageMemeModele(m) : messageDevis(m), numero);
 }
 
-export function lienRecherche(budget?: number, numero?: string): string {
-  const base = "Bonjour MOTO IMPORT, je cherche une moto";
+/**
+ * Demande sur mesure, quand le catalogue ne rend rien. Ce que l'acheteur a
+ * tapé part avec le message : il n'a pas à le réécrire, et l'équipe sait
+ * d'emblée quoi sourcer.
+ */
+export function lienRecherche(budget?: number, numero?: string, quoi?: string): string {
+  const cherche = quoi?.trim().slice(0, 80);
+  const base = `Bonjour MOTO IMPORT, je cherche une moto${cherche ? ` : « ${cherche} »` : ""}`;
   return lien(
     budget ? `${base} avec un budget d'environ ${ar(budget)}.` : `${base}. Pouvez-vous me conseiller ?`,
     numero

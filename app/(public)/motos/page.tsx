@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { cataloguePublic } from "@/lib/catalogue-public";
-import { selectionCatalogue, trancheCatalogue } from "@/lib/catalogue";
+import { rechercheCatalogue, trancheCatalogue } from "@/lib/catalogue";
 import { VueCatalogue } from "@/components/catalogue/vue-catalogue";
 import { Squelette, VoileChargement } from "@/components/ui";
 import { FOURCHETTE_DELAI_TEXTE } from "@/lib/conditions";
@@ -27,7 +27,7 @@ export default async function PageCatalogue({ searchParams }: { searchParams: Pa
   const toutes = await cataloguePublic();
 
   const lire = (cle: string) => premier(sp[cle]);
-  const selection = selectionCatalogue(toutes, lire);
+  const { motos: selection, approximatif, correspondantes, tri } = rechercheCatalogue(toutes, lire);
   // Seule la premiere tranche part avec la page : la suite est demandee au
   // defilement, a la route des tranches.
   const motos = trancheCatalogue(selection, 0);
@@ -41,8 +41,10 @@ export default async function PageCatalogue({ searchParams }: { searchParams: Pa
   const annees = [...new Set(toutes.map((m) => m.annee))].sort((a, b) => b - a);
 
   // Projection allegee : la feuille de filtres compte les resultats en direct,
-  // sans qu'il faille lui transmettre les medias de tout le catalogue.
-  const catalogue = toutes.map((m) => ({
+  // sans qu'il faille lui transmettre les medias de tout le catalogue. Elle
+  // ne porte que les motos qui repondent au texte cherche : le compte de la
+  // feuille est alors celui que la liste affichera.
+  const catalogue = correspondantes.map((m) => ({
     categorie: m.categorie,
     etat: m.etat,
     prix_ttc: m.prix_ttc,
@@ -59,7 +61,15 @@ export default async function PageCatalogue({ searchParams }: { searchParams: Pa
       {/* Titre principal pour les moteurs de recherche et les lecteurs
           d'écran : la page n'en affiche pas, ses filtres tiennent lieu d'en-tête. */}
       <h1 className="sr-only">Catalogue MOTO IMPORT : motos importées, prix rendu Antananarivo</h1>
-      <VueCatalogue motos={motos} total={selection.length} marques={marques} annees={annees} catalogue={catalogue} />
+      <VueCatalogue
+        motos={motos}
+        total={selection.length}
+        marques={marques}
+        annees={annees}
+        catalogue={catalogue}
+        approximatif={approximatif}
+        triEffectif={tri}
+      />
     </Suspense>
   );
 }
