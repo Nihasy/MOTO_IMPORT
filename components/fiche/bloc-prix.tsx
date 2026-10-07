@@ -29,7 +29,7 @@ export function BlocPrix({ moto }: { moto: MotoPublique }) {
       {/* Le véhicule déjà sur place n'a plus de trajet devant lui : « rendu à
           Antananarivo » y décrit une livraison qui a eu lieu, et la date de
           validité du prix n'a plus d'objet — elle couvre la variation des
-          droits d'importation (CGV art. 5.4), déjà acquittés ici. */}
+          cours (CGV art. 5.4), alors qu'ici achat et fret sont payés. */}
       {surPlace ? (
         <>
           <p className="mt-2 text-corps text-chrome">

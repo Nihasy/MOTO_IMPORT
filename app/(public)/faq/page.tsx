@@ -34,7 +34,7 @@ const QUESTIONS = [
   },
   {
     q: "Le prix peut-il changer entre la commande et la livraison ?",
-    r: "Le prix affiché est valable jusqu'à la date indiquée sur chaque fiche. Une fois le bon de commande signé, le prix est ferme : ni la variation du fret, ni celle du taux de change ne vous sont répercutées, sauf variation exceptionnelle des droits de douane prévue aux CGV.",
+    r: "Le prix affiché est valable jusqu'à la date indiquée sur chaque fiche. Une fois le bon de commande signé, le prix est ferme : ni le fret ni les droits de douane ne vous sont répercutés. Seule une variation du cours du yuan ou du dollar d'au moins 3 % depuis la signature peut conduire à un nouveau prix. Nous vous le proposons par écrit, par WhatsApp ou par email, et vous avez trois jours ouvrés pour répondre. En cas de hausse, vous choisissez : accepter, ou annuler avec remboursement intégral de votre acompte (CGV 5.4 et 5.5).",
     cgv: "Article 5 — Prix",
   },
   {

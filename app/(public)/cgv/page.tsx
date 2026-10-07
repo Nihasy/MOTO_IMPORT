@@ -57,7 +57,8 @@ const ARTICLES: [string, string[]][] = [
     "Les prix affichés s'entendent toutes taxes comprises, rendus à Antananarivo, carte grise établie au nom de l'acheteur incluse, sous la réserve de l'article 7.4 pour les motos de cross.",
     "Chaque prix est valable jusqu'à la date indiquée sur la fiche du véhicule.",
     "5.3 — Les prix affichés au catalogue peuvent être modifiés à tout moment avant la signature du bon de commande. Seul le prix inscrit au bon de commande engage les parties.",
-    "5.4 — Après signature, le prix est ferme. Une révision ne peut intervenir qu'en cas de variation des droits et taxes d'importation excédant huit pour cent (8 %), auquel cas l'acheteur peut renoncer à la commande et obtenir le remboursement intégral de son acompte.",
+    "5.4 — Après signature, le prix est ferme. Les droits et taxes d'importation n'en justifient jamais la révision : seule une variation du cours du yuan ou du dollar d'au moins trois pour cent (3 %) depuis la signature le peut. MOTO IMPORT propose alors le nouveau prix à l'acheteur par écrit, par WhatsApp ou par email, et l'acheteur dispose de trois (3) jours ouvrés pour répondre par écrit.",
+    "5.5 — En cas de hausse, l'acheteur choisit entre accepter le nouveau prix et renoncer à la commande, auquel cas son acompte lui est intégralement remboursé. Sans réponse de sa part dans le délai de l'article 5.4, la commande est annulée : MOTO IMPORT l'en informe et lui restitue intégralement son acompte.",
   ]],
   ["Article 6 — Annulation et désistement", [
     "6.1 — En cas de désistement de l'acheteur après signature du bon de commande et avant l'arrivée du véhicule à Antananarivo, l'acompte versé reste acquis à MOTO IMPORT, le véhicule ayant été acheté et expédié à sa demande.",
@@ -111,7 +112,7 @@ export default function Page() {
       <BarreSuperieure titre="CGV" />
       <main className="conteneur pb-24 pt-6">
         <h1 className="text-titre-fiche">Conditions générales de vente</h1>
-        <p className="mt-2 text-meta text-dim">Version en vigueur au 6 octobre 2026 — MOTO IMPORT, Antananarivo.</p>
+        <p className="mt-2 text-meta text-dim">Version en vigueur au 7 octobre 2026 — MOTO IMPORT, Antananarivo.</p>
         <div className="mt-5 space-y-5">
           {ARTICLES.map(([titre, paragraphes]) => (
             <section key={titre}>
