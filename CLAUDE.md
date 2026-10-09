@@ -81,6 +81,7 @@ Vercel détient les variables sensibles ; la construction se fait chez lui.
 | Règle et géométrie du filigrane | `marquable`, `couche()` — `lib/cloudinary.ts` |
 | Marques proposées au filtre | `MARQUES_CONNUES` — `lib/marques.ts` |
 | Noms courants des types pour la recherche (« naked », « adv »…) | `SYNONYMES_CATEGORIE` — `lib/recherche.ts` |
+| Bornes d'acompte, délais de livraison, de retrait et de gardiennage | `ACOMPTE_MIN`, `DELAI_MAX`… — `lib/conditions.ts` |
 
 Ne jamais dupliquer ces listes : elles servent à la fois au fichier
 téléchargeable, au guide affiché et à la validation.
@@ -131,3 +132,19 @@ chaque lot, `node scripts/menage-cloudinary.mjs` doit annoncer 0 orphelin.
 Le mode automatique de Claude Code refuse les suppressions en production
 (Supabase, Cloudinary), même demandées explicitement. Préparer la commande, la
 simuler, puis laisser l'utilisateur la lancer avec `! commande`.
+
+## Contenu de la page Facebook
+
+Scripts, concepts, chiffres de la page et stratégie vivent dans un dépôt **privé**
+à part, `Desktop\MOTO_IMPORT_CONTENU` : celui-ci est lisible publiquement, rien de
+ce contenu n'y entre. Deux skills s'en servent : `contenu-moto-import` (écrire,
+valider, revisiter un script ou un concept) et `suivi-page-moto` (mesurer la page
+dans Metricool et tenir le doc de suivi).
+
+Les scripts ne promettent que ce que disent le contrat et les CGV, résumés article
+par article dans `MOTO_IMPORT_CONTENU/referentiel/faits.md`. **Toute modification
+de `lib/conditions.ts`, de `app/(public)/cgv/page.tsx`, de la FAQ ou du contrat
+PDF doit être reportée
+dans ce fichier le jour même**, sinon les vidéos promettront l'ancienne règle
+(l'acompte de 45 à 80 % selon la moto en est l'exemple : les légendes disaient
+60 %).
