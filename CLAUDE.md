@@ -61,15 +61,40 @@ vérifier après coup.
 
 ## Déploiement
 
-Push sur `main` → GitHub Action `.github/workflows/deploy.yml` → `vercel deploy
---prod` avec un jeton.
+**La production est sur le compte Vercel `hei.nihasy`, équipe MOTO**
+(`moto-7b13`, `team_kmlVqIxo3fQHbi1ixuN5cWhW`, projet `moto-import`), au forfait
+**Pro** depuis le 10/10/2026. Ce n'est ni le compte relié à GitHub ni celui
+branché sur Claude : le connecteur Vercel de Claude ne voit pas ce projet. La
+CLI du PC, elle, y est connectée.
 
-**Le compte Vercel de production est `motoimportcontact`**, distinct du compte
-Vercel relié à GitHub et de celui branché sur Claude : le projet MOTO_IMPORT
-n'apparaît donc pas dans `list_projects`. Pour suivre un déploiement, passer par
-les runs GitHub Actions, pas par l'API Vercel.
+`.github/workflows/deploy.yml` vise encore l'ancien compte (`motoimportcontact`,
+en pause) : chaque push sur `main` échoue à l'étape « Déployer sur Vercel » et
+**ne met rien en ligne**. Tant que le secret `VERCEL_TOKEN` et les identifiants
+du workflow ne sont pas remplacés, on déploie à la main depuis une copie propre :
+`git clone --depth 1`, copier `.vercel/project.json`, puis
+`npx vercel@latest deploy --prod --yes --scope moto-7b13 --cwd <copie>`. Sans
+`--scope`, Vercel répond « Not authorized ».
+
+Lire l'état de l'équipe (blocage, forfait) :
+`MSYS_NO_PATHCONV=1 npx vercel api "/v2/teams/team_kmlVqIxo3fQHbi1ixuN5cWhW"`.
+Sous Git Bash, sans `MSYS_NO_PATHCONV`, le chemin est transformé et la CLI
+refuse l'appel.
 
 Vercel détient les variables sensibles ; la construction se fait chez lui.
+
+## Cache et quotas Vercel
+
+Le 10/10/2026, le site a répondu `402 DEPLOYMENT_DISABLED` : l'équipe gratuite
+avait dépassé ses écritures de cache (`dataCacheWrite`). Le catalogue et les
+fiches se réécrivaient toutes les heures. **Le catalogue en cache et les pages
+publiques durent désormais un jour** (`lib/catalogue-public.ts`, `revalidate =
+86400`), et `tests/quota-cache.test.ts` refuse un délai plus court.
+
+Le back-office vide le cache à chaque écriture. Un script qui écrit en base sans
+passer par lui doit le vider lui-même, sinon le site garde l'ancien catalogue
+jusqu'au lendemain : `POST /api/revalidate` (session ou en-tête
+`x-revalidate-secret`), ou `npx vercel cache invalidate --tag catalogue --yes
+--scope moto-7b13` depuis un dossier lié au projet.
 
 ## Sources uniques de vérité
 

@@ -27,7 +27,11 @@ import { jsonLdSecurise } from "@/lib/jsonld";
 // Aucun `loading.tsx` ne doit couvrir cette route : la frontiere Suspense
 // diffuserait un 200 avant que `notFound()` puisse repondre, transformant
 // chaque slug inconnu en soft-404 indexable (13.1).
-export const revalidate = 3600;
+//
+// Un jour, comme le cache du catalogue (`lib/catalogue-public.ts`) : régénérer
+// chaque heure les fiches visitées par les robots a coupé le site le 10/10/2026.
+// La valeur doit rester littérale, Next la lit sans exécuter le module.
+export const revalidate = 86400;
 export const dynamicParams = true;
 
 type Props = { params: Promise<{ slug: string }> };

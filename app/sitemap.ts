@@ -3,7 +3,8 @@ import { slugsEnLigne } from "@/lib/catalogue-public";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-export const revalidate = 3600;
+// Un jour, comme le cache du catalogue : voir `lib/catalogue-public.ts`.
+export const revalidate = 86400;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const statiques = [

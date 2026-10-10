@@ -11,7 +11,8 @@ import { CarteMoto } from "@/components/catalogue/carte-moto";
 import { CommentCaSePasse } from "@/components/fiche/blocs";
 import { EtatVide, Section } from "@/components/ui";
 
-export const revalidate = 3600;
+// Un jour, comme le cache du catalogue : voir `lib/catalogue-public.ts`.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   // `absolute` : le titre contient déjà la marque, le gabarit « | MOTO IMPORT »

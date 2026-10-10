@@ -8,7 +8,7 @@ import { ETIQUETTE_CATALOGUE } from "@/lib/db/etiquettes";
 import type { Media, MotoAvecMedias } from "@/lib/types";
 
 /**
- * Catalogue public, lu en base une fois par heure au plus.
+ * Catalogue public, lu en base une fois par jour au plus.
  *
  * Chaque page publique relisait la base à chaque visite : le catalogue, sa
  * pagination, et surtout chaque fiche, qui rechargeait toutes les motos et
@@ -18,11 +18,19 @@ import type { Media, MotoAvecMedias } from "@/lib/types";
  * de grâce avant bridage le 31/10/2026.
  *
  * Tout passe désormais par cet instantané. Il est vidé à chaque écriture qui
- * touche une moto ou une photo (`lib/db/index.ts`), et sinon au bout d'une
- * heure — le délai qu'annoncent déjà les scripts qui écrivent en base sans
- * passer par le back-office.
+ * touche une moto ou une photo (`lib/db/index.ts`), et sinon au bout d'un jour.
+ *
+ * Un jour et non une heure : le 10/10/2026, Vercel a coupé le site
+ * (`DEPLOYMENT_DISABLED`, dépassement des écritures de cache du forfait
+ * gratuit). Toutes les heures, cet instantané de plusieurs Mo et chaque fiche
+ * visitée par un robot (160 Ko de HTML) se réécrivaient, même quand rien
+ * n'avait changé. Les écritures du back-office vident le cache sur-le-champ ;
+ * seuls les scripts qui écrivent en base sans passer par lui doivent le vider
+ * eux-mêmes (`/api/revalidate`, ou `vercel cache invalidate --tag catalogue`).
+ * Les pages qui lisent ce catalogue reprennent le même délai, et
+ * `tests/quota-cache.test.ts` refuse qu'on le raccourcisse.
  */
-const UNE_HEURE = 3600;
+const UN_JOUR = 86_400;
 
 /**
  * Motos par lot de photos. Le cache de Next refuse toute entrée de plus de
@@ -34,12 +42,12 @@ const MOTOS_PAR_LOT = 40;
 
 const lireFiches = unstable_cache(() => db().listerFichesPubliques(), ["catalogue-fiches"], {
   tags: [ETIQUETTE_CATALOGUE],
-  revalidate: UNE_HEURE,
+  revalidate: UN_JOUR,
 });
 
 const lireMedias = unstable_cache((ids: string[]) => db().mediasDeMotos(ids), ["catalogue-medias"], {
   tags: [ETIQUETTE_CATALOGUE],
-  revalidate: UNE_HEURE,
+  revalidate: UN_JOUR,
 });
 
 /** Tout le catalogue public, photos comprises, dans l'ordre par défaut. */
