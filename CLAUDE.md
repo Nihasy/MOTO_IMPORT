@@ -90,6 +90,16 @@ fiches se réécrivaient toutes les heures. **Le catalogue en cache et les pages
 publiques durent désormais un jour** (`lib/catalogue-public.ts`, `revalidate =
 86400`), et `tests/quota-cache.test.ts` refuse un délai plus court.
 
+**Mesure d'audience Vercel (Web Analytics) : rebranchée le 10/10/2026, au forfait
+Pro seulement.** Elle compte les pages vues du site public, sans cookie
+(`components/ui/mesure-audience.tsx`, back-office et connexion exclus), et deux
+événements rares : `clic_devis` et `enregistrement` (`VERS_VERCEL` dans
+`lib/analytics.ts`). Chaque millier d'événements coûte 0,03 $ au-delà de
+l'inclus. Les événements fréquents (`galerie_balayee`, `vue_fiche`, filtres,
+recherche) avaient mis l'ancien compte gratuit en pause le 30/09 : ils ne vont
+qu'aux pixels Facebook et TikTok, et `tests/quota-cache.test.ts` refuse qu'on
+les envoie à Vercel. Sur un forfait gratuit, débrancher la mesure.
+
 Le back-office vide le cache à chaque écriture. Un script qui écrit en base sans
 passer par lui doit le vider lui-même, sinon le site garde l'ancien catalogue
 jusqu'au lendemain : `POST /api/revalidate` (session ou en-tête

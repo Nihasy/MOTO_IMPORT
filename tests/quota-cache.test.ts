@@ -34,3 +34,31 @@ describe("délais de cache du catalogue", () => {
     expect(lire("app/api/revalidate/route.ts")).toMatch(/revalidateTag\(ETIQUETTE_CATALOGUE\)/);
   });
 });
+
+/**
+ * La mesure d'audience Vercel facture chaque événement. Le 30/09/2026, les
+ * événements fréquents (une photo balayée, une fiche vue) avaient mis l'ancien
+ * compte en pause. Seuls des événements rares, qui marquent une intention
+ * d'achat, ont le droit de partir vers Vercel.
+ */
+describe("événements envoyés à la mesure d'audience Vercel", () => {
+  const source = lire("lib/analytics.ts");
+  const liste = source.match(/VERS_VERCEL[^=]*= new Set\(\[([^\]]*)\]\)/);
+
+  it("la liste des événements envoyés à Vercel est explicite", () => {
+    expect(liste, "VERS_VERCEL attendu dans lib/analytics.ts").not.toBeNull();
+  });
+
+  it.each(["galerie_balayee", "vue_fiche", "filtre_applique", "recherche", "plein_ecran_ouvert"])(
+    "%s, trop fréquent, ne part pas vers Vercel",
+    (evenement) => {
+      expect(liste![1]).not.toContain(`"${evenement}"`);
+    }
+  );
+
+  it("track() n'est appelé que derrière cette liste", () => {
+    // `ttq?.track(` est le pixel TikTok : seul l'appel nu compte.
+    expect(source.match(/(?<![.\w])track\(/g)).toHaveLength(1);
+    expect(source).toMatch(/if \(VERS_VERCEL\.has\(evenement\)\) track\(/);
+  });
+});

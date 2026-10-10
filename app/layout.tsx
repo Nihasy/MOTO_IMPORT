@@ -4,6 +4,7 @@ import { SITE_URL } from "@/lib/site";
 import { FOURCHETTE_DELAI_TEXTE } from "@/lib/conditions";
 import { Suspense } from "react";
 import { IndicateurNavigation } from "@/components/ui/indicateur-navigation";
+import { MesureAudience } from "@/components/ui/mesure-audience";
 import "./globals.css";
 
 const openSans = Open_Sans({
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <IndicateurNavigation />
         </Suspense>
         {children}
+        <MesureAudience />
       </body>
     </html>
   );

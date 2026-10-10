@@ -8,7 +8,10 @@ const enProduction = process.env.NODE_ENV === "production";
 const scriptSrc = [
   "'self'",
   "'unsafe-inline'",
-  ...(enProduction ? [] : ["'unsafe-eval'"]),
+  // La mesure d'audience Vercel sert son script et reçoit ses envois depuis le
+  // site lui-même (`/_vercel/insights`) une fois déployée : `'self'` suffit. Seul
+  // le mode développement charge sa version de débogage depuis ce domaine.
+  ...(enProduction ? [] : ["'unsafe-eval'", "https://va.vercel-scripts.com"]),
 ].join(" ");
 
 const csp = [

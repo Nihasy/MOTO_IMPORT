@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import type { DemandeSource } from "./types";
 
 type Evenement =
@@ -19,19 +20,24 @@ type Fenetre = Window & {
 type Donnees = Record<string, string | number | boolean | null>;
 
 /**
- * Événements envoyés aux pixels Facebook et TikTok, quand ils sont posés.
- *
- * Rien ne part vers la mesure d'audience de Vercel : sur le forfait gratuit,
- * chaque page vue et chaque événement entame un quota mensuel, et son
- * dépassement a mis en pause l'ancien compte, site compris (30/09/2026). Ne
- * pas la rebrancher sans forfait payant.
+ * Seuls ces événements partent aussi vers la mesure d'audience de Vercel : ils
+ * sont rares et disent qui veut acheter. Les autres (une photo balayée, un
+ * filtre, une frappe dans la recherche) se comptent par dizaines par visite :
+ * `galerie_balayee` et `vue_fiche` avaient porté l'ancien compte à 84 000
+ * événements pour 50 000 permis, et l'avaient mis en pause, site compris
+ * (30/09/2026). Au forfait Pro, chaque millier coûte 0,03 $ : n'ajouter ici
+ * qu'un événement qui marque une intention d'achat.
  */
+const VERS_VERCEL: ReadonlySet<Evenement> = new Set(["clic_devis", "enregistrement"]);
+
+/** Événements envoyés aux pixels Facebook et TikTok, quand ils sont posés. */
 export function pister(evenement: Evenement, donnees: Donnees = {}) {
   if (typeof window === "undefined") return;
   const w = window as Fenetre;
   try {
     w.fbq?.("trackCustom", evenement, donnees);
     w.ttq?.track(evenement, donnees);
+    if (VERS_VERCEL.has(evenement)) track(evenement, donnees);
   } catch {
     /* la mesure ne doit jamais casser le parcours */
   }
