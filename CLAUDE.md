@@ -181,6 +181,11 @@ tranches de budget vivent dans `BUDGETS` (`lib/facebook.ts`), seule source.
   Studio marche mais le filtre « jamais publiée » ne voit rien.
 - Les cartes sont rendues à la demande, jamais en cache Vercel (voir le
   quota du 10/10/2026), et portent le filigrane par `urlReseau()`.
+- Le ZIP du kit s'assemble dans le navigateur, carte par carte : une réponse de
+  fonction Vercel est plafonnée à 4,5 Mo, une carte en pèse environ 1,5. Un kit
+  fabriqué côté serveur marche en local et échoue en production dès trois motos.
+- Seules les motos `disponible` et `dispo_immediate` sont proposées
+  (`estPromouvable`) : `estEnVente` compte aussi `reserve`, qui a déjà un acheteur.
 - Le commentaire « VENDUE » ne part que sur clic, depuis le bandeau du Studio :
   un commentaire public passe par le même feu vert qu'une publication.
 - Une moto sur commande n'est jamais dite « à Tana » sur la carte ni dans la

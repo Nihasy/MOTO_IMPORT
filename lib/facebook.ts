@@ -3,9 +3,17 @@ import { DELAI_MAX, DELAI_MIN } from "./conditions";
 import { ar, arCourt } from "./format";
 import { SITE_URL } from "./site";
 import {
-  LIBELLE_CATEGORIE, estEnVente, miseEnVenteDe,
-  type Categorie, type Etat, type Media, type MiseEnVente, type Moto, type PublicationFb,
+  CATEGORIES, LIBELLE_CATEGORIE, miseEnVenteDe,
+  type Categorie, type Etat, type Media, type MiseEnVente, type Moto, type PublicationFb, type Statut,
 } from "./types";
+
+/**
+ * Statuts qu'on peut promouvoir. Plus étroit que `estEnVente`, qui compte aussi
+ * `reserve` : une moto réservée a un acheteur et un contrat signé, la montrer
+ * dans un album ferait écrire des gens pour une moto qui n'est plus à vendre.
+ */
+export const STATUTS_STUDIO = ["disponible", "dispo_immediate"] as const satisfies readonly Statut[];
+export const estPromouvable = (s: Statut): boolean => (STATUTS_STUDIO as readonly string[]).includes(s);
 
 /**
  * Studio Facebook : choisir des motos du catalogue, en tirer un album prêt à
@@ -98,10 +106,37 @@ export function historiqueParMoto(publications: PublicationFb[]): Historique {
 const JOUR_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Motos que le Studio peut proposer. Seulement celles en vente sur le site : le
- * lien de chaque photo mène à la fiche, et une fiche en brouillon ou vendue
- * ferait atterrir le lecteur sur une page vide ou sur une moto partie. Une moto
- * sans photo est écartée, faute de quoi fabriquer sa carte.
+ * Filtres lus dans l'URL. Toute valeur hors liste est ignorée plutôt que
+ * transmise : `?jours=-5` donnait une fenêtre négative, donc un Studio vide
+ * sans explication.
+ */
+export function filtresDepuisParams(p: Record<string, string | string[] | undefined>): FiltresStudio {
+  const un = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const jours = Number(un(p.jours));
+  const budget = un(p.budget);
+  const etat = un(p.etat);
+  const vente = un(p.vente);
+  const fraicheur = un(p.fraicheur);
+  const q = un(p.q)?.trim().slice(0, 100);
+  const categories = [...new Set(([] as string[]).concat(p.cat ?? []))].filter((c): c is Categorie =>
+    (CATEGORIES as readonly string[]).includes(c)
+  );
+  return {
+    jours: (FENETRES_NOUVEAUTE as readonly number[]).includes(jours) ? jours : undefined,
+    categories,
+    budget: estCleBudget(budget) ? budget : undefined,
+    etat: etat === "neuf" || etat === "occasion" ? etat : undefined,
+    vente: vente === "local" || vente === "commande" ? vente : undefined,
+    fraicheur: fraicheur === "jamais" || fraicheur === "ancienne" ? fraicheur : undefined,
+    q: q || undefined,
+  };
+}
+
+/**
+ * Motos que le Studio peut proposer. Seulement celles à vendre sur le site : le
+ * lien de chaque photo mène à la fiche, et une fiche en brouillon, réservée ou
+ * vendue ferait atterrir le lecteur sur une moto qu'il ne peut pas acheter. Une
+ * moto sans photo est écartée, faute de quoi fabriquer sa carte.
  */
 export function filtrerStudio(
   lignes: LigneStudio[],
@@ -111,7 +146,7 @@ export function filtrerStudio(
 ): LigneStudio[] {
   const mots = (f.q ?? "").toLowerCase().split(/\s+/).filter(Boolean);
   return lignes
-    .filter((m) => estEnVente(m.statut) && m.couverture && m.prix_ttc > 0)
+    .filter((m) => estPromouvable(m.statut) && m.couverture && m.prix_ttc > 0)
     .filter((m) => !f.jours || maintenant - new Date(m.created_at).getTime() <= f.jours * JOUR_MS)
     .filter((m) => !f.categories?.length || f.categories.includes(m.categorie))
     .filter((m) => !f.budget || dansBudget(m.prix_ttc, f.budget))
@@ -287,14 +322,24 @@ export function ventesASignaler(
  * légendes arrivent relues et corrigées à la main : ce sont elles qui partent,
  * pas celles que le serveur saurait regénérer.
  */
+export const MAX_TITRE = 90;
+
 export const albumSchema = z.object({
-  titre: z.string().trim().max(200),
+  // Au-delà de trois lignes, le titre déborde de la carte de couverture.
+  titre: z.string().trim().max(MAX_TITRE, `Titre limité à ${MAX_TITRE} caractères.`),
   message: z.string().trim().min(1, "Le texte du post est vide.").max(5000),
   couverture: z.boolean(),
   motos: z
-    .array(z.object({ ref: z.string().regex(/^MI-\d{3,}$/), legende: z.string().trim().max(2000) }))
+    .array(
+      z.object({
+        ref: z.string().regex(/^MI-\d{3,}$/, "Référence de moto invalide."),
+        legende: z.string().trim().max(2000, "Légende limitée à 2 000 caractères."),
+      })
+    )
     .min(1, "Aucune moto choisie.")
-    .max(MAX_ALBUM, `Pas plus de ${MAX_ALBUM} motos par album.`),
+    .max(MAX_ALBUM, `Pas plus de ${MAX_ALBUM} motos par album.`)
+    // L'écran l'empêche déjà ; l'action est un point d'entrée à part entière.
+    .refine((l) => new Set(l.map((m) => m.ref)).size === l.length, "Une même moto figure deux fois dans l'album."),
 });
 export type Album = z.infer<typeof albumSchema>;
 

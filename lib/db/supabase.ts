@@ -403,16 +403,18 @@ export function creerPiloteSupabase(): Pilote {
     },
 
     async listerPublicationsFb() {
-      // Les cent dernières suffisent à l'historique d'un catalogue de quelques
-      // centaines de motos ; lire tout le journal ferait croître chaque
-      // ouverture du Studio avec l'âge de la page.
+      // Le filtre « jamais publiée » a besoin d'un historique long : à cent
+      // lignes, une moto montrée il y a quatre mois redevenait « jamais
+      // publiée ». Cinq cents albums couvrent des années de page. Le texte du
+      // post, de loin la colonne la plus lourde, n'est jamais relu par le
+      // Studio : il reste en base, pour mémoire, et ne voyage pas.
       const { data, error } = await sb
         .from("publications_fb")
-        .select("*")
+        .select("id, mode, post_id, lien_post, programme_pour, titre, refs, ventes_signalees, auteur, created_at")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(500);
       err(error);
-      return (data ?? []) as import("@/lib/types").PublicationFb[];
+      return (data ?? []).map((p) => ({ ...p, message: "" })) as import("@/lib/types").PublicationFb[];
     },
 
     async creerPublicationFb(p) {

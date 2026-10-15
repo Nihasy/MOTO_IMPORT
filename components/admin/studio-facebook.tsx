@@ -4,9 +4,10 @@ import { useMemo, useState, useTransition } from "react";
 import clsx from "clsx";
 import { ar, dateFr } from "@/lib/format";
 import {
-  MAX_ALBUM, TAILLE_SELECTION_VARIEE, legendeAlbum, legendePhoto, selectionVariee,
-  type Album, type LigneStudio,
+  MAX_ALBUM, MAX_TITRE, TAILLE_SELECTION_VARIEE, albumSchema, legendeAlbum, legendePhoto, nomCarte,
+  selectionVariee, texteKit, type Album, type LigneStudio,
 } from "@/lib/facebook";
+import { creerZip } from "@/lib/zip";
 import { LIBELLE_CATEGORIE, miseEnVenteDe } from "@/lib/types";
 import {
   consignerPublicationManuelle, publierSurFacebook, type ResultatFb,
@@ -18,6 +19,8 @@ export type Candidate = LigneStudio & {
 };
 
 const urlCarte = (ref: string) => `/api/facebook/carte?ref=${encodeURIComponent(ref)}`;
+const urlCouverture = (refs: string[], titre: string) =>
+  `/api/facebook/carte?couverture=1&refs=${refs.map(encodeURIComponent).join(",")}&titre=${encodeURIComponent(titre)}`;
 
 /**
  * Studio Facebook : de la liste filtrée à l'album prêt à partir.
@@ -91,19 +94,36 @@ export function StudioFacebook({
     motos: selection.map((ref) => ({ ref, legende: (legendes[ref] ?? "").trim() })),
   });
 
+  /**
+   * Le ZIP est assemblé ici, dans le navigateur, carte par carte. Fabriqué par
+   * le serveur, il dépassait la limite de 4,5 Mo d'une réponse de fonction
+   * Vercel dès trois motos (une carte pèse environ 1,5 Mo) : le kit marchait en
+   * local et échouait en production.
+   */
   const telechargerKit = async () => {
-    setTelechargement("Fabrication des cartes…");
+    const verif = albumSchema.safeParse(album());
+    if (!verif.success) {
+      setTelechargement(verif.error.issues[0]?.message ?? "Album invalide.");
+      return;
+    }
+    const a_ = verif.data;
+    const adresses = [
+      ...(a_.couverture
+        ? [{ nom: nomCarte(0, "couverture"), url: urlCouverture(a_.motos.map((m) => m.ref), a_.titre) }]
+        : []),
+      ...a_.motos.map((m, i) => ({ nom: nomCarte(i + 1, m.ref), url: urlCarte(m.ref) })),
+    ];
     try {
-      const rep = await fetch("/api/facebook/kit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(album()),
-      });
-      if (!rep.ok) {
-        const j = (await rep.json().catch(() => ({}))) as { erreur?: string };
-        throw new Error(j.erreur ?? `Erreur ${rep.status}`);
+      const fichiers = [];
+      for (const [i, c] of adresses.entries()) {
+        setTelechargement(`Carte ${i + 1} sur ${adresses.length}…`);
+        const rep = await fetch(c.url);
+        if (!rep.ok) throw new Error(`${c.nom} : ${(await rep.text()) || `erreur ${rep.status}`}`);
+        fichiers.push({ nom: c.nom, contenu: new Uint8Array(await rep.arrayBuffer()) });
       }
-      const url = URL.createObjectURL(await rep.blob());
+      fichiers.push({ nom: "legendes.txt", contenu: texteKit(a_) });
+      const zip = creerZip(fichiers);
+      const url = URL.createObjectURL(new Blob([zip as Uint8Array<ArrayBuffer>], { type: "application/zip" }));
       const a = document.createElement("a");
       a.href = url;
       a.download = `${campagne}.zip`;
@@ -124,10 +144,29 @@ export function StudioFacebook({
     }
   };
 
-  const programmeIso = programme ? new Date(programme).toISOString() : null;
-  const quandLisible = programme
-    ? new Date(programme).toLocaleString("fr-FR", { dateStyle: "full", timeStyle: "short" })
+  // Une saisie incomplète du champ date donne une date invalide : `toISOString`
+  // lèverait alors en plein rendu et viderait l'écran.
+  const datePrevue = programme ? new Date(programme) : null;
+  const dateValide = datePrevue && !Number.isNaN(datePrevue.getTime()) ? datePrevue : null;
+  const programmeIso = dateValide ? dateValide.toISOString() : null;
+  const quandLisible = dateValide
+    ? dateValide.toLocaleString("fr-FR", { dateStyle: "full", timeStyle: "short" })
     : "maintenant";
+
+  /**
+   * Après un envoi réussi, l'album est vidé : le laisser tel quel, c'était
+   * laisser sous le doigt un second « Publier » qui repostait le même album.
+   */
+  const apresEnvoi = (r: ResultatFb) => {
+    setResultat(r);
+    setEtape("composer");
+    if (!r.ok) return;
+    setSelection([]);
+    setLegendes({});
+    setMessageSaisi(null);
+    setProgramme("");
+    setLienManuel("");
+  };
 
   return (
     <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
@@ -219,7 +258,7 @@ export function StudioFacebook({
                 id="titre-album"
                 className="champ mb-2 w-full"
                 value={titre}
-                maxLength={200}
+                maxLength={MAX_TITRE}
                 onChange={(e) => setTitre(e.target.value)}
                 onBlur={() => setTitreApercu(titre)}
               />
@@ -231,7 +270,7 @@ export function StudioFacebook({
               {couverture ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`/api/facebook/carte?couverture=1&refs=${selection.join(",")}&titre=${encodeURIComponent(titreApercu)}`}
+                  src={urlCouverture(selection, titreApercu)}
                   alt="Aperçu de la couverture"
                   className="mb-3 w-40 rounded border border-line"
                 />
@@ -320,7 +359,7 @@ export function StudioFacebook({
                     className="btn-fantome px-3"
                     disabled={enCours}
                     onClick={() =>
-                      demarrer(async () => setResultat(await consignerPublicationManuelle(album(), lienManuel)))
+                      demarrer(async () => apresEnvoi(await consignerPublicationManuelle(album(), lienManuel)))
                     }
                   >
                     Consigner
@@ -365,11 +404,7 @@ export function StudioFacebook({
                         className="btn-or px-4"
                         disabled={enCours}
                         onClick={() =>
-                          demarrer(async () => {
-                            const r = await publierSurFacebook(album(), programmeIso);
-                            setResultat(r);
-                            if (r.ok) setEtape("composer");
-                          })
+                          demarrer(async () => apresEnvoi(await publierSurFacebook(album(), programmeIso)))
                         }
                       >
                         {enCours ? "Envoi en cours…" : "Confirmer l'envoi"}
@@ -378,22 +413,24 @@ export function StudioFacebook({
                   </div>
                 )}
               </div>
-
-              {resultat ? (
-                <p className={clsx("mt-3 text-meta", resultat.ok ? "text-dispo" : "text-vendu")}>
-                  {resultat.ok ? resultat.message : resultat.erreur}
-                  {resultat.ok && resultat.lien ? (
-                    <>
-                      {" "}
-                      <a href={resultat.lien} target="_blank" rel="noopener" className="font-semibold text-gold-light">
-                        Voir le post ↗
-                      </a>
-                    </>
-                  ) : null}
-                </p>
-              ) : null}
             </>
           )}
+
+          {/* Hors de l'album : il est vidé après un envoi réussi, et le
+              message doit rester lisible, avec le lien du post. */}
+          {resultat ? (
+            <p role="status" className={clsx("mt-3 text-meta", resultat.ok ? "text-dispo" : "text-vendu")}>
+              {resultat.ok ? resultat.message : resultat.erreur}
+              {resultat.ok && resultat.lien ? (
+                <>
+                  {" "}
+                  <a href={resultat.lien} target="_blank" rel="noopener" className="font-semibold text-gold-light">
+                    Voir le post ↗
+                  </a>
+                </>
+              ) : null}
+            </p>
+          ) : null}
         </div>
       </section>
     </div>

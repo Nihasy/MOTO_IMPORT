@@ -179,7 +179,9 @@ export function urlReseau(
   opts: { origine?: Origine; largeur: number; hauteur: number }
 ): string {
   if (!transformable(cloudinaryId)) return cloudinaryId;
-  const parts = [`c_fill,g_auto,w_${opts.largeur},h_${opts.hauteur},f_jpg,q_auto:good`];
+  // Pas de `g_auto` : les photos du catalogue sont déjà en 4:3, comme les
+  // cases des cartes, et le recadrage intelligent est facturé à part.
+  const parts = [`c_fill,w_${opts.largeur},h_${opts.hauteur},f_jpg,q_auto:good`];
   if (marquable("plein")) parts.push(couche());
   if (opts.origine === "constructeur") parts.push(FOND_NEUTRE);
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${parts.join("/")}/${cloudinaryId}`;

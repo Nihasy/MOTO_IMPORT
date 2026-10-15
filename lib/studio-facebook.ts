@@ -1,8 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { carteCouverture, carteMoto } from "./carte-facebook";
-import { estEnVente } from "./types";
-import { nomCarte, type Album, type LigneStudio } from "./facebook";
+import { estPromouvable, nomCarte, type Album, type LigneStudio } from "./facebook";
 
 /** Lignes du Studio, tirées de la liste d'administration (couverture comprise). */
 export async function lignesStudio(): Promise<LigneStudio[]> {
@@ -36,7 +35,7 @@ export async function motosDeLAlbum(refs: string[]): Promise<LigneStudio[]> {
   return refs.map((ref) => {
     const m = parRef.get(ref);
     if (!m) throw new Error(`${ref} introuvable.`);
-    if (!estEnVente(m.statut)) throw new Error(`${ref} n'est plus en vente.`);
+    if (!estPromouvable(m.statut)) throw new Error(`${ref} n'est plus à vendre (statut : ${m.statut}).`);
     if (!m.couverture) throw new Error(`${ref} n'a pas de photo.`);
     return m;
   });

@@ -3,8 +3,8 @@ import { db } from "@/lib/db";
 import { urlMedia } from "@/lib/cloudinary";
 import { dateFr } from "@/lib/format";
 import {
-  BUDGETS, FENETRES_NOUVEAUTE, JOURS_AVANT_REPUBLICATION, campagneDuJour, estCleBudget,
-  filtrerStudio, historiqueParMoto, titreSuggere, ventesASignaler, type FiltresStudio,
+  BUDGETS, FENETRES_NOUVEAUTE, JOURS_AVANT_REPUBLICATION, campagneDuJour, filtresDepuisParams,
+  filtrerStudio, historiqueParMoto, titreSuggere, ventesASignaler,
 } from "@/lib/facebook";
 import { facebookConfigure } from "@/lib/facebook-graph";
 import { lignesStudio } from "@/lib/studio-facebook";
@@ -35,18 +35,8 @@ const MODES: Record<PublicationFb["mode"], string> = {
 
 export default async function StudioFacebookPage({ searchParams }: { searchParams: Promise<Params> }) {
   const p = await searchParams;
-  const cats = ([] as string[]).concat(p.cat ?? []).filter((c): c is Categorie =>
-    (CATEGORIES as readonly string[]).includes(c)
-  );
-  const filtres: FiltresStudio = {
-    jours: Number(p.jours) || undefined,
-    categories: cats,
-    budget: estCleBudget(p.budget) ? p.budget : undefined,
-    etat: p.etat === "neuf" || p.etat === "occasion" ? p.etat : undefined,
-    vente: p.vente === "local" || p.vente === "commande" ? p.vente : undefined,
-    fraicheur: p.fraicheur === "jamais" || p.fraicheur === "ancienne" ? p.fraicheur : undefined,
-    q: p.q?.trim() || undefined,
-  };
+  const filtres = filtresDepuisParams(p);
+  const cats = filtres.categories ?? [];
 
   // Le journal vit dans une table à part (migration 0013). Tant qu'elle manque,
   // le Studio reste utilisable : seul l'historique est perdu, et on le dit.

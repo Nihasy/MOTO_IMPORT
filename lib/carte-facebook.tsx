@@ -5,7 +5,7 @@ import { DELAI_MAX, DELAI_MIN } from "./conditions";
 import { ar, arCourt } from "./format";
 import { SITE_URL } from "./site";
 import { miseEnVenteDe } from "./types";
-import type { LigneStudio } from "./facebook";
+import { MAX_TITRE, type LigneStudio } from "./facebook";
 
 /**
  * Cartes du Studio Facebook, au format 4:5 (1080 × 1350) : c'est le plus haut
@@ -135,7 +135,9 @@ export function carteMoto(m: LigneStudio, origine: string): ImageResponse {
  * Première image de l'album : le titre et un aperçu des quatre premières motos,
  * avec la fourchette de prix. C'est elle qui occupe la grande case du fil.
  */
-export function carteCouverture(titre: string, motos: LigneStudio[], origine: string): ImageResponse {
+export function carteCouverture(titreBrut: string, motos: LigneStudio[], origine: string): ImageResponse {
+  // L'aperçu lit le titre dans l'URL, hors du schéma de l'album : on le borne ici aussi.
+  const titre = titreBrut.trim().slice(0, MAX_TITRE) || "Motos du catalogue";
   const apercu = motos.slice(0, 4);
   const prix = motos.map((m) => m.prix_ttc);
   const fourchette =
@@ -158,7 +160,9 @@ export function carteCouverture(titre: string, motos: LigneStudio[], origine: st
           <Marque taille={34} />
           <div
             style={{
-              display: "flex", fontSize: titre.length > 40 ? 64 : 80, fontWeight: 800,
+              // Trois paliers : le titre le plus long admis (MAX_TITRE) tient
+              // en trois lignes au plus petit sans pousser la grille hors cadre.
+              display: "flex", fontSize: titre.length > 60 ? 52 : titre.length > 30 ? 64 : 80, fontWeight: 800,
               color: C.texte, lineHeight: 1.05,
             }}
           >
