@@ -92,7 +92,7 @@ global existe : il tient même quand l'adresse est falsifiée.
 
 ```
 app/(public)      Accueil, catalogue, fiche, pages éditoriales
-app/admin         Back-office (tableau de bord, motos, import, demandes, fournisseurs)
+app/admin         Back-office (tableau de bord, motos, import, Studio Facebook, demandes, fournisseurs)
 app/connexion     Authentification — hors du layout admin pour éviter la boucle de garde
 app/api           Routes d'écriture, toutes validées par Zod
 components/       ui · catalogue · fiche · admin
@@ -126,6 +126,50 @@ Mesures sur un poste de développement, magasin JSON local :
 La fiche est neuf fois plus rapide que le catalogue parce qu'elle est générée
 statiquement, là où le catalogue est rendu à chaque requête — le cahier des
 charges impose ce rendu dynamique pour que les filtres vivent dans l'URL.
+
+## Studio Facebook (`/admin/facebook`)
+
+Prépare les albums de la page Facebook à partir du catalogue, sans rien
+ressaisir.
+
+1. **Filtrer** les motos à vendre : nouveautés (7, 14, 30 jours), type
+   (plusieurs à la fois), budget, neuve ou occasion, au local ou sur commande,
+   jamais publiée ou pas publiée depuis 30 jours. Seules les motos
+   `disponible` et `dispo_immediate` sont proposées : une moto réservée a déjà
+   un acheteur.
+2. **Composer** un album de dix motos au plus, à la main ou par « Sélection
+   variée » (une marque à tour de rôle, rangées par prix). Chaque moto reçoit
+   une carte 1080 × 1350 (photo filigranée, modèle, prix, « Sur commande » ou
+   « Au local ») et une légende modifiable avec son lien tracé
+   (`utm_source=facebook`, `utm_content=MI-xxx`) ; une couverture résume
+   l'album.
+3. **Envoyer** : télécharger le kit (`.zip` des cartes + `legendes.txt`) et
+   publier à la main, puis le consigner ; ou publier et programmer
+   directement par l'API Graph, après une confirmation explicite.
+
+Le journal (`publications_fb`, migration 0013) alimente l'historique de chaque
+moto, et signale les posts où une moto vendue apparaît : un clic y commente
+« VENDUE ».
+
+| Variable | Rôle |
+|---|---|
+| `FACEBOOK_PAGE_ID` | Page qui publie. Facultative : sans elle, seul le kit est offert. |
+| `FACEBOOK_PAGE_TOKEN` | Jeton de Page longue durée (`pages_manage_posts`, `pages_read_engagement`). Uniquement dans Vercel. |
+| `FACEBOOK_GRAPH_VERSION` | Version de l'API, `v23.0` par défaut. |
+
+Choix à ne pas défaire sans relire le code :
+
+- Les cartes sont rendues à la demande et **jamais mises en cache côté Vercel**
+  (quota d'écritures de cache, 10/10/2026).
+- Le ZIP s'assemble **dans le navigateur** : une réponse de fonction Vercel est
+  plafonnée à 4,5 Mo, une carte pèse environ 1,5 Mo.
+- Une moto sur commande n'est **jamais dite « à Tana »**, ni sur la carte ni dans
+  la légende (CGV art. 2) ; le délai affiché vient de `lib/conditions.ts`.
+- Rien ne part sur la page sans clic de confirmation, le commentaire
+  « VENDUE » compris.
+
+Tests : `tests/studio-facebook*.test.ts`, `tests/facebook-graph.test.ts` (contrat
+d'appel à l'API Graph contre un faux `fetch`), `tests/journal-facebook.test.ts`.
 
 ## Points d'attention pour la maintenance
 
@@ -165,6 +209,9 @@ charges impose ce rendu dynamique pour que les filtres vivent dans l'URL.
 4. Générer `AUTH_SECRET`, `IP_SALT` et `REVALIDATE_SECRET`.
 5. Déployer sur Vercel, brancher le domaine, activer la sauvegarde quotidienne
    Supabase et **tester une restauration** avant l'ouverture au public.
+6. Facultatif : renseigner `FACEBOOK_PAGE_ID` et `FACEBOOK_PAGE_TOKEN` pour
+   publier depuis le Studio Facebook. Faire le premier envoi en programmé, pour
+   le vérifier dans Meta Business Suite avant qu'il parte.
 
 ### Domaine
 
