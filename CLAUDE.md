@@ -168,6 +168,24 @@ Le mode automatique de Claude Code refuse les suppressions en production
 (Supabase, Cloudinary), même demandées explicitement. Préparer la commande, la
 simuler, puis laisser l'utilisateur la lancer avec `! commande`.
 
+## Studio Facebook (`/admin/facebook`)
+
+Filtrer les motos en vente (nouveautés, type, budget, état, au local / sur
+commande, jamais publiées), composer un album, relire, puis télécharger le kit
+(cartes 4:5 + `legendes.txt`) ou publier / programmer par l'API Graph. Les
+tranches de budget vivent dans `BUDGETS` (`lib/facebook.ts`), seule source.
+
+- La publication directe exige `FACEBOOK_PAGE_ID` et `FACEBOOK_PAGE_TOKEN`
+  dans Vercel ; sans elles, seule la voie du kit est offerte.
+- Le journal est la table `publications_fb` (migration 0013). Sans elle, le
+  Studio marche mais le filtre « jamais publiée » ne voit rien.
+- Les cartes sont rendues à la demande, jamais en cache Vercel (voir le
+  quota du 10/10/2026), et portent le filigrane par `urlReseau()`.
+- Le commentaire « VENDUE » ne part que sur clic, depuis le bandeau du Studio :
+  un commentaire public passe par le même feu vert qu'une publication.
+- Une moto sur commande n'est jamais dite « à Tana » sur la carte ni dans la
+  légende (`mentionVente`, testé).
+
 ## Contenu de la page Facebook
 
 Scripts, concepts, chiffres de la page et stratégie vivent dans un dépôt **privé**

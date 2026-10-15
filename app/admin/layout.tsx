@@ -43,6 +43,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
       ton: publieesIncompletes ? "alerte" : "action",
     },
     { href: "/admin/import", libelle: "Import" },
+    { href: "/admin/facebook", libelle: "Facebook" },
     { href: "/admin/demandes", libelle: "Demandes", compte: nouvellesDemandes, ton: "alerte" },
     ...(session.role === "admin"
       ? [

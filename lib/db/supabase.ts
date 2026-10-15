@@ -401,5 +401,30 @@ export function creerPiloteSupabase(): Pilote {
       err((await sb.from("import_lots").delete().eq("id", id)).error);
       return n;
     },
+
+    async listerPublicationsFb() {
+      // Les cent dernières suffisent à l'historique d'un catalogue de quelques
+      // centaines de motos ; lire tout le journal ferait croître chaque
+      // ouverture du Studio avec l'âge de la page.
+      const { data, error } = await sb
+        .from("publications_fb")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      err(error);
+      return (data ?? []) as import("@/lib/types").PublicationFb[];
+    },
+
+    async creerPublicationFb(p) {
+      const { data, error } = await sb.from("publications_fb").insert(p).select().single();
+      err(error);
+      return data as import("@/lib/types").PublicationFb;
+    },
+
+    async majPublicationFb(id, patch) {
+      const { data, error } = await sb.from("publications_fb").update(patch).eq("id", id).select().single();
+      err(error);
+      return data as import("@/lib/types").PublicationFb;
+    },
   };
 }

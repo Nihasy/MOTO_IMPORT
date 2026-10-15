@@ -1,6 +1,6 @@
 import type {
   Demande, DemandeStatut, Fournisseur, ImportLot, Media, Moto, MotoAvecMedias,
-  MotoPublique, Parametres, Statut, Vue,
+  MotoPublique, Parametres, PublicationFb, Statut, Vue,
 } from "@/lib/types";
 import type { Reglages } from "@/lib/tarification";
 import type { MotoInput } from "@/lib/schemas";
@@ -98,6 +98,11 @@ export interface Pilote {
   majLot(id: string, patch: Partial<ImportLot>): Promise<ImportLot>;
   listerLots(): Promise<ImportLot[]>;
   annulerLot(id: string): Promise<number>;
+
+  /** Journal des publications Facebook, la plus récente d'abord. */
+  listerPublicationsFb(): Promise<PublicationFb[]>;
+  creerPublicationFb(p: Omit<PublicationFb, "id" | "created_at">): Promise<PublicationFb>;
+  majPublicationFb(id: string, patch: Partial<Omit<PublicationFb, "id" | "created_at">>): Promise<PublicationFb>;
 }
 
 type Interne = "fournisseur_id" | "prix_yuan" | "taux_yuan" | "volume_m3" | "marge_ar" | "mise_en_vente";

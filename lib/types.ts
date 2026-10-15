@@ -198,6 +198,32 @@ export type ImportLot = {
 };
 
 /**
+ * Publication de la page Facebook, consignée par le Studio.
+ *
+ * `mode` dit qui l'a mise en ligne : l'API (`direct`, `programme`) ou la main,
+ * après téléchargement du kit (`manuel`). Seule une publication passée par
+ * l'API porte un `post_id`, donc seule elle peut recevoir le commentaire
+ * « VENDUE » ; les autres comptent pour l'historique des motos.
+ *
+ * Les motos sont désignées par référence, pas par identifiant : une référence
+ * se lit dans l'écran et dans le texte publié, et elle survit à une
+ * suppression puis recréation de la fiche par import.
+ */
+export type PublicationFb = {
+  id: string;
+  mode: "direct" | "programme" | "manuel";
+  post_id: string | null;
+  lien_post: string | null;
+  programme_pour: string | null;
+  titre: string;
+  message: string;
+  refs: string[];
+  ventes_signalees: string[];
+  auteur: string | null;
+  created_at: string;
+};
+
+/**
  * Un lot de photos dont le compte ne boucle pas n'a pas fini : la fonction a
  * été coupée avant d'écrire son bilan. Le 25/09/2026, un tel lot avait écrit
  * 71 photos sur 131 et s'affichait « OK » avec 0 réussi. Les photos ignorées

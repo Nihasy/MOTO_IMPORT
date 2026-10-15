@@ -168,3 +168,19 @@ export function urlTelechargement(
   if (opts.nom) parts.push(`fl_attachment:${opts.nom}`);
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${parts.join("/")}/${cloudinaryId}`;
 }
+
+/**
+ * Photo recadrée pour les cartes du Studio Facebook, marquée comme toute image
+ * publiée. Le JPEG est forcé parce que le moteur des cartes (`next/og`) ne lit
+ * ni le WebP ni l'AVIF que `f_auto` pourrait choisir.
+ */
+export function urlReseau(
+  cloudinaryId: string,
+  opts: { origine?: Origine; largeur: number; hauteur: number }
+): string {
+  if (!transformable(cloudinaryId)) return cloudinaryId;
+  const parts = [`c_fill,g_auto,w_${opts.largeur},h_${opts.hauteur},f_jpg,q_auto:good`];
+  if (marquable("plein")) parts.push(couche());
+  if (opts.origine === "constructeur") parts.push(FOND_NEUTRE);
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${parts.join("/")}/${cloudinaryId}`;
+}

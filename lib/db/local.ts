@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type {
-  Demande, Fournisseur, ImportLot, Media, Moto, MotoAvecMedias, Parametres, Statut,
+  Demande, Fournisseur, ImportLot, Media, Moto, MotoAvecMedias, Parametres, PublicationFb, Statut,
 } from "@/lib/types";
 import { estPublic } from "@/lib/types";
 import { construireSlug } from "@/lib/format";
@@ -20,6 +20,7 @@ type Base = {
   demandes: Demande[];
   fournisseurs: Fournisseur[];
   import_lots: ImportLot[];
+  publications_fb?: PublicationFb[];
   parametres?: Parametres | null;
   tarification?: Reglages | null;
 };
@@ -467,6 +468,30 @@ export function creerPiloteLocal(): Pilote {
       base.import_lots = base.import_lots.filter((l) => l.id !== id);
       await ecrire(base);
       return avant - base.medias.length;
+    },
+
+    async listerPublicationsFb() {
+      const base = await lire();
+      return [...(base.publications_fb ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at));
+    },
+
+    async creerPublicationFb(p) {
+      const base = await lire();
+      const pub: PublicationFb = { ...p, id: randomUUID(), created_at: now() };
+      // Un magasin écrit avant le Studio n'a pas la liste : elle naît ici.
+      base.publications_fb = [...(base.publications_fb ?? []), pub];
+      await ecrire(base);
+      return pub;
+    },
+
+    async majPublicationFb(id, patch) {
+      const base = await lire();
+      const liste = base.publications_fb ?? [];
+      const i = liste.findIndex((p) => p.id === id);
+      if (i < 0) throw new Error("Publication introuvable");
+      liste[i] = { ...liste[i], ...patch };
+      await ecrire(base);
+      return liste[i];
     },
   };
 }
