@@ -1,7 +1,9 @@
 # Mise en production a chaque push sur main.
-# Le compte Vercel (motoimportcontact) n'est pas celui relie a GitHub : on
-# deploie donc par la CLI avec un jeton, sans l'integration Git de Vercel.
-# La construction se fait chez Vercel, qui detient les variables sensibles.
+# Projet Vercel moto-import de l'equipe MOTO (compte hei.nihasy@gmail.com).
+# Le compte GitHub relie a ce compte Vercel n'a pas acces a ce depot : on
+# deploie donc par la CLI avec un jeton (secret VERCEL_TOKEN), sans
+# l'integration Git de Vercel. La construction se fait chez Vercel, qui
+# detient les variables sensibles.
 name: Deploiement production
 
 on:
@@ -14,8 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  VERCEL_ORG_ID: team_q28q02PdQeKXfhjvDe6r0xdJ
-  VERCEL_PROJECT_ID: prj_QI7leI40s1Zou0o2es9SGZ8N25BZ
+  VERCEL_ORG_ID: team_kmlVqIxo3fQHbi1ixuN5cWhW
+  VERCEL_PROJECT_ID: prj_idbCh13vAM7N3eoLVN3hoeZtFYBw
 
 jobs:
   deploy:
@@ -39,7 +41,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.jeton.outputs.ok == 'true'
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Deployer sur Vercel
         if: steps.jeton.outputs.ok == 'true'
