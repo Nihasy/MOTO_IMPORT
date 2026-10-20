@@ -6,6 +6,7 @@ import { mentionCarteGrise } from "@/lib/immatriculation";
 import { urlMedia } from "@/lib/cloudinary";
 import { LIBELLE_CATEGORIE } from "@/lib/types";
 import { SITE_URL } from "@/lib/site";
+import { cheminApercu } from "@/lib/apercu";
 import { GalerieFiche } from "@/components/fiche/galerie-fiche";
 import { BlocPrix } from "@/components/fiche/bloc-prix";
 import { ActionsFiche, BarreActionFixe } from "@/components/fiche/barre-action";
@@ -51,6 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!moto) return { title: "Moto introuvable" };
 
   const titre = `${moto.marque} ${moto.modele} ${moto.annee} — ${ar(moto.prix_ttc)} rendu Tana`;
+  const apercu = `${SITE_URL}${cheminApercu(moto)}`;
   const description = `${moto.marque} ${moto.modele} ${moto.annee}, ${moto.cylindree} cm³, ${
     moto.etat === "neuf" ? "neuve" : "occasion"
   }. ${ar(moto.prix_ttc)} rendu à Antananarivo, ${mentionCarteGrise(moto).toLowerCase()}. Livraison ${moto.delai_min_jours} à ${moto.delai_max_jours} jours. Réf. ${moto.reference}.`;
@@ -64,10 +66,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url: `${SITE_URL}/motos/${moto.slug}`,
       type: "website",
-      // `images` est volontairement absent : le fichier opengraph-image.tsx
-      // est injecte automatiquement par Next avec son URL versionnee.
+      // Adresse versionnee par le prix et la photo (lib/apercu.ts) : Facebook
+      // recharge l'image des que l'un des deux change.
+      images: [{ url: apercu, width: 1200, height: 630, alt: `${moto.marque} ${moto.modele} — MOTO IMPORT` }],
     },
-    twitter: { card: "summary_large_image", title: titre, description },
+    twitter: { card: "summary_large_image", title: titre, description, images: [apercu] },
   };
 }
 

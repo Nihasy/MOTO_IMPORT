@@ -3,15 +3,28 @@ import { motoPublique } from "@/lib/catalogue-public";
 import { ar } from "@/lib/format";
 import { mentionCarteGrise } from "@/lib/immatriculation";
 import { urlMedia } from "@/lib/cloudinary";
+import { versionApercu } from "@/lib/apercu";
 
-export const alt = "Fiche moto MOTO IMPORT";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+const size = { width: 1200, height: 630 };
 
-/** Partage Facebook : photo de couverture, modèle, prix (13.1). */
-export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
+/**
+ * Image de partage Facebook : photo de couverture, modèle, prix (13.1).
+ *
+ * Servie à une adresse versionnée (`?v=`, voir `lib/apercu.ts`) plutôt que par
+ * la convention `opengraph-image` : l'adresse change avec le prix, donc
+ * Facebook ne réaffiche jamais un ancien prix. La bonne version se garde un
+ * an ; une version périmée ou absente ne se garde qu'une minute, pour ne pas
+ * figer l'image d'aujourd'hui sous une adresse d'hier.
+ */
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const moto = await motoPublique(slug);
+  const demandee = new URL(request.url).searchParams.get("v");
+  const cache =
+    moto && demandee === versionApercu(moto)
+      ? "public, max-age=31536000, immutable"
+      : "public, max-age=0, s-maxage=60, must-revalidate";
+  const headers = { "Cache-Control": cache };
 
   if (!moto) {
     return new ImageResponse(
@@ -26,7 +39,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           MOTO IMPORT
         </div>
       ),
-      size
+      { ...size, headers }
     );
   }
 
@@ -90,6 +103,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         </div>
       </div>
     ),
-    size
+    { ...size, headers }
   );
 }

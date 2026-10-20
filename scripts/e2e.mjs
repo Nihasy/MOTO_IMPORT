@@ -188,7 +188,7 @@ verifier("sur place, le parcours d'importation n'est pas décrit", !surPlace.tex
 verifier("le bouton devis pointe vers WhatsApp", fiche.texte.includes("wa.me"));
 verifier("les données structurées Vehicle sont présentes", fiche.texte.includes('"@type":"Vehicle"'));
 verifier("l'offre Schema.org est présente", fiche.texte.includes('"@type":"Offer"'));
-verifier("Open Graph pointe vers l'image dédiée", fiche.texte.includes("opengraph-image"));
+verifier("Open Graph pointe vers l'image versionnée par le prix", /\/apercu\?v=[0-9a-f]{12}/.test(fiche.texte));
 // Le titre du bloc passe en deux tons — « Comment » en blanc, la suite en
 // or — donc « Comment ça se passe » n'est plus d'un seul tenant dans le
 // HTML. La seconde moitie, elle, l'est.
@@ -200,6 +200,9 @@ verifier("la balise og:image est presente", Boolean(urlOg), String(urlOg));
 const og = await get(new URL(urlOg ?? "/", BASE).pathname + (new URL(urlOg ?? "/", BASE).search));
 verifier("l'image Open Graph est générée", og.statut === 200, `statut ${og.statut}`);
 verifier("l'image OG est bien une image", (og.entetes.get("content-type") ?? "").startsWith("image/"));
+verifier("la bonne version de l'image OG se garde longtemps", (og.entetes.get("cache-control") ?? "").includes("immutable"));
+const ogPerimee = await get(new URL(urlOg ?? "/", BASE).pathname + "?v=000000000000");
+verifier("une version périmée de l'image OG n'est pas figée", !(ogPerimee.entetes.get("cache-control") ?? "").includes("immutable"));
 
 // Fiche occasion : bloc état obligatoire
 const occasion = await get("/motos/honda-rebel-500-2021-mi003");
